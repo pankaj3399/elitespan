@@ -8,12 +8,12 @@ const Hero = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="text-center py-40 px-6 bg-white"
+      className="text-center pt-40 px-6"
     >
-      <h1 className="text-4xl md:text-5xl font-bold text-[#0B0757] mb-4">
+      <h1 className="text-4xl md:text-5xl font-bold text-[#061140] mb-4" style={{ fontWeight: 700, fontSize: '48px' }}>
         Unleash the Power of Optimal Health
       </h1>
-      <p className="text-xl text-gray-600 mb-8">
+      <p className="text-xl text-[#061140] mb-8" style={{ fontWeight: 300, fontSize: '48px' }}>
         Through Education, Innovation and Expertise
       </p>
       <motion.button 
@@ -25,7 +25,7 @@ const Hero = () => {
         transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
         className="px-8 py-3 bg-[#0B0757] text-white rounded-full text-lg hover:bg-[#1a237e]"
       >
-        Join HealthSpan
+        Join Elite HealthSpan
       </motion.button>
     </motion.section>
   );
