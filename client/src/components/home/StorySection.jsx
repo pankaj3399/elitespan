@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
-import { useEffect } from 'react';
 import Story1 from "../../assets/Story1.png";
 import Story2 from "../../assets/Story2.png";
 import Story3 from "../../assets/Story3.png";
@@ -24,13 +23,13 @@ const StoryCard = ({ image, number, text }) => {
         <img 
           src={image} 
           alt={`Story ${number}`} 
-          className="w-full h-full object-cover object-top" // Changed to object-top
+          className="w-full h-full object-cover object-top"
         />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" /> {/* Enhanced gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-8">
         <h3 className="text-white text-xl font-medium mb-2">Story {number} (Area)</h3>
-        <p className="text-white/90 text-sm">{text}</p> {/* Increased text opacity */}
+        <p className="text-white/90 text-sm">{text}</p>
       </div>
     </motion.div>
   );
@@ -38,6 +37,7 @@ const StoryCard = ({ image, number, text }) => {
 
 const StorySection = () => {
   const containerControls = useAnimation();
+  const containerRef = useRef(null);
   
   const stories = [
     {
@@ -58,48 +58,65 @@ const StorySection = () => {
     {
       image: Story3,
       number: "4",
-      text: "Lorem ipsum magnam facilis taciti goiundae. Eam nuisquam koras oniga maki omarc vae, natus. Dia mikrokosm tartochia resalkiga, lippa igit lithe kisam ert mihilsen."
+      text: "Lorem ipsum magnam facilis taciti goiundae. Eam nuisquam koras oniga maki omarc vae, natus."
     },
     {
       image: Story4,
       number: "5",
-      text: "Lorem ipsum minsig penyer putyus a tirant, kavel sunt phosis. In posuere felis non diam. Proin eget. Diritadit sed ta fsnyre selctor fty byur kjst. Mekonsting nyra sirkiga sv dirm denn to duning."
+      text: "Lorem ipsum minsig penyer putyus a tirant, kavel sunt phosis. In posuere felis non diam."
     },
     {
       image: Story5,
       number: "6",
-      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat, volutpat at felis. Platea sapien Grade demi ut nonumen, em fugt."
+      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
     },
     {
       image: Story7,
       number: "7",
-      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat, volutpat at felis. Platea sapien Grade demi ut nonumen, em fugt."
+      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
     },
     {
       image: Story8,
       number: "8",
-      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat, volutpat at felis. Platea sapien Grade demi ut nonumen, em fugt."
+      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
     }
   ];
 
-  // Duplicate stories for infinite scroll effect
-  const extendedStories = [...stories, ...stories];
+  // Create three sets of stories for seamless infinite scroll
+  const extendedStories = [...stories, ...stories, ...stories];
 
   useEffect(() => {
-    const startAnimation = async () => {
-      await containerControls.start({
-        x: [0, -1600],
-        transition: {
-          x: {
-            repeat: Infinity,
-            duration: 40,
-            ease: "linear"
-          }
+    let animationFrame;
+    let startTime = null;
+    const duration = 40000; // 40 seconds
+    
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      
+      if (containerRef.current) {
+        const singleSetWidth = containerRef.current.children[0].offsetWidth * stories.length;
+        const progress = (elapsed % duration) / duration;
+        const x = -progress * singleSetWidth;
+        
+        containerControls.set({ x });
+        
+        if (elapsed >= duration) {
+          startTime = timestamp;
         }
-      });
+      }
+      
+      animationFrame = requestAnimationFrame(animate);
     };
-    startAnimation();
-  }, [containerControls]);
+    
+    animationFrame = requestAnimationFrame(animate);
+    
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [containerControls, stories.length]);
 
   return (
     <motion.section 
@@ -111,6 +128,7 @@ const StorySection = () => {
     >
       <div className="relative w-full">
         <motion.div 
+          ref={containerRef}
           className="flex"
           animate={containerControls}
         >
