@@ -10,7 +10,7 @@ const Navbar = () => {
     <nav className="w-full py-4 px-6 flex items-center justify-between fixed top-0 z-50 bg-white shadow-md">
       <div className="text-2xl font-bold text-[#0B0757]">
         <img src={logo} alt="Elite Healthspan" className="h-15" />
-      </div>
+      </div> 
       
       <div className="hidden md:flex items-center gap-8">
         <a href="#how" className="text-[#64748B] hover:text-[#0B0757] font-medium">How It Works</a>

@@ -1,10 +1,14 @@
 import React from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { useEffect } from 'react';
+import Story1 from "../../assets/Story1.png";
+import Story2 from "../../assets/Story2.png";
 import Story3 from "../../assets/Story3.png";
 import Story4 from "../../assets/Story4.png";
 import Story5 from "../../assets/Story5.png";
 import Story6 from "../../assets/Story6.png";
+import Story7 from "../../assets/Story7.png";
+import Story8 from "../../assets/Story8.png";
 
 const StoryCard = ({ image, number, text }) => {
   return (
@@ -16,15 +20,17 @@ const StoryCard = ({ image, number, text }) => {
       whileHover={{ scale: 1.02 }}
       className="relative min-w-[400px] h-[500px] rounded-2xl overflow-hidden mx-3"
     >
-      <img 
-        src={image} 
-        alt={`Story ${number}`} 
-        className="w-full h-full object-cover"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+      <div className="absolute inset-0">
+        <img 
+          src={image} 
+          alt={`Story ${number}`} 
+          className="w-full h-full object-cover object-top" // Changed to object-top
+        />
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" /> {/* Enhanced gradient */}
       <div className="absolute bottom-0 left-0 right-0 p-8">
         <h3 className="text-white text-xl font-medium mb-2">Story {number} (Area)</h3>
-        <p className="text-white/80 text-sm">{text}</p>
+        <p className="text-white/90 text-sm">{text}</p> {/* Increased text opacity */}
       </div>
     </motion.div>
   );
@@ -35,23 +41,43 @@ const StorySection = () => {
   
   const stories = [
     {
-      image: Story3,
+      image: Story1,
+      number: "1",
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    },
+    {
+      image: Story2,
+      number: "2",
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    },
+    {
+      image: Story6,
       number: "3",
       text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
     },
     {
-      image: Story4,
+      image: Story3,
       number: "4",
       text: "Lorem ipsum magnam facilis taciti goiundae. Eam nuisquam koras oniga maki omarc vae, natus. Dia mikrokosm tartochia resalkiga, lippa igit lithe kisam ert mihilsen."
     },
     {
-      image: Story5,
+      image: Story4,
       number: "5",
       text: "Lorem ipsum minsig penyer putyus a tirant, kavel sunt phosis. In posuere felis non diam. Proin eget. Diritadit sed ta fsnyre selctor fty byur kjst. Mekonsting nyra sirkiga sv dirm denn to duning."
     },
     {
-      image: Story6,
+      image: Story5,
       number: "6",
+      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat, volutpat at felis. Platea sapien Grade demi ut nonumen, em fugt."
+    },
+    {
+      image: Story7,
+      number: "7",
+      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat, volutpat at felis. Platea sapien Grade demi ut nonumen, em fugt."
+    },
+    {
+      image: Story8,
+      number: "8",
       text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat, volutpat at felis. Platea sapien Grade demi ut nonumen, em fugt."
     }
   ];
@@ -62,7 +88,7 @@ const StorySection = () => {
   useEffect(() => {
     const startAnimation = async () => {
       await containerControls.start({
-        x: [0, -1600], // Move four cards (400px each * 4 = 1600px)
+        x: [0, -1600],
         transition: {
           x: {
             repeat: Infinity,
