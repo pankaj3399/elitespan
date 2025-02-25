@@ -8,7 +8,7 @@ const Hero = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="text-center pt-40 px-6"
+      className="text-center pt-30 px-6"
     >
       <h1 className="text-4xl md:text-5xl font-bold text-[#061140] mb-4" style={{ fontWeight: 700, fontSize: '48px' }}>
         Unleash the Power of Optimal Health
