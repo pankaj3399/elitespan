@@ -27,7 +27,7 @@ const FAQSection = () => {
       className="w-full py-16"
     >
       <h1 className="text-4xl font-bold text-center text-[#0A0F40] mb-16">
-        How It Works
+        Our Approach
       </h1>
       
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
