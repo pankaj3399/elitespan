@@ -25,7 +25,7 @@ const Hero = () => {
         transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
         className="px-8 py-3 bg-[#0B0757] text-white rounded-full text-lg hover:bg-[#1a237e]"
       >
-        Join Elite HealthSpan
+        Get Started
       </motion.button>
     </motion.section>
   );

@@ -5,7 +5,7 @@ const MembershipSection = () => {
   const features = [
     {
       title: "Connections",
-      description: "Connect with top Providers, Scientists, Practitioners, and Advisors in Alternative Medicine.",
+      description: "Connect with providers, scientists, and advisors providing innovative healthcare solutions.",
       icon: "📱"
     },
     {
