@@ -40,16 +40,16 @@ const StorySection = () => {
   const containerRef = useRef(null);
   
   const stories = [
-    {
-      image: Story1,
-      number: "1",
-      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-    },
-    {
-      image: Story2,
-      number: "2",
-      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-    },
+    // {
+    //   image: Story1,
+    //   number: "1",
+    //   text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    // },
+    // {
+    //   image: Story2,
+    //   number: "2",
+    //   text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    // },
     {
       image: Story6,
       number: "3",
@@ -70,16 +70,16 @@ const StorySection = () => {
       number: "6",
       text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
     },
-    {
-      image: Story7,
-      number: "7",
-      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
-    },
-    {
-      image: Story8,
-      number: "8",
-      text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
-    }
+    // {
+    //   image: Story7,
+    //   number: "7",
+    //   text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
+    // },
+    // {
+    //   image: Story8,
+    //   number: "8",
+    //   text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
+    // }
   ];
 
   // Create three sets of stories for seamless infinite scroll
