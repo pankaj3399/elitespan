@@ -52,22 +52,22 @@ const StorySection = () => {
     // },
     {
       image: Story6,
-      number: "3",
+      number: "1",
       text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
     },
     {
       image: Story3,
-      number: "4",
+      number: "2",
       text: "Lorem ipsum magnam facilis taciti goiundae. Eam nuisquam koras oniga maki omarc vae, natus."
     },
     {
       image: Story4,
-      number: "5",
+      number: "3",
       text: "Lorem ipsum minsig penyer putyus a tirant, kavel sunt phosis. In posuere felis non diam."
     },
     {
       image: Story5,
-      number: "6",
+      number: "4",
       text: "Lorem ifutilismanen ut sis. Qing hest nascetur purus id fermentum, congue eleifend erat."
     },
     // {
