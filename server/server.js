@@ -14,7 +14,7 @@ app.use(express.json());
 
 // CORS configuration to allow requests from your frontend
 app.use(cors({
-  origin: 'https://elitespan.vercel.app', // Allow requests from your frontend URL
+  origin: '*', // Allow requests from your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
