@@ -6,13 +6,24 @@ const doctorSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
   specialization: {
     type: String,
     required: true,
     trim: true,
   },
   experience: {
-    type: Number, // Years of experience
+    type: Number,
     required: true,
     min: 0,
   },
@@ -33,7 +44,15 @@ const doctorSchema = new mongoose.Schema({
   },
   isApproved: {
     type: Boolean,
-    default: false, //doctors will require admin approval
+    default: false, // Requires admin approval
+  },
+  availability: {
+    type: [String], // e.g., ["Monday 9-5", "Tuesday 9-5"]
+    default: [],
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 

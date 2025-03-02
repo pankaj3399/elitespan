@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
 const { signup, login, editProfile } = require('../controllers/userController');
-const auth = require('../middleware/auth');
+const {auth} = require('../middleware/auth');
 
 router.post('/signup', [
   check('name').trim().not().isEmpty().withMessage('Name is required'),
@@ -19,6 +19,12 @@ router.post('/login', [
 router.put('/profile', auth, [
   check('name').optional().trim().not().isEmpty().withMessage('Name is required'),
   check('contactInfo.phone').optional().isMobilePhone().withMessage('Valid phone number is required'),
-], editProfile);
+], async (req, res, next) => {
+  try {
+    await editProfile(req, res, next); // Pass next for middleware compatibility
+  } catch (error) {
+    next(error); // Handle errors appropriately
+  }
+});
 
 module.exports = router;
