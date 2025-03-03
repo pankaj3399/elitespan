@@ -257,7 +257,7 @@
 ### 14. Create Payment Intent
 
 - **Endpoint**: `POST /api/payments/create-payment-intent`
-- **Description**: Initiates a Stripe payment intent for a user to pay for premium access or consultations.
+- **Description**: Initiates a Stripe payment intent for credit card, Apple Pay, or PayPal payments for premium access or consultations.
 - **Request**:
 
   - **Method**: POST
@@ -278,8 +278,7 @@
 ### 15. Confirm Payment
 
 - **Endpoint**: `POST /api/payments/confirm-payment`
-- **Description**: Confirms a Stripe payment and stores transaction details.
-- **Request**:
+- **Description**: Confirms a Stripe payment (credit card, Apple Pay, or PayPal) and stores transaction details.
 
   - **Method**: POST
   - **URL**: `http://localhost:3000/api/payments/confirm-payment`
@@ -294,10 +293,10 @@
     ```
 
 
-### 16. Get Transactions (Admin)
+### Get Transactions (Admin)
 
 - **Endpoint**: `GET /api/payments/transactions`
-- **Description**: Retrieves all transactions for admin revenue tracking.
+- **Description**: Retrieves all transactions for admin revenue tracking, supporting all payment types.
 - **Request**:
 
   - **Method**: GET
