@@ -100,3 +100,206 @@
       "isApproved": false
     }
     ```
+
+### 6. Doctor Signup
+
+- **Endpoint**: `POST /api/doctors/signup`
+- **Description**: Registers a new doctor with name, email, password, and professional details.
+- **Request**:
+
+  - **Method**: POST
+  - **URL**: `http://localhost:3000/api/doctors/signup`
+  - **Headers**: `Content-Type: application/json`
+  - **Body**:
+
+    ```json
+    {
+    "name": "Dr. John Doe",
+    "email": "john.doe@hospital.com",
+    "password": "password123",
+    "specialization": "Cardiology",
+    "experience": 15,
+    "location": "New York",
+    "contactInfo": {
+    "phone": "123-456-7890",
+    "email": "john.doe@hospital.com"
+    }
+  }
+
+    ```
+
+### 7. Doctor Login
+
+- **Endpoint**: `POST /api/doctors/login`
+- **Description**: Authenticates a doctor and returns a JWT token.
+- **Request**:
+
+  - **Method**: POST
+  - **URL**: `http://localhost:3000/api/doctors/login`
+  - **Headers**: `Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "email": "john.doe@hospital.com",
+  "password": "password123"
+  }
+
+    ```
+
+### 8. Update Doctor Profile
+
+- **Endpoint**: `PUT /api/doctors/profile`
+- **Description**: Updates a doctor’s profile, including availability.
+- **Request**:
+
+  - **Method**: POST
+  - **URL**: `http://localhost:3000/api/doctors/profile`
+  - **Headers**: `Authorization: Bearer <jwt-token>, Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "name": "Dr. John Doe Updated",
+  "specialization": "Cardiology",
+  "experience": 16,
+  "location": "New York",
+  "contactInfo": {
+    "phone": "234-567-8901",
+    "email": "john.doe@hospital.com"
+  },
+  "availability": ["Monday 9-5", "Tuesday 9-5"]
+  }
+
+    ```
+
+### 9. Get Doctor Profile
+
+- **Endpoint**: `GET /api/doctors/profile`
+- **Description**: Retrieves a doctor’s profile for their dashboard.
+- **Request**:
+
+  - **Method**: GET
+  - **URL**: `http://localhost:3000/api/doctors/profile`
+  - **Headers**: `Authorization: Bearer <jwt-token>`
+
+
+### 10. Admin Signup
+
+- **Endpoint**: `POST /api/admins/signup`
+- **Description**: Registers a new admin with name, email, and password.
+- **Request**:
+
+  - **Method**: POST
+  - **URL**: `http://localhost:3000/api/admins/signup`
+  - **Headers**: `Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "password": "admin123"
+  }
+
+    ```
+
+### 11. Admin Login
+
+- **Endpoint**: `POST /api/admins/login`
+- **Description**: Authenticates an admin and returns a JWT token.
+- **Request**:
+
+  - **Method**: POST
+  - **URL**: `http://localhost:3000/api/admins/login`
+  - **Headers**: `Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "email": "admin@example.com",
+  "password": "admin123"
+  }
+
+    ```
+
+### 12. Approve/Reject Doctor
+
+- **Endpoint**: `PUT /api/admins/doctors/approve`
+- **Description**: Approves or rejects a doctor’s registration.
+- **Request**:
+
+  - **Method**: PUT
+  - **URL**: `http://localhost:3000/api/admins/doctors/approve`
+  - **Headers**: `Authorization: Bearer <jwt-token>, Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "doctorId": "doctor-id-from-mongodb",
+  "isApproved": true // or false
+  }
+
+    ```
+
+
+### 13. Get All Doctors (for Admin)
+
+- **Endpoint**: `GET /api/admins/doctors`
+- **Description**: Retrieves all doctors for admin review and approval.
+- **Request**:
+
+  - **Method**: GET
+  - **URL**: `http://localhost:3000/api/admins/doctors`
+  - **Headers**: `Authorization: Bearer <jwt-token>`
+
+
+### 14. Create Payment Intent
+
+- **Endpoint**: `POST /api/payments/create-payment-intent`
+- **Description**: Initiates a Stripe payment intent for a user to pay for premium access or consultations.
+- **Request**:
+
+  - **Method**: POST
+  - **URL**: `http://localhost:3000/api/payments/create-payment-intent`
+  - **Headers**: `Authorization: Bearer <jwt-token>, Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "amount": 99.99, // Amount in dollars
+  "userId": "user-id-from-mongodb",
+  "doctorId": "doctor-id-from-mongodb" 
+  }
+
+    ```
+
+
+### 15. Confirm Payment
+
+- **Endpoint**: `POST /api/payments/confirm-payment`
+- **Description**: Confirms a Stripe payment and stores transaction details.
+- **Request**:
+
+  - **Method**: POST
+  - **URL**: `http://localhost:3000/api/payments/confirm-payment`
+  - **Headers**: `Authorization: Bearer <jwt-token>, Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "paymentIntentId": "payment-intent-id-from-stripe"
+  }
+
+    ```
+
+
+### 16. Get Transactions (Admin)
+
+- **Endpoint**: `GET /api/payments/transactions`
+- **Description**: Retrieves all transactions for admin revenue tracking.
+- **Request**:
+
+  - **Method**: GET
+  - **URL**: `http://localhost:3000/api/payments/transactions`
+  - **Headers**: `Authorization: Bearer <admin-jwt-token>`
