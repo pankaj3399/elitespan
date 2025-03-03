@@ -1,4 +1,6 @@
-const BASE_URL = 'https://elitespan-kxpd.vercel.app/api';
+// client/src/services/api.js
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/api';
 
 export const signup = async (userData) => {
   try {
@@ -56,7 +58,7 @@ export const getDoctors = async (filters) => {
   }
 };
 
-
+// Doctor Endpoints (Milestone 2)
 export const doctorSignup = async (doctorData) => {
   try {
     const response = await fetch(`${BASE_URL}/doctors/signup`, {
@@ -117,7 +119,7 @@ export const getDoctorProfile = async (token) => {
   }
 };
 
-
+// Admin Endpoints (Milestone 2)
 export const adminSignup = async (adminData) => {
   try {
     const response = await fetch(`${BASE_URL}/admins/signup`, {
