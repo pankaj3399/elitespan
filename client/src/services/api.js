@@ -58,7 +58,7 @@ export const getDoctors = async (filters) => {
   }
 };
 
-// Doctor Endpoints (Milestone 2)
+// Doctor Endpoints 
 export const doctorSignup = async (doctorData) => {
   try {
     const response = await fetch(`${BASE_URL}/doctors/signup`, {
@@ -119,7 +119,7 @@ export const getDoctorProfile = async (token) => {
   }
 };
 
-// Admin Endpoints (Milestone 2)
+// Admin Endpoints 
 export const adminSignup = async (adminData) => {
   try {
     const response = await fetch(`${BASE_URL}/admins/signup`, {
@@ -177,5 +177,55 @@ export const getAllDoctors = async (token) => {
     return response.json();
   } catch (error) {
     throw new Error(error.message || 'Server error while fetching all doctors');
+  }
+};
+
+// Payment Endpoints
+export const createPaymentIntent = async (token, paymentData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/payments/create-payment-intent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(paymentData),
+    });
+    if (!response.ok) throw new Error('Payment intent creation failed');
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || 'Server error during payment intent creation');
+  }
+};
+
+export const confirmPayment = async (token, paymentData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/payments/confirm-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(paymentData),
+    });
+    if (!response.ok) throw new Error('Payment confirmation failed');
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || 'Server error during payment confirmation');
+  }
+};
+
+export const getTransactions = async (token) => {
+  try {
+    const response = await fetch(`${BASE_URL}/payments/transactions`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) throw new Error('Failed to fetch transactions');
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || 'Server error while fetching transactions');
   }
 };

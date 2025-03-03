@@ -5,6 +5,7 @@ const waitlistRoutes = require('./routes/waitlistRoutes');
 const userRoutes = require('./routes/userRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const cors = require('cors');
 
 // Load environment variables
@@ -30,6 +31,7 @@ app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/admins', adminRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // // Start cron job
 // require('./utils/cron');
