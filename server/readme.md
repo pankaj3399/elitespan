@@ -293,7 +293,7 @@
     ```
 
 
-### Get Transactions (Admin)
+### 16. Get Transactions (Admin)
 
 - **Endpoint**: `GET /api/payments/transactions`
 - **Description**: Retrieves all transactions for admin revenue tracking, supporting all payment types.
@@ -301,4 +301,92 @@
 
   - **Method**: GET
   - **URL**: `http://localhost:3000/api/payments/transactions`
+  - **Headers**: `Authorization: Bearer <admin-jwt-token>`
+
+
+### 17. List All Users (Admin)
+
+- **Endpoint**: `GET /api/admin-panel/users`
+- **Description**: Retrieves a list of all users for admin management.
+
+  - **Method**: GET
+  - **URL**: `http://localhost:3000/api/admin-panel/users`
+  - **Headers**: `Authorization: Bearer <jwt-token>, Content-Type: application/json`
+
+### 18. Update User (Admin)
+
+- **Endpoint**: `PUT /api/admin-panel/users/:userId`
+- **Description**: Updates a user’s premium status or ban status.
+
+  - **Method**: PUT
+  - **URL**: `http://localhost:3000/api/payments/confirm-payment`
+  - **Headers**: `Authorization: Bearer <admin-jwt-token>, Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "isPremium": true, // Optional, boolean
+  "isBanned": false  // Optional, boolean
+  }
+
+    ```
+
+### 19. Delete User (Admin)
+
+- **Endpoint**: `DELETE /api/admin-panel/users/:userId`
+- **Description**: Deletes a user from the platform.
+
+  - **Method**: DELETE
+  - **URL**: `http://localhost:3000/api/admin-panel/users/<user-id>`
+  - **Headers**: `Authorization: Bearer <admin-jwt-token>`
+
+
+
+### 20. List All Doctors (Admin)
+
+- **Endpoint**: `GET /api/admin-panel/doctors`
+- **Description**: Retrieves a list of all doctors for admin review and approval.
+
+  - **Method**: POST
+  - **URL**: `http://localhost:3000/api/admin-panel/doctors`
+  - **Headers**: `Authorization: Bearer <admin-jwt-token>`
+
+
+
+### 21. Approve/Reject Doctor (Admin)
+
+- **Endpoint**: `PUT /api/admin-panel/doctors/approve`
+- **Description**: Approves or rejects a doctor’s registration.
+
+  - **Method**: PUT
+  - **URL**: `http://localhost:3000/api/admin-panel/doctors/approve`
+  - **Headers**: `Authorization: Bearer <admin-jwt-token>, Content-Type: application/json`
+  - **Body**:
+
+    ```json
+  {
+  "doctorId": "doctor-id-from-mongodb",
+  "isApproved": true // or false
+  }
+
+    ```
+
+### 22. Delete Doctor (Admin)
+
+- **Endpoint**: `DELETE /api/admin-panel/doctors/:doctorId`
+- **Description**: Deletes a doctor from the platform.
+
+  - **Method**: DELETE
+  - **URL**: `http://localhost:3000/api/admin-panel/doctors/<doctor-id>`
+  - **Headers**: `Authorization: Bearer <jwt-token>, Content-Type: application/json`
+
+
+
+### 23. Get Analytics (Admin)
+
+- **Endpoint**: `GET /api/admin-panel/analytics`
+- **Description**: Retrieves platform analytics for admin insights (users, doctors, revenue).
+
+  - **Method**: GET
+  - **URL**: `http://localhost:3000/api/admin-panel/analytics`
   - **Headers**: `Authorization: Bearer <admin-jwt-token>`

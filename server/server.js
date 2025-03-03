@@ -6,6 +6,7 @@ const userRoutes = require('./routes/userRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const adminPanelRoutes = require('./routes/adminPanelRoutes');
 const cors = require('cors');
 
 // Load environment variables
@@ -32,6 +33,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/admin-panel', adminPanelRoutes);
 
 // // Start cron job
 // require('./utils/cron');

@@ -44,7 +44,7 @@ exports.confirmPayment = async (req, res) => {
   try {
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     if (paymentIntent.status === 'succeeded') {
-      const { amount, currency, metadata, payment_method } = paymentIntent;
+      const { amount, currency, metadata } = paymentIntent;
       const transaction = new Transaction({
         userId: metadata.userId,
         doctorId: metadata.doctorId || null,
@@ -52,13 +52,34 @@ exports.confirmPayment = async (req, res) => {
         currency,
         stripePaymentId: paymentIntent.id,
         status: 'succeeded',
-        invoice: `https://your-app.com/invoice/${paymentIntent.id}`, // Mocked URL
+        invoice: await generateInvoice({ // Generate invoice
+          stripePaymentId: paymentIntent.id,
+          userId: metadata.userId,
+          doctorId: metadata.doctorId || null,
+          amount: amount / 100,
+          currency,
+          createdAt: new Date(),
+        }),
       });
 
       await transaction.save();
       await User.findByIdAndUpdate(metadata.userId, {
         $set: { isPremium: true, premiumExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }, // 30 days premium
       });
+
+      // Update analytics
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let analytics = await Analytics.findOne({ date: today });
+      if (!analytics) {
+        analytics = new Analytics({ date: today });
+      }
+      analytics.transactions.total += 1;
+      analytics.transactions.revenue += amount / 100;
+      analytics.usersRegistered = await User.countDocuments();
+      analytics.doctorsRegistered = await Doctor.countDocuments();
+      analytics.doctorsApproved = await Doctor.countDocuments({ isApproved: true });
+      await analytics.save();
 
       res.json({ message: 'Payment confirmed', transaction });
     } else if (paymentIntent.status === 'requires_action') {
