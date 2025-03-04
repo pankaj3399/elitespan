@@ -9,7 +9,10 @@ export const signup = async (userData) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
     });
-    if (!response.ok) throw new Error('Signup failed');
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Signup failed');
+    }
     return response.json();
   } catch (error) {
     throw new Error(error.message || 'Server error during signup');
@@ -30,6 +33,22 @@ export const login = async (credentials) => {
   }
 };
 
+export const updateProfile = async (profileData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/users/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileData),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Profile update failed');
+    }
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || 'Server error during profile update');
+  }
+};
 export const editProfile = async (token, profileData) => {
   try {
     const response = await fetch(`${BASE_URL}/users/profile`, {
@@ -206,7 +225,10 @@ export const confirmPayment = async (token, paymentData) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify({
+        paymentIntentId: paymentData.paymentIntentId,
+        paymentTokenId: paymentData.paymentTokenId, // Updated to use paymentTokenId for token-based payments
+      }),
     });
     if (!response.ok) throw new Error('Payment confirmation failed');
     return response.json();

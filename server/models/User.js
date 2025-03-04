@@ -1,4 +1,12 @@
+// backend/models/User.js
+
 const mongoose = require('mongoose');
+
+const contactInfoSchema = new mongoose.Schema({
+  phone: { type: String, required: false, trim: true },
+  address: { type: String, required: false, trim: true },
+  // Add other fields as needed
+});
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -11,19 +19,23 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-    lowercase: true,
   },
   password: {
     type: String,
     required: true,
   },
   contactInfo: {
-    phone: String,
-    address: String,
+    type: contactInfoSchema,
+    required: false,
+    default: {},
   },
-  profilePicture: {
-    type: String, // URL to Cloudinary (mocked for now)
-    default: '',
+  isPremium: {
+    type: Boolean,
+    default: false,
+  },
+  premiumExpiry: {
+    type: Date,
+    default: null,
   },
   createdAt: {
     type: Date,

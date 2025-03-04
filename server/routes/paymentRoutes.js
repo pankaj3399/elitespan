@@ -1,3 +1,5 @@
+// backend/routes/paymentRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
@@ -6,7 +8,7 @@ const { auth, authAdmin } = require('../middleware/auth');
 
 router.post('/create-payment-intent', auth, [
   check('amount').isFloat({ min: 1 }).withMessage('Amount must be greater than 0'),
-  check('userId').not().isEmpty().withMessage('User ID is required'),
+  check('userId').optional().not().isEmpty().withMessage('User ID is required if applicable'),
   check('doctorId').optional().not().isEmpty().withMessage('Doctor ID is required if applicable'),
 ], createPaymentIntent);
 
