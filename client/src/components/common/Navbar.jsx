@@ -1,24 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import logo from "../../assets/logo.png";
+import MembershipModal from '../MembershipModal'; // Reintroduced
+import ContactInfoForm from '../ContactInfoForm'; // New first step after membership
+import PaymentMethodModal from '../PaymentMethodModal'; // New component
+import CreditCardForm from '../CreditCardForm'; // Added import
+import PayPalForm from '../PayPalForm'; // Added import
+import ApplePayForm from '../ApplePayForm'; // Added import
+import { useAuth } from '../../contexts/AuthContext'; // Import from AuthContext
+import { login, signup } from '../../services/api'; // Import login and signup functions
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [showJoinModal, setShowJoinModal] = React.useState(false);
-  const [showLoginModal, setShowLoginModal] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [modalStep, setModalStep] = useState(null); // Track modal steps: 'membership', 'contactInfo', 'paymentMethod', 'paymentForm'
+  const { token, setToken } = useAuth(); // Use imported useAuth hook
+  const [loginError, setLoginError] = useState('');
+  const [loginCredentials, setLoginCredentials] = useState({ email: '', password: '' });
 
   const handleJoinClick = () => {
-    setShowJoinModal(true);
+    setModalStep('membership'); // Start with membership modal
   };
 
   const handleLoginClick = () => {
-    setShowLoginModal(true);
+    setModalStep('login');
   };
 
   const closeModals = () => {
-    setShowJoinModal(false);
-    setShowLoginModal(false);
+    setModalStep(null);
+    setLoginError('');
+    setLoginCredentials({ email: '', password: '' });
+  };
+
+  const handleContinue = (nextStep) => {
+    setModalStep(nextStep);
+  };
+
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginCredentials(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    const { email, password } = loginCredentials;
+
+    try {
+      const response = await login({ email, password });
+      setToken(response.token); // Store token in context and localStorage
+      closeModals();
+      alert('Logged in successfully!');
+    } catch (error) {
+      if (error.message === 'Login failed') {
+        setLoginError(`'Invalid credentials. If you're new, please join Elite Healthspan.'`);
+      } else {
+        setLoginError('Server error during login. Please try again.');
+      }
+    }
   };
 
   return (
@@ -90,57 +128,52 @@ const Navbar = () => {
         </motion.div>
       )}
 
-      {/* Join Modal */}
-      {showJoinModal && (
-        <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-md w-full mx-4">
-            <button 
-              onClick={closeModals} 
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            <div className="flex flex-col items-center mb-8">
-              <div className="flex items-center gap-2 text-[#0B0757]">
-                <img src={logo} alt="" />
-              </div>
-            </div>
-            
-            <h2 className="text-center text-2xl font-semibold text-[#0B0757] mb-4">
-              Become a member to view<br />
-              top-quality longevity services.
-            </h2>
-            
-            <p className="text-center text-gray-600 mb-8">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit,<br />
-              sed do eiusmod tempor incididunt ut labore et dolore<br />
-              magna aliqua.
-            </p>
-            
-            <div className="flex flex-col gap-4">
-              <button
-                className="w-full py-3 bg-[#0B0757] text-white rounded-full font-medium text-base"
-              >
-                Join Elite Healthspan
-              </button>
-              
-              <button
-                onClick={() => {
-                  closeModals();
-                  handleLoginClick();
-                }}
-                className="w-full py-3 bg-[#D4A017] text-white rounded-full font-medium text-base"
-              >
-                Login to Account
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Modals */}
+      {modalStep === 'membership' && (
+        <MembershipModal 
+          onClose={closeModals} 
+          onContinue={() => handleContinue('contactInfo')} // Proceed to contact info after membership
+        />
       )}
-
-      {/* Login Modal */}
-      {showLoginModal && (
+      {modalStep === 'contactInfo' && (
+        <ContactInfoForm 
+          onClose={closeModals} 
+          onContinue={(userId) => handleContinue('paymentMethod')} // Pass userId after signup
+          userId={null} // Start with no userId, create one in ContactInfoForm
+        />
+      )}
+      {modalStep === 'paymentMethod' && (
+        <PaymentMethodModal 
+          onClose={closeModals} 
+          onContinue={(paymentMethod) => handleContinue(`paymentForm_${paymentMethod}`)} 
+          userId={token ? JSON.parse(atob(token.split('.')[1])).id : null} // Use userId from contact info
+        />
+      )}
+      {modalStep === 'paymentForm_creditCard' && (
+        <CreditCardForm 
+          onClose={closeModals} 
+          onContinue={closeModals} // Payment completes signup, close modal
+          userId={token ? JSON.parse(atob(token.split('.')[1])).id : null} // Use userId from contact info
+          token={token} // Pass token for authenticated requests
+        />
+      )}
+      {modalStep === 'paymentForm_payPal' && (
+        <PayPalForm 
+          onClose={closeModals} 
+          onContinue={closeModals} // Payment completes signup, close modal
+          userId={token ? JSON.parse(atob(token.split('.')[1])).id : null} 
+          token={token} // Pass token for authenticated requests
+        />
+      )}
+      {modalStep === 'paymentForm_applePay' && (
+        <ApplePayForm 
+          onClose={closeModals} 
+          onContinue={closeModals} // Payment completes signup, close modal
+          userId={token ? JSON.parse(atob(token.split('.')[1])).id : null} 
+          token={token} // Pass token for authenticated requests
+        />
+      )}
+      {modalStep === 'login' && (
         <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-sm w-full mx-4">
             <button 
@@ -152,12 +185,15 @@ const Navbar = () => {
             
             <h2 className="text-2xl font-semibold text-[#0B0757] mb-8">Login</h2>
             
-            <form className="flex flex-col gap-4">
+            <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-gray-700 text-sm">Email</label>
                 <input 
                   type="email" 
+                  name="email"
                   placeholder="Email Address" 
+                  value={loginCredentials.email}
+                  onChange={handleLoginChange}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
                 />
               </div>
@@ -166,10 +202,15 @@ const Navbar = () => {
                 <label className="text-gray-700 text-sm">Password</label>
                 <input 
                   type="password" 
+                  name="password"
                   placeholder="Password" 
+                  value={loginCredentials.password}
+                  onChange={handleLoginChange}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
                 />
               </div>
+              
+              {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
               
               <button
                 type="submit"
@@ -180,7 +221,17 @@ const Navbar = () => {
             </form>
             
             <p className="text-center text-gray-600 text-sm mt-6">
-              New to Elite? Join the waitlist for access.
+              New to Elite? {loginError.includes('new') ? (
+                <button
+                  onClick={() => {
+                    closeModals();
+                    handleJoinClick();
+                  }}
+                  className="text-[#0B0757] underline hover:text-[#1a237e]"
+                >
+                  Join Elite Healthspan
+                </button>
+              ) : 'Join the waitlist for access.'}
             </p>
             
             <button
@@ -197,6 +248,6 @@ const Navbar = () => {
       )}
     </nav>
   );
-};
+}; // Added this closing curly brace and semicolon
 
 export default Navbar;
