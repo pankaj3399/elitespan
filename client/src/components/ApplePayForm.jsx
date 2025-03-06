@@ -11,14 +11,15 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 const ApplePayForm = ({ onClose, onContinue, userId, token: propToken }) => {
   const [error, setError] = useState('');
   const [paymentIntent, setPaymentIntent] = useState(null);
-  const { token: contextToken } = useAuth(); // Use token from AuthContext as fallback
-
-  const finalToken = propToken || contextToken; // Use propToken if provided, otherwise contextToken
+  const [isLoading, setIsLoading] = useState(false);
+  const [applePayAvailable, setApplePayAvailable] = useState(false);
+  const { token: contextToken } = useAuth();
+  const finalToken = propToken || contextToken;
 
   useEffect(() => {
     const fetchPaymentIntent = async () => {
       if (!finalToken) {
-        setError('Please ensure you’re logged in or joined to make a payment.');
+        setError('Please log in to make a payment.');
         return;
       }
 
@@ -26,37 +27,110 @@ const ApplePayForm = ({ onClose, onContinue, userId, token: propToken }) => {
         const response = await createPaymentIntent(finalToken, { amount: 9.99, userId, doctorId: null });
         setPaymentIntent(response);
       } catch (err) {
-        setError(err.message || 'Payment intent creation failed. Please ensure you’re logged in.');
+        setError(err.message || 'Failed to create payment intent.');
+        console.error('Payment intent error:', err);
       }
     };
-    fetchPaymentIntent();
-  }, [userId, finalToken]);
 
-  const handleApplePay = async () => {
-    if (!finalToken) {
-      setError('Please ensure you’re logged in or joined to make a payment.');
-      return;
-    }
-
-    try {
+    const checkApplePay = async () => {
       const stripe = await stripePromise;
-      const { error } = await stripe.confirmApplePayPayment(paymentIntent.clientSecret, {
+      if (!stripe) {
+        setError('Stripe initialization failed.');
+        return;
+      }
+
+      const paymentRequest = stripe.paymentRequest({
         country: 'US',
         currency: 'usd',
         total: {
           label: 'Elite Healthspan Membership',
-          amount: 9.99,
+          amount: 999, // Amount in cents (9.99 USD)
         },
+        requestPayerName: true,
+        requestPayerEmail: true,
       });
 
-      if (error) throw new Error(error.message);
-
-      const paymentResponse = await confirmPayment(finalToken, { paymentIntentId: paymentIntent.clientSecret });
-      if (paymentResponse.message === 'Payment confirmed') {
-        onContinue(); // Complete signup, close modal
+      const result = await paymentRequest.canMakePayment();
+      setApplePayAvailable(!!result && !!result.applePay);
+      if (!result || !result.applePay) {
+        setError('Apple Pay is not available on this device or browser. Please try on Safari with Apple Pay enabled.');
       }
+    };
+
+    fetchPaymentIntent();
+    if (typeof window !== 'undefined' && window.ApplePaySession) {
+      checkApplePay();
+    }
+  }, [userId, finalToken]);
+
+  const handleApplePay = async () => {
+    if (!finalToken) {
+      setError('Please log in to make a payment.');
+      return;
+    }
+
+    if (!applePayAvailable) {
+      setError('Apple Pay is not available.');
+      return;
+    }
+
+    if (!paymentIntent || !paymentIntent.clientSecret) {
+      setError('Payment intent not available. Please try again.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const stripe = await stripePromise;
+      const paymentRequest = stripe.paymentRequest({
+        country: 'US',
+        currency: 'usd',
+        total: {
+          label: 'Elite Healthspan Membership',
+          amount: 999, // Amount in cents (9.99 USD)
+        },
+        requestPayerName: true,
+        requestPayerEmail: true,
+      });
+
+      paymentRequest.on('paymentmethod', async (event) => {
+        try {
+          const { error: confirmError } = await stripe.confirmApplePayPayment(paymentIntent.clientSecret, {
+            paymentMethod: event.paymentMethod,
+          });
+
+          if (confirmError) {
+            event.complete('fail');
+            throw new Error(confirmError.message);
+          }
+
+          event.complete('success');
+
+          const paymentIntentId = paymentIntent.clientSecret.split('_secret_')[0];
+          const confirmResponse = await confirmPayment(finalToken, {
+            paymentIntentId,
+            paymentMethodId: event.paymentMethod.id,
+          });
+
+          if (confirmResponse.message === 'Payment confirmed') {
+            onContinue();
+          } else {
+            setError('Apple Pay payment confirmation failed.');
+          }
+        } catch (err) {
+          event.complete('fail');
+          setError(err.message || 'Apple Pay payment failed');
+          console.error('Apple Pay error:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      });
+
+      await paymentRequest.show();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Apple Pay payment failed');
+      console.error('Apple Pay error:', err);
+      setIsLoading(false);
     }
   };
 
@@ -77,6 +151,11 @@ const ApplePayForm = ({ onClose, onContinue, userId, token: propToken }) => {
         </p>
         
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {!applePayAvailable && !error && (
+          <p className="text-yellow-500 text-sm mb-4">
+            Apple Pay is not available on this device or browser. Please try on Safari with Apple Pay enabled.
+          </p>
+        )}
         
         <div className="flex justify-between gap-4">
           <button
@@ -87,9 +166,10 @@ const ApplePayForm = ({ onClose, onContinue, userId, token: propToken }) => {
           </button>
           <button
             onClick={handleApplePay}
-            className="w-full py-3 bg-[#0B0757] text-white rounded-full font-medium text-base hover:bg-[#1a237e]"
+            disabled={isLoading || !applePayAvailable}
+            className="w-full py-3 bg-[#0B0757] text-white rounded-full font-medium text-base hover:bg-[#1a237e] disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Continue
+            {isLoading ? 'Processing...' : 'Continue'}
           </button>
         </div>
       </div>

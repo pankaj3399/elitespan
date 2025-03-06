@@ -17,9 +17,9 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// CORS configuration to allow requests from any origin (for testing)
+
 app.use(cors({
-  origin: '*', // Allow requests from any origin (not secure for production)
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
