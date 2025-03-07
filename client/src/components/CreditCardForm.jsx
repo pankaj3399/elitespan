@@ -1,5 +1,4 @@
 // client/src/components/CreditCardForm.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -14,31 +13,50 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
   const [isLoading, setIsLoading] = useState(false);
   const cardElementRef = useRef(null);
   const cardInstanceRef = useRef(null);
-  const stripeInstanceRef = useRef(null); // Store the Stripe instance
+  const stripeInstanceRef = useRef(null);
   const { token: contextToken } = useAuth();
   const finalToken = propToken || contextToken;
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 2;
+  const hasFetchedPaymentIntent = useRef(false);
 
-  useEffect(() => {
-    const fetchPaymentIntent = async () => {
-      if (!finalToken) {
-        setError('Please log in to make a payment.');
+  const fetchPaymentIntent = async () => {
+    if (!finalToken) {
+      setError('Please log in to make a payment.');
+      return;
+    }
+
+    const paymentData = { amount: 9.99, userId, doctorId: null };
+    console.log('Fetching payment intent with payload:', paymentData);
+
+    try {
+      const response = await createPaymentIntent(finalToken, paymentData);
+      console.log('Payment intent response:', response);
+      setPaymentIntent(response);
+      setError('');
+      setRetryCount(0);
+    } catch (err) {
+      console.error('Payment intent fetch error:', err);
+      const status = err.response?.status;
+      if (status === 400 || status === 401 || status === 403) {
+        setError(err.message || 'Invalid payment request. Please check your details and try again.');
         return;
       }
 
-      try {
-        console.log('Fetching payment intent with token:', finalToken);
-        const response = await createPaymentIntent(finalToken, { amount: 9.99, userId, doctorId: null });
-        console.log('Payment intent response:', response); // Debug response
-        setPaymentIntent(response);
-      } catch (err) {
-        setError(err.message || 'Failed to create payment intent.');
-        console.error('Payment intent error:', err);
+      if (retryCount < maxRetries) {
+        console.log(`Retrying fetchPaymentIntent (attempt ${retryCount + 1}/${maxRetries})...`);
+        setRetryCount(retryCount + 1);
+        setTimeout(fetchPaymentIntent, 1000 * (retryCount + 1));
+      } else {
+        setError(err.message || 'Failed to create payment intent after multiple attempts.');
       }
-    };
-    fetchPaymentIntent();
-  }, [userId, finalToken]);
+    }
+  };
 
   useEffect(() => {
+    if (hasFetchedPaymentIntent.current) return;
+    hasFetchedPaymentIntent.current = true;
+
     const initializeStripeElements = async () => {
       setIsLoading(true);
       const stripe = await stripePromise;
@@ -48,7 +66,7 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
         return;
       }
 
-      stripeInstanceRef.current = stripe; // Store the Stripe instance
+      stripeInstanceRef.current = stripe;
       const elements = stripe.elements();
       const card = elements.create('card', {
         style: {
@@ -68,6 +86,7 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
       setIsLoading(false);
     };
 
+    fetchPaymentIntent();
     initializeStripeElements();
 
     return () => {
@@ -76,66 +95,87 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
         cardInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [userId, finalToken]);
 
-const handleSubmit = async (event) => {
-  event.preventDefault();
+  const handleCreditCard = async () => {
+    if (!finalToken) {
+      setError('Please log in to make a payment.');
+      return;
+    }
 
-  if (!finalToken) {
-    setError('Please log in to make a payment.');
-    return;
-  }
+    if (!cardInstanceRef.current || !stripeInstanceRef.current) {
+      setError('Payment elements not ready. Please wait.');
+      return;
+    }
 
-  if (!cardInstanceRef.current || !stripeInstanceRef.current) {
-    setError('Payment elements not ready. Please wait.');
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    const stripe = stripeInstanceRef.current;
-    const cardElement = cardInstanceRef.current;
-    console.log('Creating payment method with card element:', cardElement);
-
-    const { paymentMethod, error: paymentMethodError } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
-      billing_details: { address: { country: 'US', postal_code: '90210' } },
-    });
-
-    if (paymentMethodError) throw new Error(paymentMethodError.message);
-
-    console.log('Payment intent before confirmation:', paymentIntent);
     if (!paymentIntent || !paymentIntent.clientSecret) {
-      throw new Error('Payment intent not available. Please try again.');
+      setError('Payment intent not available. Retrying...');
+      fetchPaymentIntent();
+      return;
     }
 
-    // Extract the PaymentIntent ID from the clientSecret (split by '_secret_')
-    const paymentIntentId = paymentIntent.clientSecret.split('_secret_')[0];
-    console.log('Extracted PaymentIntent ID:', paymentIntentId);
+    setIsLoading(true);
+    try {
+      const stripe = stripeInstanceRef.current;
+      const cardElement = cardInstanceRef.current;
+      console.log('Creating payment method with card element:', cardElement);
 
-    const paymentResponse = await confirmPayment(finalToken, {
-      paymentIntentId: paymentIntentId, // Use the extracted ID
-      paymentMethodId: paymentMethod.id,
-    });
+      const { paymentMethod, error: paymentMethodError } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: { address: { country: 'US', postal_code: '90210' } },
+      });
 
-    if (paymentResponse.message === 'Payment confirmed') {
-      onContinue();
-    } else {
-      setError('Payment failed. Please try again.');
+      if (paymentMethodError) {
+        throw new Error(paymentMethodError.message);
+      }
+
+      console.log('Payment intent before confirmation:', paymentIntent);
+      if (!paymentIntent.clientSecret) {
+        throw new Error('Payment intent not available. Please try again.');
+      }
+
+      // Confirm payment with the backend
+      const paymentResponse = await confirmPayment(finalToken, {
+        paymentIntentId: paymentIntent.clientSecret.split('_secret_')[0],
+        paymentMethodId: paymentMethod.id,
+      });
+
+      if (paymentResponse.message === 'Payment confirmed') {
+        console.log('Payment confirmed successfully:', paymentResponse);
+        onContinue(); // Proceed to the next step
+      } else if (paymentResponse.requiresAction) {
+        // Handle 3D Secure or other actions
+        const { error: confirmError } = await stripe.confirmCardPayment(paymentIntent.clientSecret, {
+          payment_method: paymentMethod.id,
+        });
+
+        if (confirmError) {
+          throw new Error(confirmError.message);
+        }
+
+        // After 3D Secure, confirm again with the backend
+        const secondConfirmation = await confirmPayment(finalToken, {
+          paymentIntentId: paymentIntent.clientSecret.split('_secret_')[0],
+          paymentMethodId: paymentMethod.id,
+        });
+
+        if (secondConfirmation.message === 'Payment confirmed') {
+          console.log('Payment confirmed after 3D Secure:', secondConfirmation);
+          onContinue();
+        } else {
+          throw new Error('Payment failed after authentication.');
+        }
+      } else {
+        throw new Error('Payment failed. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'Payment submission failed');
+      console.error('Payment submission error:', err);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (err) {
-    setError(err.message || 'Payment submission failed');
-    console.error('Payment submission error:', {
-      message: err.message,
-      stack: err.stack,
-      code: err.code,
-      param: err.param,
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   return (
     <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
@@ -147,55 +187,51 @@ const handleSubmit = async (event) => {
           <X className="w-6 h-6" />
         </button>
         
-        <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Credit Card</h2>
+        <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Credit Card Payment</h2>
         
         <p className="text-center text-gray-600 mb-8">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          Enter your credit card details to complete your payment securely.
         </p>
-        
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div ref={cardElementRef} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"></div>
-          
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-700 text-sm">Country</label>
-            <select 
-              defaultValue="US"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
-            >
-              <option value="US">United States (US)</option>
-              <option value="CA">Canada (CA)</option>
-              <option value="GB">United Kingdom (GB)</option>
-            </select>
-          </div>
-          
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-700 text-sm">ZIP</label>
-            <input 
-              type="text" 
-              placeholder="ZIP" 
-              defaultValue="90210"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
-            />
-          </div>
-          
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          
-          <div className="flex justify-between gap-4 mt-4">
-            <button
-              onClick={onClose}
-              className="w-full py-3 bg-white text-[#0B0757] rounded-full border border-[#0B0757] font-medium text-base hover:bg-gray-100"
-            >
-              Back
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 bg-[#0B0757] text-white rounded-full font-medium text-base hover:bg-[#1a237e] disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Processing...' : 'Continue'}
-            </button>
-          </div>
-        </form>
+
+        <div ref={cardElementRef} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]" />
+        <div className="flex flex-col gap-2 mt-4">
+          <label className="text-gray-700 text-sm">Country</label>
+          <select 
+            defaultValue="US"
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
+          >
+            <option value="US">United States (US)</option>
+            <option value="CA">Canada (CA)</option>
+            <option value="GB">United Kingdom (GB)</option>
+          </select>
+        </div>
+        <div className="flex flex-col gap-2 mt-4">
+          <label className="text-gray-700 text-sm">ZIP</label>
+          <input 
+            type="text" 
+            placeholder="ZIP" 
+            defaultValue="90210"
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
+          />
+        </div>
+
+        {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
+
+        <div className="flex justify-between gap-4 mt-4">
+          <button
+            onClick={onClose}
+            className="w-full py-3 bg-white text-[#0B0757] rounded-full border border-[#0B0757] font-medium text-base hover:bg-gray-100"
+          >
+            Back
+          </button>
+          <button
+            onClick={handleCreditCard}
+            disabled={isLoading}
+            className="w-full py-3 bg-[#0B0757] text-white rounded-full font-medium text-base hover:bg-[#1a237e] disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Processing...' : 'Continue'}
+          </button>
+        </div>
       </div>
     </div>
   );

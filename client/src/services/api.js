@@ -1,258 +1,206 @@
 // client/src/services/api.js
+import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/api';
 
+const api = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export const setAuthToken = (token) => {
+  if (token) {
+    api.defaults.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.Authorization;
+  }
+};
+
 export const signup = async (userData) => {
   try {
-    const response = await fetch(`${BASE_URL}/users/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Signup failed');
-    }
-    return response.json();
+    const response = await api.post('/users/signup', userData);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during signup');
+    console.error('Signup error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Signup failed');
   }
 };
 
 export const login = async (credentials) => {
   try {
-    const response = await fetch(`${BASE_URL}/users/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
-    if (!response.ok) throw new Error('Login failed');
-    return response.json();
+    const response = await api.post('/users/login', credentials);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during login');
+    console.error('Login error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Login failed');
   }
 };
 
-export const updateProfile = async (profileData) => {
+export const updateProfile = async (token, profileData) => {
   try {
-    const response = await fetch(`${BASE_URL}/users/profile`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(profileData),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Profile update failed');
-    }
-    return response.json();
+    setAuthToken(token);
+    const response = await api.put('/users/profile', profileData);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during profile update');
+    console.error('Update profile error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Profile update failed');
   }
 };
 
 export const editProfile = async (token, profileData) => {
   try {
-    const response = await fetch(`${BASE_URL}/users/profile`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(profileData),
-    });
-    if (!response.ok) throw new Error('Profile update failed');
-    return response.json();
+    setAuthToken(token);
+    const response = await api.put('/users/profile', profileData);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during profile update');
+    console.error('Edit profile error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Profile update failed');
   }
 };
 
 export const getDoctors = async (filters) => {
   try {
     const query = new URLSearchParams(filters).toString();
-    const response = await fetch(`${BASE_URL}/doctors?${query}`);
-    if (!response.ok) throw new Error('Failed to fetch doctors');
-    return response.json();
+    const response = await api.get(`/doctors?${query}`);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error while fetching doctors');
+    console.error('Get doctors error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to fetch doctors');
   }
 };
 
 // Doctor Endpoints
 export const doctorSignup = async (doctorData) => {
   try {
-    const response = await fetch(`${BASE_URL}/doctors/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(doctorData),
-    });
-    if (!response.ok) throw new Error('Doctor signup failed');
-    return response.json();
+    const response = await api.post('/doctors/signup', doctorData);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during doctor signup');
+    console.error('Doctor signup error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Doctor signup failed');
   }
 };
 
 export const doctorLogin = async (credentials) => {
   try {
-    const response = await fetch(`${BASE_URL}/doctors/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
-    if (!response.ok) throw new Error('Doctor login failed');
-    return response.json();
+    const response = await api.post('/doctors/login', credentials);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during doctor login');
+    console.error('Doctor login error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Doctor login failed');
   }
 };
 
 export const updateDoctorProfile = async (token, profileData) => {
   try {
-    const response = await fetch(`${BASE_URL}/doctors/profile`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(profileData),
-    });
-    if (!response.ok) throw new Error('Doctor profile update failed');
-    return response.json();
+    setAuthToken(token);
+    const response = await api.put('/doctors/profile', profileData);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during doctor profile update');
+    console.error('Update doctor profile error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Doctor profile update failed');
   }
 };
 
 export const getDoctorProfile = async (token) => {
   try {
-    const response = await fetch(`${BASE_URL}/doctors/profile`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (!response.ok) throw new Error('Failed to fetch doctor profile');
-    return response.json();
+    setAuthToken(token);
+    const response = await api.get('/doctors/profile');
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error while fetching doctor profile');
+    console.error('Get doctor profile error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to fetch doctor profile');
   }
 };
 
 // Admin Endpoints
 export const adminSignup = async (adminData) => {
   try {
-    const response = await fetch(`${BASE_URL}/admins/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(adminData),
-    });
-    if (!response.ok) throw new Error('Admin signup failed');
-    return response.json();
+    const response = await api.post('/admins/signup', adminData);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during admin signup');
+    console.error('Admin signup error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Admin signup failed');
   }
 };
 
 export const adminLogin = async (credentials) => {
   try {
-    const response = await fetch(`${BASE_URL}/admins/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
-    if (!response.ok) throw new Error('Admin login failed');
-    return response.json();
+    const response = await api.post('/admins/login', credentials);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during admin login');
+    console.error('Admin login error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Admin login failed');
   }
 };
 
 export const updateDoctorApproval = async (token, approvalData) => {
   try {
-    const response = await fetch(`${BASE_URL}/admins/doctors/approve`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(approvalData),
-    });
-    if (!response.ok) throw new Error('Doctor approval update failed');
-    return response.json();
+    setAuthToken(token);
+    const response = await api.put('/admins/doctors/approve', approvalData);
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error during doctor approval update');
+    console.error('Update doctor approval error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Doctor approval update failed');
   }
 };
 
 export const getAllDoctors = async (token) => {
   try {
-    const response = await fetch(`${BASE_URL}/admins/doctors`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (!response.ok) throw new Error('Failed to fetch all doctors');
-    return response.json();
+    setAuthToken(token);
+    const response = await api.get('/admins/doctors');
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error while fetching all doctors');
+    console.error('Get all doctors error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to fetch all doctors');
   }
 };
 
 // Payment Endpoints
 export const createPaymentIntent = async (token, paymentData) => {
   try {
-    const response = await fetch(`${BASE_URL}/payments/create-payment-intent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(paymentData),
-    });
-    if (!response.ok) throw new Error('Payment intent creation failed');
-    const data = await response.json();
-    console.log('API response for createPaymentIntent:', data); // Debug the response
-    return data;
+    setAuthToken(token);
+    console.log('Sending createPaymentIntent request:', { token: token.substring(0, 10) + '...', paymentData });
+    const response = await api.post('/payments/create-payment-intent', paymentData);
+    console.log('API response for createPaymentIntent:', response.data);
+    return response.data;
   } catch (error) {
-    console.error('Error in createPaymentIntent:', error);
-    throw new Error(error.message || 'Server error during payment intent creation');
+    console.error('Error in createPaymentIntent:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    throw new Error(error.response?.data?.message || 'Payment intent creation failed');
   }
 };
 
 export const confirmPayment = async (token, paymentData) => {
   try {
-    const response = await fetch(`${BASE_URL}/payments/confirm-payment`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        paymentIntentId: paymentData.paymentIntentId,
-        paymentMethodId: paymentData.paymentMethodId,
-      }),
-    });
-    const responseData = await response.json(); // Capture response data
-    console.log('Confirm Payment Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      data: responseData,
-    });
-    if (!response.ok) throw new Error(`Payment confirmation failed with status ${response.status}: ${responseData.message || 'Unknown error'}`);
-    return responseData;
+    setAuthToken(token);
+    console.log('Sending confirmPayment request:', { token: token.substring(0, 10) + '...', paymentData });
+    const response = await api.post('/payments/confirm-payment', paymentData);
+    console.log('Confirm Payment Response:', response.data);
+    return response.data;
   } catch (error) {
-    console.error('Error in confirmPayment:', error);
-    throw new Error(error.message || 'Server error during payment confirmation');
+    console.error('Error in confirmPayment:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    throw new Error(error.response?.data?.message || 'Payment confirmation failed');
   }
 };
 
 export const getTransactions = async (token) => {
   try {
-    const response = await fetch(`${BASE_URL}/payments/transactions`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (!response.ok) throw new Error('Failed to fetch transactions');
-    return response.json();
+    setAuthToken(token);
+    const response = await api.get('/payments/transactions');
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Server error while fetching transactions');
+    console.error('Get transactions error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to fetch transactions');
   }
 };
+
+export default api;
