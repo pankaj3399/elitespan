@@ -43,15 +43,10 @@ app.get('/', (req, res) => {
   res.send('Backend API is running on Vercel');
 });
 
-// Define PORT from environment variable or default to 3000
 const PORT = process.env.PORT || 3000;
-
-// // For local development: Start the server (comment or remove this for Vercel deployment)
-if (process.env.NODE_ENV !== 'production') {
-   app.listen(PORT, () => {
-     console.log(`Server running on port ${PORT}`);
-   });
-}
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 // Export the Express app for Vercel (serverless deployment)
 module.exports = app;
