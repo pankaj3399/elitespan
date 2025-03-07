@@ -49,6 +49,7 @@ export const updateProfile = async (profileData) => {
     throw new Error(error.message || 'Server error during profile update');
   }
 };
+
 export const editProfile = async (token, profileData) => {
   try {
     const response = await fetch(`${BASE_URL}/users/profile`, {
@@ -77,7 +78,7 @@ export const getDoctors = async (filters) => {
   }
 };
 
-// Doctor Endpoints 
+// Doctor Endpoints
 export const doctorSignup = async (doctorData) => {
   try {
     const response = await fetch(`${BASE_URL}/doctors/signup`, {
@@ -127,9 +128,7 @@ export const getDoctorProfile = async (token) => {
   try {
     const response = await fetch(`${BASE_URL}/doctors/profile`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!response.ok) throw new Error('Failed to fetch doctor profile');
     return response.json();
@@ -138,7 +137,7 @@ export const getDoctorProfile = async (token) => {
   }
 };
 
-// Admin Endpoints 
+// Admin Endpoints
 export const adminSignup = async (adminData) => {
   try {
     const response = await fetch(`${BASE_URL}/admins/signup`, {
@@ -188,9 +187,7 @@ export const getAllDoctors = async (token) => {
   try {
     const response = await fetch(`${BASE_URL}/admins/doctors`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!response.ok) throw new Error('Failed to fetch all doctors');
     return response.json();
@@ -211,8 +208,11 @@ export const createPaymentIntent = async (token, paymentData) => {
       body: JSON.stringify(paymentData),
     });
     if (!response.ok) throw new Error('Payment intent creation failed');
-    return response.json();
+    const data = await response.json();
+    console.log('API response for createPaymentIntent:', data); // Debug the response
+    return data;
   } catch (error) {
+    console.error('Error in createPaymentIntent:', error);
     throw new Error(error.message || 'Server error during payment intent creation');
   }
 };
@@ -227,12 +227,19 @@ export const confirmPayment = async (token, paymentData) => {
       },
       body: JSON.stringify({
         paymentIntentId: paymentData.paymentIntentId,
-        paymentTokenId: paymentData.paymentTokenId, // Updated to use paymentTokenId for token-based payments
+        paymentMethodId: paymentData.paymentMethodId,
       }),
     });
-    if (!response.ok) throw new Error('Payment confirmation failed');
-    return response.json();
+    const responseData = await response.json(); // Capture response data
+    console.log('Confirm Payment Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: responseData,
+    });
+    if (!response.ok) throw new Error(`Payment confirmation failed with status ${response.status}: ${responseData.message || 'Unknown error'}`);
+    return responseData;
   } catch (error) {
+    console.error('Error in confirmPayment:', error);
     throw new Error(error.message || 'Server error during payment confirmation');
   }
 };
@@ -241,9 +248,7 @@ export const getTransactions = async (token) => {
   try {
     const response = await fetch(`${BASE_URL}/payments/transactions`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!response.ok) throw new Error('Failed to fetch transactions');
     return response.json();

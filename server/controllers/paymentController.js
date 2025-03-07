@@ -3,7 +3,8 @@
 const Stripe = require('stripe');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
-const Analytics = require('../models/Analytics'); // For tracking analytics
+const Analytics = require('../models/Analytics');
+const Doctor = require('../models/Doctor');
 require('dotenv').config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -30,7 +31,7 @@ exports.createPaymentIntent = async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: 'usd',
-      payment_method_types: ['card'], // Explicitly specify card as the payment method type
+      payment_method_types: ['card', , 'apple_pay'], 
       metadata: {
         userId: userId || req.user.id || 'anonymous', // Use anonymous if no user
         doctorId,
@@ -55,23 +56,22 @@ exports.createPaymentIntent = async (req, res) => {
 
 // Confirm Payment and Store Transaction
 exports.confirmPayment = async (req, res) => {
-  const { paymentIntentId, paymentTokenId } = req.body; // Updated to accept paymentTokenId
+  const { paymentIntentId, paymentMethodId } = req.body;
+  console.log('Confirming payment with:', { paymentIntentId, paymentMethodId });
 
   try {
-    // Use the payment token to confirm the payment intent
     const paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId, {
-      payment_method_data: {
-        type: 'card',
-        card: { token: paymentTokenId }, // Use the token from stripe.createToken
-      },
+      payment_method: paymentMethodId,
     });
+
+    console.log('Payment intent confirmed:', paymentIntent);
 
     if (paymentIntent.status === 'succeeded') {
       const { amount, currency, metadata } = paymentIntent;
       const transaction = new Transaction({
-        userId: metadata.userId === 'anonymous' ? null : metadata.userId, // Use null for anonymous, link to user later
+        userId: metadata.userId === 'anonymous' ? null : metadata.userId,
         doctorId: metadata.doctorId || null,
-        amount: amount / 100, // Convert back to dollars
+        amount: amount / 100,
         currency,
         stripePaymentId: paymentIntent.id,
         status: 'succeeded',
@@ -79,17 +79,15 @@ exports.confirmPayment = async (req, res) => {
 
       await transaction.save();
 
-      // Update user's premium status only after successful payment
       if (metadata.userId && metadata.userId !== 'anonymous') {
         await User.findByIdAndUpdate(metadata.userId, {
           $set: {
             isPremium: true,
-            premiumExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days premium
+            premiumExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           },
         });
       }
 
-      // Update analytics
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       let analytics = await Analytics.findOne({ date: today });
@@ -99,13 +97,12 @@ exports.confirmPayment = async (req, res) => {
       analytics.transactions.total += 1;
       analytics.transactions.revenue += amount / 100;
       analytics.usersRegistered = await User.countDocuments();
-      analytics.doctorsRegistered = await Doctor.countDocuments();
+      analytics.doctorsRegistered = await Doctor.countDocuments(); // Now works with the import
       analytics.doctorsApproved = await Doctor.countDocuments({ isApproved: true });
       await analytics.save();
 
       res.json({ message: 'Payment confirmed', transaction });
     } else if (paymentIntent.status === 'requires_action') {
-      // Handle 3D Secure for cards
       res.json({
         requiresAction: true,
         redirectUrl: paymentIntent.next_action?.redirect_to_url?.url || 'Action required',
@@ -119,12 +116,11 @@ exports.confirmPayment = async (req, res) => {
       stack: error.stack,
       code: error.code,
       param: error.param,
-      raw: error.raw, // Raw Stripe error for more detail
+      raw: error.raw,
     });
     res.status(500).json({ message: 'Payment confirmation failed', error: error.message });
   }
 };
-
 // Get Transactions for Admin (Revenue Tracking)
 exports.getTransactions = async (req, res) => {
   try {

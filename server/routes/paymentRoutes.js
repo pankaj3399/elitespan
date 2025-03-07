@@ -14,6 +14,7 @@ router.post('/create-payment-intent', auth, [
 
 router.post('/confirm-payment', auth, [
   check('paymentIntentId').not().isEmpty().withMessage('Payment Intent ID is required'),
+  check('paymentMethodId').not().isEmpty().withMessage('Payment Method ID is required'), // Updated from paymentTokenId
 ], confirmPayment);
 
 router.get('/transactions', authAdmin, getTransactions);
