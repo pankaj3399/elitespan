@@ -1,3 +1,4 @@
+// backend/server.js
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
@@ -14,9 +15,14 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(express.json());
+// Middleware to log incoming requests (simplified)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  // Remove detailed headers and body logging to reduce verbosity
+  next();
+});
 
+app.use(express.json());
 
 app.use(cors({
   origin: '*',
@@ -34,9 +40,6 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin-panel', adminPanelRoutes);
-
-// // Start cron job
-// require('./utils/cron');
 
 // Default route for testing
 app.get('/', (req, res) => {

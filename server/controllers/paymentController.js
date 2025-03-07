@@ -1,5 +1,4 @@
 // backend/controllers/paymentController.js
-
 const Stripe = require('stripe');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
@@ -8,54 +7,85 @@ const Doctor = require('../models/Doctor');
 require('dotenv').config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-04-10', // Use the latest Stripe API version
+  apiVersion: '2024-04-10',
 });
 
 // Create Payment Intent
 exports.createPaymentIntent = async (req, res) => {
+  console.log('Starting createPaymentIntent...');
   const { amount, userId, doctorId } = req.body;
-  console.log('Creating payment intent for:', { amount, userId, doctorId, token: req.user });
+  console.log('Received request body:', req.body);
+  console.log('Auth token (req.user):', req.user);
 
   try {
+    // Check if req.user is defined (from auth middleware)
+    if (!req.user) {
+      console.error('req.user is undefined - Authentication middleware failed');
+      return res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+    }
+
+    // Check Stripe secret key
     if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('Stripe secret key is missing. Please set STRIPE_SECRET_KEY in .env');
+      console.error('STRIPE_SECRET_KEY is not set in environment variables');
+      return res.status(500).json({ message: 'Stripe secret key is missing. Please set STRIPE_SECRET_KEY in .env' });
     }
 
     // Validate amount
     if (!amount || amount <= 0) {
+      console.log('Validation failed: Amount must be greater than 0');
       return res.status(400).json({ message: 'Amount must be greater than 0' });
     }
 
-    console.log('Stripe secret key:', process.env.STRIPE_SECRET_KEY.substring(0, 8) + '...'); // Log part of the key for debugging
+    console.log('Stripe secret key (partial):', process.env.STRIPE_SECRET_KEY?.substring(0, 8) + '...');
 
+    // Test Stripe connection
+    try {
+      await stripe.paymentIntents.list({ limit: 1 });
+      console.log('Stripe connection successful');
+    } catch (stripeError) {
+      console.error('Stripe connection failed:', {
+        message: stripeError.message,
+        stack: stripeError.stack,
+        code: stripeError.code,
+        raw: stripeError.raw,
+      });
+      return res.status(500).json({ message: 'Failed to connect to Stripe', error: stripeError.message });
+    }
+
+    // Create Payment Intent
+    console.log('Creating Stripe payment intent...');
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: 'usd',
-      payment_method_types: ['card', , 'apple_pay'], 
+      payment_method_types: ['card'], // Remove 'apple_pay'
       metadata: {
-        userId: userId || req.user.id || 'anonymous', // Use anonymous if no user
+        userId: userId || req.user?.id || 'anonymous',
         doctorId,
       },
     });
 
+    console.log('Created payment intent:', paymentIntent);
     res.json({
       clientSecret: paymentIntent.client_secret,
       paymentMethodTypes: paymentIntent.payment_method_types,
     });
   } catch (error) {
-    console.error('Stripe error details:', {
+    console.error('Error in createPaymentIntent:', {
       message: error.message,
       stack: error.stack,
       code: error.code,
       param: error.param,
-      raw: error.raw, // Raw Stripe error for more detail
+      raw: error.raw,
+      httpStatus: error.statusCode,
     });
-    res.status(500).json({ message: 'Payment intent creation failed', error: error.message });
+    // Pass the Stripe error status code (e.g., 400) to the frontend
+    res.status(error.statusCode || 500).json({ message: 'Payment intent creation failed', error: error.message });
   }
 };
 
 // Confirm Payment and Store Transaction
 exports.confirmPayment = async (req, res) => {
+  console.log('Starting confirmPayment...');
   const { paymentIntentId, paymentMethodId } = req.body;
   console.log('Confirming payment with:', { paymentIntentId, paymentMethodId });
 
@@ -97,7 +127,7 @@ exports.confirmPayment = async (req, res) => {
       analytics.transactions.total += 1;
       analytics.transactions.revenue += amount / 100;
       analytics.usersRegistered = await User.countDocuments();
-      analytics.doctorsRegistered = await Doctor.countDocuments(); // Now works with the import
+      analytics.doctorsRegistered = await Doctor.countDocuments();
       analytics.doctorsApproved = await Doctor.countDocuments({ isApproved: true });
       await analytics.save();
 
@@ -118,13 +148,15 @@ exports.confirmPayment = async (req, res) => {
       param: error.param,
       raw: error.raw,
     });
-    res.status(500).json({ message: 'Payment confirmation failed', error: error.message });
+    res.status(error.statusCode || 500).json({ message: 'Payment confirmation failed', error: error.message });
   }
 };
+
 // Get Transactions for Admin (Revenue Tracking)
 exports.getTransactions = async (req, res) => {
+  console.log('Starting getTransactions...');
   try {
-    const { startDate, endDate, status, paymentMethod } = req.query; // Added paymentMethod filter
+    const { startDate, endDate, status, paymentMethod } = req.query;
     let query = {};
 
     if (startDate || endDate) {
@@ -133,7 +165,7 @@ exports.getTransactions = async (req, res) => {
       if (endDate) query.createdAt.$lte = new Date(endDate);
     }
     if (status) query.status = status;
-    if (paymentMethod) query.paymentMethod = paymentMethod; // Mock payment method tracking (optional)
+    if (paymentMethod) query.paymentMethod = paymentMethod;
 
     const transactions = await Transaction.find(query)
       .populate('userId', 'name email')
@@ -149,8 +181,8 @@ exports.getTransactions = async (req, res) => {
       stack: error.stack,
       code: error.code,
       param: error.param,
-      raw: error.raw, // Raw Stripe error for more detail
+      raw: error.raw,
     });
-    res.status(500).json({ message: 'Failed to fetch transactions', error: error.message });
+    res.status(error.statusCode || 500).json({ message: 'Failed to fetch transactions', error: error.message });
   }
 };
