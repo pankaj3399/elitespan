@@ -14,7 +14,7 @@ const waitlistSchema = new mongoose.Schema({
   },
   sent: {
     type: Boolean,
-    default: false, // Tracks if email was sent in the daily summary
+    default: false, 
   },
 });
 
