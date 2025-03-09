@@ -1,9 +1,10 @@
-// client/src/components/CreditCardForm.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { createPaymentIntent, confirmPayment } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-toastify'; // Added for toast notification
+import 'react-toastify/dist/ReactToastify.css'; // Ensure toast styles are imported
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -143,6 +144,14 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
 
       if (paymentResponse.message === 'Payment confirmed') {
         console.log('Payment confirmed successfully:', paymentResponse);
+        toast.success('Payment Successful, you can log in', { // Added toast notification
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         onContinue(); // Proceed to the next step
       } else if (paymentResponse.requiresAction) {
         // Handle 3D Secure or other actions
@@ -162,6 +171,14 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
 
         if (secondConfirmation.message === 'Payment confirmed') {
           console.log('Payment confirmed after 3D Secure:', secondConfirmation);
+          toast.success('Payment Successful, you can log in', { // Added toast notification
+            position: 'top-right',
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
           onContinue();
         } else {
           throw new Error('Payment failed after authentication.');
