@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
-import logo from "../../assets/logo.png";
-import MembershipModal from '../MembershipModal'; // Reintroduced
-import ContactInfoForm from '../ContactInfoForm'; // New first step after membership
-import PaymentMethodModal from '../PaymentMethodModal'; // New component
-import CreditCardForm from '../CreditCardForm'; // Added import
-import PayPalForm from '../PayPalForm'; // Added import
-import ApplePayForm from '../ApplePayForm'; // Added import
-import { useAuth } from '../../contexts/AuthContext'; // Import from AuthContext
-import { login, signup } from '../../services/api'; // Import login and signup functions
+import { Menu, X, LogIn } from 'lucide-react';
+import logo from '../../assets/logo.png';
+import MembershipModal from '../MembershipModal';
+import ContactInfoForm from '../ContactInfoForm';
+import PaymentMethodModal from '../PaymentMethodModal';
+import CreditCardForm from '../CreditCardForm';
+import PayPalForm from '../PayPalForm';
+import ApplePayForm from '../ApplePayForm';
+import { useAuth } from '../../contexts/AuthContext';
+import { login, signup } from '../../services/api';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [modalStep, setModalStep] = useState(null); // Track modal steps: 'membership', 'contactInfo', 'paymentMethod', 'paymentForm'
-  const { token, setToken } = useAuth(); // Use imported useAuth hook
+  const [modalStep, setModalStep] = useState(null);
+  const { token, setToken, user, setUser } = useAuth(); // Destructure setUser, which might be undefined
   const [loginError, setLoginError] = useState('');
   const [loginCredentials, setLoginCredentials] = useState({ email: '', password: '' });
 
   const handleJoinClick = () => {
-    setModalStep('membership'); // Start with membership modal
+    setModalStep('membership');
   };
 
   const handleLoginClick = () => {
@@ -38,7 +38,7 @@ const Navbar = () => {
 
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
-    setLoginCredentials(prev => ({ ...prev, [name]: value }));
+    setLoginCredentials((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleLoginSubmit = async (e) => {
@@ -47,16 +47,39 @@ const Navbar = () => {
 
     try {
       const response = await login({ email, password });
-      setToken(response.token); // Store token in context and localStorage
+      setToken(response.token); // Store token from API response
+      // Check if setUser is a function before calling it
+      if (typeof setUser === 'function') {
+        setUser({ id: response.userId, email }); // Adjust based on API response structure
+      } else {
+        // Fallback: Update user state manually in localStorage and context if setUser is missing
+        const newUser = { id: response.userId, email };
+        localStorage.setItem('user', JSON.stringify(newUser));
+        // If useAuth doesn't provide setUser, you might need to update the context manually
+        // This is a temporary workaround; ideally, fix AuthContext
+        console.warn('setUser is not a function, updating user in localStorage only');
+      }
+      localStorage.setItem('token', response.token);
       closeModals();
       alert('Logged in successfully!');
     } catch (error) {
-      if (error.message === 'Login failed') {
-        setLoginError(`'Invalid credentials. If you're new, please join Elite Healthspan.'`);
-      } else {
-        setLoginError('Server error during login. Please try again.');
-      }
+      setLoginError(
+        error.message === 'Login failed' || error.message.includes('Invalid')
+          ? 'Invalid credentials. If you\'re new, please join Elite Healthspan.'
+          : 'Server error during login. Please try again.'
+      );
+      console.error('Login error:', error);
     }
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    if (typeof setUser === 'function') {
+      setUser(null);
+    } else {
+      localStorage.removeItem('user');
+    }
+    localStorage.removeItem('token');
   };
 
   return (
@@ -69,16 +92,22 @@ const Navbar = () => {
         <a href="#how" className="text-[#64748B] hover:text-[#0B0757] font-medium">Our Approach</a>
         <a href="#about" className="text-[#64748B] hover:text-[#0B0757] font-medium">About Elite</a>
         <a href="#faq" className="text-[#64748B] hover:text-[#0B0757] font-medium">FAQ</a>
-        <a 
-          href="#login" 
-          onClick={(e) => {
-            e.preventDefault();
-            handleLoginClick();
-          }} 
-          className="text-[#64748B] hover:text-[#0B0757] font-medium cursor-pointer"
-        >
-          Login
-        </a>
+        {token ? (
+          <button onClick={handleLogout} className="text-[#64748B] hover:text-[#0B0757] font-medium">
+            Logout
+          </button>
+        ) : (
+          <a
+            href="#login"
+            onClick={(e) => {
+              e.preventDefault();
+              handleLoginClick();
+            }}
+            className="text-[#64748B] hover:text-[#0B0757] font-medium flex items-center"
+          >
+            <LogIn className="w-4 h-4 mr-1" /> Login
+          </a>
+        )}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -103,17 +132,23 @@ const Navbar = () => {
           <a href="#how" className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">Our Approach</a>
           <a href="#about" className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">About Elite</a>
           <a href="#faq" className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">FAQ</a>
-          <a 
-            href="#login" 
-            onClick={(e) => {
-              e.preventDefault();
-              handleLoginClick();
-              setIsOpen(false);
-            }} 
-            className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium"
-          >
-            Login
-          </a>
+          {token ? (
+            <button onClick={handleLogout} className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">
+              Logout
+            </button>
+          ) : (
+            <a
+              href="#login"
+              onClick={(e) => {
+                e.preventDefault();
+                handleLoginClick();
+                setIsOpen(false);
+              }}
+              className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium flex items-center"
+            >
+              <LogIn className="w-4 h-4 mr-1" /> Login
+            </a>
+          )}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -130,54 +165,54 @@ const Navbar = () => {
 
       {/* Modals */}
       {modalStep === 'membership' && (
-        <MembershipModal 
-          onClose={closeModals} 
-          onContinue={() => handleContinue('contactInfo')} // Proceed to contact info after membership
+        <MembershipModal
+          onClose={closeModals}
+          onContinue={() => handleContinue('contactInfo')}
         />
       )}
       {modalStep === 'contactInfo' && (
-        <ContactInfoForm 
-          onClose={closeModals} 
-          onContinue={(userId) => handleContinue('paymentMethod')} // Pass userId after signup
-          userId={null} // Start with no userId, create one in ContactInfoForm
+        <ContactInfoForm
+          onClose={closeModals}
+          onContinue={(userId) => handleContinue('paymentMethod')}
+          userId={user ? user.id : null}
         />
       )}
       {modalStep === 'paymentMethod' && (
-        <PaymentMethodModal 
-          onClose={closeModals} 
-          onContinue={(paymentMethod) => handleContinue(`paymentForm_${paymentMethod}`)} 
-          userId={token ? JSON.parse(atob(token.split('.')[1])).id : null} // Use userId from contact info
+        <PaymentMethodModal
+          onClose={closeModals}
+          onContinue={(paymentMethod) => handleContinue(`paymentForm_${paymentMethod}`)}
+          userId={user ? user.id : null}
         />
       )}
       {modalStep === 'paymentForm_creditCard' && (
-        <CreditCardForm 
-          onClose={closeModals} 
-          onContinue={closeModals} // Payment completes signup, close modal
-          userId={token ? JSON.parse(atob(token.split('.')[1])).id : null} // Use userId from contact info
-          token={token} // Pass token for authenticated requests
+        <CreditCardForm
+          onClose={closeModals}
+          onContinue={closeModals}
+          userId={user ? user.id : null}
+          token={token}
         />
       )}
       {modalStep === 'paymentForm_payPal' && (
-        <PayPalForm 
-          onClose={closeModals} 
-          onContinue={closeModals} // Payment completes signup, close modal
-          userId={token ? JSON.parse(atob(token.split('.')[1])).id : null} 
-          token={token} // Pass token for authenticated requests
+        <PayPalForm
+          onClose={closeModals}
+          onContinue={closeModals}
+          userId={user ? user.id : null}
+          token={token}
         />
       )}
       {modalStep === 'paymentForm_applePay' && (
-        <ApplePayForm 
-          onClose={closeModals} 
-          onContinue={closeModals} // Payment completes signup, close modal
-          userId={token ? JSON.parse(atob(token.split('.')[1])).id : null} 
-          token={token} // Pass token for authenticated requests
+        <ApplePayForm
+          onClose={closeModals}
+          onContinue={closeModals}
+          userId={user ? user.id : null}
+          token={token}
         />
       )}
       {modalStep === 'login' && (
         <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-sm w-full mx-4">
-            <button 
-              onClick={closeModals} 
+            <button
+              onClick={closeModals}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
             >
               <X className="w-6 h-6" />
@@ -188,25 +223,27 @@ const Navbar = () => {
             <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-gray-700 text-sm">Email</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   name="email"
-                  placeholder="Email Address" 
+                  placeholder="Email Address"
                   value={loginCredentials.email}
                   onChange={handleLoginChange}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
+                  required
                 />
               </div>
               
               <div className="flex flex-col gap-2">
                 <label className="text-gray-700 text-sm">Password</label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   name="password"
-                  placeholder="Password" 
+                  placeholder="Password"
                   value={loginCredentials.password}
                   onChange={handleLoginChange}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
+                  required
                 />
               </div>
               
@@ -248,6 +285,6 @@ const Navbar = () => {
       )}
     </nav>
   );
-}; // Added this closing curly brace and semicolon
+};
 
 export default Navbar;
