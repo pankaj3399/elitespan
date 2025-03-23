@@ -6,15 +6,15 @@ import MembershipModal from '../MembershipModal';
 import ContactInfoForm from '../ContactInfoForm';
 import PaymentMethodModal from '../PaymentMethodModal';
 import CreditCardForm from '../CreditCardForm';
-import PayPalForm from '../PayPalForm';
-import ApplePayForm from '../ApplePayForm';
+// import PayPalForm from '../PayPalForm'; // Commented out
+// import ApplePayForm from '../ApplePayForm'; // Commented out
 import { useAuth } from '../../contexts/AuthContext';
 import { login, signup } from '../../services/api';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [modalStep, setModalStep] = useState(null);
-  const { token, setToken, user, setUser } = useAuth(); // Destructure setUser, which might be undefined
+  const { token, setToken, user, setUser } = useAuth();
   const [loginError, setLoginError] = useState('');
   const [loginCredentials, setLoginCredentials] = useState({ email: '', password: '' });
 
@@ -47,16 +47,12 @@ const Navbar = () => {
 
     try {
       const response = await login({ email, password });
-      setToken(response.token); // Store token from API response
-      // Check if setUser is a function before calling it
+      setToken(response.token);
       if (typeof setUser === 'function') {
-        setUser({ id: response.userId, email }); // Adjust based on API response structure
+        setUser({ id: response.userId, email });
       } else {
-        // Fallback: Update user state manually in localStorage and context if setUser is missing
         const newUser = { id: response.userId, email };
         localStorage.setItem('user', JSON.stringify(newUser));
-        // If useAuth doesn't provide setUser, you might need to update the context manually
-        // This is a temporary workaround; ideally, fix AuthContext
         console.warn('setUser is not a function, updating user in localStorage only');
       }
       localStorage.setItem('token', response.token);
@@ -192,22 +188,24 @@ const Navbar = () => {
           token={token}
         />
       )}
-      {modalStep === 'paymentForm_payPal' && (
+      {/* Commented out PayPal modal step */}
+      {/* {modalStep === 'paymentForm_payPal' && (
         <PayPalForm
           onClose={closeModals}
           onContinue={closeModals}
           userId={user ? user.id : null}
           token={token}
         />
-      )}
-      {modalStep === 'paymentForm_applePay' && (
+      )} */}
+      {/* Commented out Apple Pay modal step */}
+      {/* {modalStep === 'paymentForm_applePay' && (
         <ApplePayForm
           onClose={closeModals}
           onContinue={closeModals}
           userId={user ? user.id : null}
           token={token}
         />
-      )}
+      )} */}
       {modalStep === 'login' && (
         <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-sm w-full mx-4">

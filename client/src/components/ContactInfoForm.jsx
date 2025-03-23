@@ -123,7 +123,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
         <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Contact Information</h2>
         
         <p className="text-center text-gray-600 mb-8">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          Please provide your contact details to join Elite Healthspan. This information will help us personalize your experience and connect you with our network of providers.
         </p>
         
         <div className="form-container" style={formContainerStyle}>

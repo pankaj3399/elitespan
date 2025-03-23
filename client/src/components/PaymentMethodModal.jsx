@@ -19,7 +19,7 @@ const PaymentMethodModal = ({ onClose, onContinue, userId }) => {
         <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Choose Payment Method</h2>
         
         <p className="text-center text-gray-600 mb-8">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          Select a payment method to proceed with your annual membership payment of $119.88.
         </p>
         
         <div className="flex flex-col gap-4 mb-8">
@@ -32,7 +32,8 @@ const PaymentMethodModal = ({ onClose, onContinue, userId }) => {
             </span>
             <span className="text-[#0B0757]">➔</span>
           </button>
-          <button
+          {/* Commented out PayPal option */}
+          {/* <button
             onClick={() => handlePaymentMethodSelect('payPal')}
             className="w-full py-3 bg-white text-[#0B0757] border border-gray-200 rounded-lg flex items-center justify-between hover:bg-gray-50"
           >
@@ -40,8 +41,9 @@ const PaymentMethodModal = ({ onClose, onContinue, userId }) => {
               <span className="text-2xl">💸</span> PayPal
             </span>
             <span className="text-[#0B0757]">➔</span>
-          </button>
-          <button
+          </button> */}
+          {/* Commented out Apple Pay option */}
+          {/* <button
             onClick={() => handlePaymentMethodSelect('applePay')}
             className="w-full py-3 bg-white text-[#0B0757] border border-gray-200 rounded-lg flex items-center justify-between hover:bg-gray-50"
           >
@@ -49,7 +51,7 @@ const PaymentMethodModal = ({ onClose, onContinue, userId }) => {
               <span className="text-2xl">🍏</span> Apple Pay
             </span>
             <span className="text-[#0B0757]">➔</span>
-          </button>
+          </button> */}
         </div>
         
         <div className="flex justify-between gap-4">

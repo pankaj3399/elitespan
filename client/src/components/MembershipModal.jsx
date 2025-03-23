@@ -1,5 +1,3 @@
-// client/src/components/MembershipModal.jsx
-
 import React from 'react';
 import { X } from 'lucide-react';
 import logo from '../assets/logo.png';
@@ -22,11 +20,11 @@ const MembershipModal = ({ onClose, onContinue }) => {
         </div>
         
         <h2 className="text-center text-2xl font-semibold text-[#0B0757] mb-4">
-          What You Get/Membership
+          What You Get with Your Membership
         </h2>
         
         <p className="text-center text-gray-600 mb-8">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          Join Elite Healthspan to unlock exclusive access to our network and resources, designed to enhance your wellness journey.
         </p>
         
         <div className="flex flex-col gap-4 mb-8">
@@ -45,9 +43,9 @@ const MembershipModal = ({ onClose, onContinue }) => {
         </div>
         
         <div className="text-center text-gray-700 mb-6">
-          <p>Payment (Due Today)</p>
-          <p className="text-xl font-semibold text-[#0B0757]">$9.99</p>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p>
+          <p>Annual Membership (Due Today)</p>
+          <p className="text-xl font-semibold text-[#0B0757]">$119.88</p>
+          <p>Enjoy a full year of access to Elite Healthspan’s premium features and services.</p>
         </div>
         
         <div className="flex justify-between gap-4">
