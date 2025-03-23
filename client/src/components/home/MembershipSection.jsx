@@ -33,8 +33,8 @@ const MembershipSection = () => {
           Membership starts at
         </h2>
         <div className="flex items-baseline">
-          <span className="text-7xl font-bold text-[#0A0F40]">$9.99</span>
-          <span className="text-xl text-[#0A0F40] ml-1">/month</span>
+          <span className="text-7xl font-bold text-[#0A0F40]">$119.88</span>
+          <span className="text-xl text-[#0A0F40] ml-1">/year</span>
         </div>
         <p className="text-[#6B7280] mt-2">Charged annually</p>
       </div>

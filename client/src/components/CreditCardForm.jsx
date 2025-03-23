@@ -3,8 +3,8 @@ import { X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { createPaymentIntent, confirmPayment } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'react-toastify'; // Added for toast notification
-import 'react-toastify/dist/ReactToastify.css'; // Ensure toast styles are imported
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -27,7 +27,7 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
       return;
     }
 
-    const paymentData = { amount: 9.99, userId, doctorId: null };
+    const paymentData = { amount: 119.88, userId, doctorId: null }; // Updated to annual amount (9.99 * 12)
     console.log('Fetching payment intent with payload:', paymentData);
 
     try {
@@ -144,15 +144,23 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
 
       if (paymentResponse.message === 'Payment confirmed') {
         console.log('Payment confirmed successfully:', paymentResponse);
-        toast.success('Payment Successful, you can log in', { // Added toast notification
+        toast.success('Welcome to Elite Healthspan! Your Annual Membership is Active 🎉', {
           position: 'top-right',
           autoClose: 5000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
+          style: {
+            background: '#0B0757',
+            color: '#FFFFFF',
+            fontSize: '16px',
+            borderRadius: '8px',
+            padding: '10px 20px',
+          },
+          icon: '🎉',
         });
-        onContinue(); // Proceed to the next step
+        onContinue();
       } else if (paymentResponse.requiresAction) {
         // Handle 3D Secure or other actions
         const { error: confirmError } = await stripe.confirmCardPayment(paymentIntent.clientSecret, {
@@ -171,13 +179,21 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
 
         if (secondConfirmation.message === 'Payment confirmed') {
           console.log('Payment confirmed after 3D Secure:', secondConfirmation);
-          toast.success('Payment Successful, you can log in', { // Added toast notification
+          toast.success('Welcome to Elite Healthspan! Your Annual Membership is Active 🎉', {
             position: 'top-right',
             autoClose: 5000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
             draggable: true,
+            style: {
+              background: '#0B0757',
+              color: '#FFFFFF',
+              fontSize: '16px',
+              borderRadius: '8px',
+              padding: '10px 20px',
+            },
+            icon: '🎉',
           });
           onContinue();
         } else {
@@ -207,7 +223,7 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
         <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Credit Card Payment</h2>
         
         <p className="text-center text-gray-600 mb-8">
-          Enter your credit card details to complete your payment securely.
+          Enter your credit card details to complete your annual membership payment of $119.88 securely.
         </p>
 
         <div ref={cardElementRef} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]" />
