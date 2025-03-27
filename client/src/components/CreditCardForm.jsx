@@ -1,25 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { createPaymentIntent, confirmPayment } from '../services/api';
+import { createPaymentIntent, confirmPayment, sendSubscriptionEmail } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
+const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propToken }) => {
   const [error, setError] = useState('');
   const [paymentIntent, setPaymentIntent] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const cardElementRef = useRef(null);
   const cardInstanceRef = useRef(null);
   const stripeInstanceRef = useRef(null);
-  const { token: contextToken } = useAuth();
+  const { token: contextToken, user } = useAuth(); // Get user from auth context
   const finalToken = propToken || contextToken;
+  const finalUserId = propUserId || user?.id; // Fallback to user.id from context
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 2;
   const hasFetchedPaymentIntent = useRef(false);
+
+  console.log('CreditCardForm props and context:', {
+    propUserId,
+    userIdFromContext: user?.id,
+    finalUserId,
+    finalToken: finalToken?.substring(0, 10) + '...',
+  });
 
   const fetchPaymentIntent = async () => {
     if (!finalToken) {
@@ -27,7 +35,12 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
       return;
     }
 
-    const paymentData = { amount: 119.88, userId, doctorId: null }; // Updated to annual amount (9.99 * 12)
+    if (!finalUserId) {
+      setError('User ID not found. Please log in again.');
+      return;
+    }
+
+    const paymentData = { amount: 119.88, userId: finalUserId, doctorId: null };
     console.log('Fetching payment intent with payload:', paymentData);
 
     try {
@@ -96,11 +109,16 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
         cardInstanceRef.current = null;
       }
     };
-  }, [userId, finalToken]);
+  }, [finalUserId, finalToken]);
 
   const handleCreditCard = async () => {
     if (!finalToken) {
       setError('Please log in to make a payment.');
+      return;
+    }
+
+    if (!finalUserId) {
+      setError('User ID not found. Please log in again.');
       return;
     }
 
@@ -136,7 +154,6 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
         throw new Error('Payment intent not available. Please try again.');
       }
 
-      // Confirm payment with the backend
       const paymentResponse = await confirmPayment(finalToken, {
         paymentIntentId: paymentIntent.clientSecret.split('_secret_')[0],
         paymentMethodId: paymentMethod.id,
@@ -144,6 +161,24 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
 
       if (paymentResponse.message === 'Payment confirmed') {
         console.log('Payment confirmed successfully:', paymentResponse);
+
+        // Send subscription confirmation email
+        console.log('Attempting to send subscription email with:', { userId: finalUserId, token: finalToken?.substring(0, 10) + '...' });
+        try {
+          const emailResponse = await sendSubscriptionEmail(finalToken, finalUserId);
+          console.log('Subscription email sent successfully:', emailResponse);
+        } catch (emailError) {
+          console.error('Failed to send subscription email:', emailError.message);
+          toast.error('Payment successful, but failed to send confirmation email. Please contact support.', {
+            position: 'top-right',
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+
         toast.success('Welcome to Elite Healthspan! Your Annual Membership is Active 🎉', {
           position: 'top-right',
           autoClose: 5000,
@@ -162,7 +197,6 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
         });
         onContinue();
       } else if (paymentResponse.requiresAction) {
-        // Handle 3D Secure or other actions
         const { error: confirmError } = await stripe.confirmCardPayment(paymentIntent.clientSecret, {
           payment_method: paymentMethod.id,
         });
@@ -171,7 +205,6 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
           throw new Error(confirmError.message);
         }
 
-        // After 3D Secure, confirm again with the backend
         const secondConfirmation = await confirmPayment(finalToken, {
           paymentIntentId: paymentIntent.clientSecret.split('_secret_')[0],
           paymentMethodId: paymentMethod.id,
@@ -179,6 +212,24 @@ const CreditCardForm = ({ onClose, onContinue, userId, token: propToken }) => {
 
         if (secondConfirmation.message === 'Payment confirmed') {
           console.log('Payment confirmed after 3D Secure:', secondConfirmation);
+
+          // Send subscription confirmation email
+          console.log('Attempting to send subscription email with:', { userId: finalUserId, token: finalToken?.substring(0, 10) + '...' });
+          try {
+            const emailResponse = await sendSubscriptionEmail(finalToken, finalUserId);
+            console.log('Subscription email sent successfully:', emailResponse);
+          } catch (emailError) {
+            console.error('Failed to send subscription email:', emailError.message);
+            toast.error('Payment successful, but failed to send confirmation email. Please contact support.', {
+              position: 'top-right',
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
+          }
+
           toast.success('Welcome to Elite Healthspan! Your Annual Membership is Active 🎉', {
             position: 'top-right',
             autoClose: 5000,

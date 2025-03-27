@@ -1,7 +1,8 @@
-// client/src/services/api.js
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/api';
+
+console.log('API BASE_URL:', BASE_URL); // Debug log to confirm BASE_URL
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -200,6 +201,25 @@ export const getTransactions = async (token) => {
   } catch (error) {
     console.error('Get transactions error:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to fetch transactions');
+  }
+};
+
+// Send Subscription Email
+export const sendSubscriptionEmail = async (token, userId) => {
+  try {
+    setAuthToken(token);
+    console.log('Preparing to send subscription email:', { userId, token: token?.substring(0, 10) + '...' });
+    const response = await api.post('/users/send-subscription-email', { userId });
+    console.log('Subscription email response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error sending subscription email:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: error.config,
+    });
+    throw new Error(error.response?.data?.message || 'Failed to send subscription email');
   }
 };
 

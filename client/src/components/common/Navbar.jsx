@@ -1,4 +1,5 @@
-import React, { useState, useContext } from 'react';
+// client/src/components/Navbar.jsx
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X, LogIn } from 'lucide-react';
 import logo from '../../assets/logo.png';
@@ -14,7 +15,7 @@ import { login, signup } from '../../services/api';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [modalStep, setModalStep] = useState(null);
-  const { token, setToken, user, setUser } = useAuth();
+  const { token, user, loginUser, logoutUser } = useAuth();
   const [loginError, setLoginError] = useState('');
   const [loginCredentials, setLoginCredentials] = useState({ email: '', password: '' });
 
@@ -47,15 +48,8 @@ const Navbar = () => {
 
     try {
       const response = await login({ email, password });
-      setToken(response.token);
-      if (typeof setUser === 'function') {
-        setUser({ id: response.userId, email });
-      } else {
-        const newUser = { id: response.userId, email };
-        localStorage.setItem('user', JSON.stringify(newUser));
-        console.warn('setUser is not a function, updating user in localStorage only');
-      }
-      localStorage.setItem('token', response.token);
+      console.log('Login response:', response);
+      loginUser(response.token, response.user); // Use loginUser to set token and user
       closeModals();
       alert('Logged in successfully!');
     } catch (error) {
@@ -69,13 +63,7 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    setToken(null);
-    if (typeof setUser === 'function') {
-      setUser(null);
-    } else {
-      localStorage.removeItem('user');
-    }
-    localStorage.removeItem('token');
+    logoutUser(); // Use logoutUser to clear token and user
   };
 
   return (
@@ -83,7 +71,7 @@ const Navbar = () => {
       <div className="text-2xl font-bold text-[#0B0757]">
         <img src={logo} alt="Elite Healthspan" className="h-15" />
       </div>
-      
+
       <div className="hidden md:flex items-center gap-8">
         <a href="#how" className="text-[#64748B] hover:text-[#0B0757] font-medium">Our Approach</a>
         <a href="#about" className="text-[#64748B] hover:text-[#0B0757] font-medium">About Elite</a>
@@ -113,11 +101,11 @@ const Navbar = () => {
           Join Elite Healthspan
         </motion.button>
       </div>
-      
+
       <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? <X className="w-6 h-6 text-[#0B0757]" /> : <Menu className="w-6 h-6 text-[#0B0757]" />}
       </button>
-      
+
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -215,9 +203,9 @@ const Navbar = () => {
             >
               <X className="w-6 h-6" />
             </button>
-            
+
             <h2 className="text-2xl font-semibold text-[#0B0757] mb-8">Login</h2>
-            
+
             <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-gray-700 text-sm">Email</label>
@@ -231,7 +219,7 @@ const Navbar = () => {
                   required
                 />
               </div>
-              
+
               <div className="flex flex-col gap-2">
                 <label className="text-gray-700 text-sm">Password</label>
                 <input
@@ -244,9 +232,9 @@ const Navbar = () => {
                   required
                 />
               </div>
-              
+
               {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
-              
+
               <button
                 type="submit"
                 className="w-full py-3 bg-[#D4A017] text-white rounded-full font-medium text-base mt-4"
@@ -254,7 +242,7 @@ const Navbar = () => {
                 Login
               </button>
             </form>
-            
+
             <p className="text-center text-gray-600 text-sm mt-6">
               New to Elite? {loginError.includes('new') ? (
                 <button
@@ -268,7 +256,7 @@ const Navbar = () => {
                 </button>
               ) : 'Join the waitlist for access.'}
             </p>
-            
+
             <button
               onClick={() => {
                 closeModals();
