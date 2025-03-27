@@ -4,8 +4,8 @@ import logo from '../assets/logo.png';
 
 const MembershipModal = ({ onClose, onContinue }) => {
   return (
-    <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
-      <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-[90vw] min-w-[300px] w-full mx-2 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 backdrop-blur-md bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-md w-full mx-4">
         <button
           onClick={onClose}
           className="absolute top-5 right-5 p-1 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors z-10"
@@ -45,7 +45,7 @@ const MembershipModal = ({ onClose, onContinue }) => {
         <div className="text-center text-gray-700 mb-6">
           <p>Annual Membership (Due Today)</p>
           <p className="text-xl font-semibold text-[#0B0757]">$119.88</p>
-          <p>Enjoy a full year of access to Elite Healthspan’s premium features and services.</p>
+          <p>Enjoy a full year of access to Elite Healthspan's premium features and services.</p>
         </div>
 
         <div className="flex justify-between gap-4">
