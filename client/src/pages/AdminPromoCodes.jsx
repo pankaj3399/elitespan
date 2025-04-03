@@ -5,7 +5,7 @@ import Navbar from '../components/common/Navbar';
 
 const AdminPromoCodes = () => {
   const { token, user } = useAuth();
-  const [promoCode, setPromoCode] = useState({ code: '', discountPercentage: '', expiresAt: '' });
+  const [promoCode, setPromoCode] = useState({ code: '', discountPercentage: '', expiryDate: '' }); // Changed expiresAt to expiryDate
   const [promoCodes, setPromoCodes] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -33,8 +33,8 @@ const AdminPromoCodes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createPromoCode(token, { ...promoCode, expiresAt: promoCode.expiresAt || null });
-      setPromoCode({ code: '', discountPercentage: '', expiresAt: '' });
+      await createPromoCode(token, { ...promoCode, expiryDate: promoCode.expiryDate || null }); // Changed expiresAt to expiryDate
+      setPromoCode({ code: '', discountPercentage: '', expiryDate: '' }); // Changed expiresAt to expiryDate
       fetchPromoCodes();
       setSuccess('Promo code created successfully');
       setTimeout(() => setSuccess(''), 3000);
@@ -122,8 +122,8 @@ const AdminPromoCodes = () => {
                     <label className="block text-gray-700 font-medium mb-2">Expiry Date</label>
                     <input
                       type="date"
-                      name="expiresAt"
-                      value={promoCode.expiresAt}
+                      name="expiryDate" // Changed expiresAt to expiryDate
+                      value={promoCode.expiryDate}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                     />
