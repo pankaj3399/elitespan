@@ -5,7 +5,7 @@ import Navbar from '../components/common/Navbar';
 
 const AdminPromoCodes = () => {
   const { token, user } = useAuth();
-  const [promoCode, setPromoCode] = useState({ code: '', discountPercentage: '', expiryDate: '' });
+  const [promoCode, setPromoCode] = useState({ code: '', discountPercentage: '', expiresAt: '' });
   const [promoCodes, setPromoCodes] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -17,6 +17,7 @@ const AdminPromoCodes = () => {
   const fetchPromoCodes = async () => {
     try {
       const response = await getPromoCodes(token);
+      console.log('Fetched promo codes:', response.promoCodes); // Debug log
       setPromoCodes(response.promoCodes);
     } catch (err) {
       setError('Failed to fetch promo codes');
@@ -32,8 +33,8 @@ const AdminPromoCodes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createPromoCode(token, promoCode);
-      setPromoCode({ code: '', discountPercentage: '', expiryDate: '' });
+      await createPromoCode(token, { ...promoCode, expiresAt: promoCode.expiresAt || null });
+      setPromoCode({ code: '', discountPercentage: '', expiresAt: '' });
       fetchPromoCodes();
       setSuccess('Promo code created successfully');
       setTimeout(() => setSuccess(''), 3000);
@@ -42,6 +43,13 @@ const AdminPromoCodes = () => {
       setError('Failed to create promo code');
       setTimeout(() => setError(''), 3000);
     }
+  };
+
+  // Helper function to format date safely
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No expiry';
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
   };
 
   return (
@@ -114,11 +122,10 @@ const AdminPromoCodes = () => {
                     <label className="block text-gray-700 font-medium mb-2">Expiry Date</label>
                     <input
                       type="date"
-                      name="expiryDate"
-                      value={promoCode.expiryDate}
+                      name="expiresAt"
+                      value={promoCode.expiresAt}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      required
                     />
                   </div>
                 </div>
@@ -183,7 +190,7 @@ const AdminPromoCodes = () => {
                           {pc.discountPercentage}%
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {new Date(pc.expiryDate).toLocaleDateString()}
+                          {formatDate(pc.expiresAt)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

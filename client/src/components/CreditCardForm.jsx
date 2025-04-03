@@ -24,7 +24,11 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
   const maxRetries = 2;
   const hasFetchedPaymentIntent = useRef(false);
 
-  const fetchPaymentIntent = async (amount = 119.88) => {
+  const BASE_AMOUNT = 119.88; // Original amount before discount
+  const discountedAmount = BASE_AMOUNT * (1 - discount / 100);
+  const discountAmount = BASE_AMOUNT * (discount / 100);
+
+  const fetchPaymentIntent = async (amount = BASE_AMOUNT) => {
     if (!finalToken) {
       setError('Please log in to make a payment.');
       return;
@@ -67,7 +71,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
     try {
       const response = await validatePromoCode(finalToken, promoCode);
       setDiscount(response.discountPercentage);
-      fetchPaymentIntent(119.88); // Re-fetch with discounted amount
+      fetchPaymentIntent(BASE_AMOUNT); // Re-fetch with discounted amount
       toast.success('Promo code applied successfully!');
     } catch (err) {
       setDiscount(0);
@@ -109,7 +113,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
       setIsLoading(false);
     };
 
-    fetchPaymentIntent(119.88 * (1 - discount / 100));
+    fetchPaymentIntent(BASE_AMOUNT * (1 - discount / 100));
     initializeStripeElements();
 
     return () => {
@@ -138,7 +142,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
 
     if (!paymentIntent || !paymentIntent.clientSecret) {
       setError('Payment intent not available. Retrying...');
-      fetchPaymentIntent(119.88 * (1 - discount / 100));
+      fetchPaymentIntent(BASE_AMOUNT * (1 - discount / 100));
       return;
     }
 
@@ -278,10 +282,6 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
         
         <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Credit Card Payment</h2>
         
-        <p className="text-center text-gray-600 mb-8">
-          Enter your credit card details to complete your annual membership payment of ${((119.88 * (1 - discount / 100)).toFixed(2))}.
-        </p>
-
         <div className="mb-4">
           <input
             type="text"
@@ -296,6 +296,26 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
           >
             Apply
           </button>
+        </div>
+
+        {/* Payment Breakdown */}
+        <div className="mb-4 p-4 bg-gray-100 rounded-lg">
+          <p className="text-gray-700">
+            <strong>Original Amount:</strong> ${BASE_AMOUNT.toFixed(2)}
+          </p>
+          {discount > 0 && (
+            <>
+              <p className="text-green-600">
+                <strong>Discount ({discount}%):</strong> -${discountAmount.toFixed(2)}
+              </p>
+              <p className="text-gray-700">
+                <strong>Final Amount:</strong> ${discountedAmount.toFixed(2)}
+              </p>
+            </>
+          )}
+          <p className="text-gray-600 mt-2">
+            You are paying ${discountedAmount.toFixed(2)} for your annual membership.
+          </p>
         </div>
 
         <div ref={cardElementRef} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]" />

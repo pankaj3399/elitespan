@@ -1,4 +1,3 @@
-// server/models/PromoCode.js
 const mongoose = require('mongoose');
 
 const promoCodeSchema = new mongoose.Schema({
