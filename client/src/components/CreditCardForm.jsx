@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { createPaymentIntent, confirmPayment, sendSubscriptionEmail } from '../services/api';
+import { createPaymentIntent, confirmPayment, sendSubscriptionEmail, validatePromoCode } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -12,24 +12,19 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
   const [error, setError] = useState('');
   const [paymentIntent, setPaymentIntent] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [discount, setDiscount] = useState(0);
   const cardElementRef = useRef(null);
   const cardInstanceRef = useRef(null);
   const stripeInstanceRef = useRef(null);
-  const { token: contextToken, user } = useAuth(); // Get user from auth context
+  const { token: contextToken, user } = useAuth();
   const finalToken = propToken || contextToken;
-  const finalUserId = propUserId || user?.id; // Fallback to user.id from context
+  const finalUserId = propUserId || user?.id;
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 2;
   const hasFetchedPaymentIntent = useRef(false);
 
-  console.log('CreditCardForm props and context:', {
-    propUserId,
-    userIdFromContext: user?.id,
-    finalUserId,
-    finalToken: finalToken?.substring(0, 10) + '...',
-  });
-
-  const fetchPaymentIntent = async () => {
+  const fetchPaymentIntent = async (amount = 119.88) => {
     if (!finalToken) {
       setError('Please log in to make a payment.');
       return;
@@ -40,7 +35,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
       return;
     }
 
-    const paymentData = { amount: 119.88, userId: finalUserId, doctorId: null };
+    const paymentData = { amount: amount * (1 - discount / 100), userId: finalUserId, doctorId: null };
     console.log('Fetching payment intent with payload:', paymentData);
 
     try {
@@ -60,10 +55,24 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
       if (retryCount < maxRetries) {
         console.log(`Retrying fetchPaymentIntent (attempt ${retryCount + 1}/${maxRetries})...`);
         setRetryCount(retryCount + 1);
-        setTimeout(fetchPaymentIntent, 1000 * (retryCount + 1));
+        setTimeout(() => fetchPaymentIntent(amount), 1000 * (retryCount + 1));
       } else {
         setError(err.message || 'Failed to create payment intent after multiple attempts.');
       }
+    }
+  };
+
+  const handlePromoCode = async () => {
+    if (!promoCode) return;
+    try {
+      const response = await validatePromoCode(finalToken, promoCode);
+      setDiscount(response.discountPercentage);
+      fetchPaymentIntent(119.88); // Re-fetch with discounted amount
+      toast.success('Promo code applied successfully!');
+    } catch (err) {
+      setDiscount(0);
+      setError(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -100,7 +109,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
       setIsLoading(false);
     };
 
-    fetchPaymentIntent();
+    fetchPaymentIntent(119.88 * (1 - discount / 100));
     initializeStripeElements();
 
     return () => {
@@ -109,7 +118,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
         cardInstanceRef.current = null;
       }
     };
-  }, [finalUserId, finalToken]);
+  }, [finalUserId, finalToken, discount]);
 
   const handleCreditCard = async () => {
     if (!finalToken) {
@@ -129,7 +138,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
 
     if (!paymentIntent || !paymentIntent.clientSecret) {
       setError('Payment intent not available. Retrying...');
-      fetchPaymentIntent();
+      fetchPaymentIntent(119.88 * (1 - discount / 100));
       return;
     }
 
@@ -162,8 +171,6 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
       if (paymentResponse.message === 'Payment confirmed') {
         console.log('Payment confirmed successfully:', paymentResponse);
 
-        // Send subscription confirmation email
-        console.log('Attempting to send subscription email with:', { userId: finalUserId, token: finalToken?.substring(0, 10) + '...' });
         try {
           const emailResponse = await sendSubscriptionEmail(finalToken, finalUserId);
           console.log('Subscription email sent successfully:', emailResponse);
@@ -213,8 +220,6 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
         if (secondConfirmation.message === 'Payment confirmed') {
           console.log('Payment confirmed after 3D Secure:', secondConfirmation);
 
-          // Send subscription confirmation email
-          console.log('Attempting to send subscription email with:', { userId: finalUserId, token: finalToken?.substring(0, 10) + '...' });
           try {
             const emailResponse = await sendSubscriptionEmail(finalToken, finalUserId);
             console.log('Subscription email sent successfully:', emailResponse);
@@ -274,8 +279,24 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
         <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Credit Card Payment</h2>
         
         <p className="text-center text-gray-600 mb-8">
-          Enter your credit card details to complete your annual membership payment of $119.88 securely.
+          Enter your credit card details to complete your annual membership payment of ${((119.88 * (1 - discount / 100)).toFixed(2))}.
         </p>
+
+        <div className="mb-4">
+          <input
+            type="text"
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value)}
+            placeholder="Enter Promo Code"
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
+          />
+          <button
+            onClick={handlePromoCode}
+            className="mt-2 px-4 py-2 bg-[#0B0757] text-white rounded-lg hover:bg-[#1a237e]"
+          >
+            Apply
+          </button>
+        </div>
 
         <div ref={cardElementRef} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]" />
         <div className="flex flex-col gap-2 mt-4">

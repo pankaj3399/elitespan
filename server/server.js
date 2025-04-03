@@ -7,6 +7,7 @@ const doctorRoutes = require('./routes/doctorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const adminPanelRoutes = require('./routes/adminPanelRoutes');
+const promoCodeRoutes = require('./routes/promoCodeRoutes'); // New route
 const cors = require('cors');
 const AWS = require('aws-sdk');
 const nodemailer = require('nodemailer');
@@ -52,7 +53,6 @@ connectDB();
 let emailTransport;
 
 if (process.env.EMAIL_SERVICE === 'ses') {
-  // Configure AWS SES
   AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -61,7 +61,6 @@ if (process.env.EMAIL_SERVICE === 'ses') {
   emailTransport = new AWS.SES({ apiVersion: '2010-12-01' });
   console.log('Email service configured: AWS SES');
 } else if (process.env.EMAIL_SERVICE === 'nodemailer') {
-  // Configure Nodemailer with Gmail
   emailTransport = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -94,20 +93,19 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin-panel', adminPanelRoutes);
+app.use('/api/promo-codes', promoCodeRoutes); // New route
 
 // Endpoint: Send Subscription Email
 app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => {
   console.log('Received send-subscription-email request:', req.body);
   const { userId } = req.body;
 
-  // Validate userId
   if (!userId) {
     console.error('User ID is missing in the request body');
     return res.status(400).json({ message: 'User ID is required' });
   }
 
   try {
-    // Fetch user from the database
     const user = await User.findById(userId).select('email name');
     if (!user) {
       console.error(`User not found for userId: ${userId}`);
@@ -117,19 +115,17 @@ app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => 
     const { email, name } = user;
     const sourceEmail = process.env.EMAIL_USER;
 
-    // Validate email and sourceEmail
     if (!email || !sourceEmail) {
       console.error('Email or source email is missing', { email, sourceEmail });
       return res.status(400).json({ message: 'Email or source email is missing' });
     }
 
-    // Prepare email content
     const subject = 'Welcome to Elite Healthspan – Your Subscription is Active!';
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #0B0757;">Welcome to Elite Healthspan, ${name}!</h2>
         <p style="color: #333; font-size: 16px;">
-          We're thrilled to confirm that your annual membership subscription of $119.88 has been successfully activated.
+          We're thrilled to confirm that your annual membership subscription of $${(119.88 * (1 - discount / 100)).toFixed(2)} has been successfully activated.
           You now have full access to Elite Healthspan's exclusive network and resources to enhance your wellness journey.
         </p>
         <p style="color: #333; font-size: 16px;">
@@ -156,7 +152,7 @@ app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => 
     const textContent = `
       Welcome to Elite Healthspan, ${name}!
 
-      We're thrilled to confirm that your annual membership subscription of $119.88 has been successfully activated.
+      We're thrilled to confirm that your annual membership subscription of $${(119.88 * (1 - discount / 100)).toFixed(2)} has been successfully activated.
       You now have full access to Elite Healthspan's exclusive network and resources to enhance your wellness journey.
 
       What's Next?
@@ -173,7 +169,6 @@ app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => 
       © ${new Date().getFullYear()} Elite Healthspan. All rights reserved.
     `;
 
-    // Send email based on the configured service
     if (process.env.EMAIL_SERVICE === 'ses') {
       const params = {
         Source: sourceEmail,
