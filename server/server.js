@@ -13,6 +13,7 @@ const AWS = require('aws-sdk');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
+const PromoCode = require('./models/PromoCode');
 
 // Load environment variables
 dotenv.config();
@@ -98,7 +99,7 @@ app.use('/api/promo-codes', promoCodeRoutes); // New route
 // Endpoint: Send Subscription Email
 app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => {
   console.log('Received send-subscription-email request:', req.body);
-  const { userId } = req.body;
+  const { userId, promoCode } = req.body;
 
   if (!userId) {
     console.error('User ID is missing in the request body');
@@ -111,6 +112,29 @@ app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => 
       console.error(`User not found for userId: ${userId}`);
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // Default price and discount percentage
+    const basePrice = 119.88;
+    let discountPercentage = 0;
+
+    // Check if promo code was provided and is valid
+    if (promoCode) {
+      const promoCodeData = await PromoCode.findOne({
+        code: promoCode,
+        isActive: true,
+        expiryDate: { $gte: new Date() }
+      });
+
+      if (promoCodeData) {
+        discountPercentage = promoCodeData.discountPercentage;
+        console.log(`Applied promo code: ${promoCode} with discount: ${discountPercentage}%`);
+      } else {
+        console.log(`Promo code not found or expired: ${promoCode}`);
+      }
+    }
+
+    // Calculate the final price
+    const finalPrice = (basePrice * (1 - discountPercentage / 100)).toFixed(2);
 
     const { email, name } = user;
     const sourceEmail = process.env.EMAIL_USER;
@@ -125,7 +149,7 @@ app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => 
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #0B0757;">Welcome to Elite Healthspan, ${name}!</h2>
         <p style="color: #333; font-size: 16px;">
-          We're thrilled to confirm that your annual membership subscription of $${(119.88 * (1 - discount / 100)).toFixed(2)} has been successfully activated.
+          We're thrilled to confirm that your annual membership subscription of $${finalPrice} has been successfully activated.
           You now have full access to Elite Healthspan's exclusive network and resources to enhance your wellness journey.
         </p>
         <p style="color: #333; font-size: 16px;">
@@ -152,7 +176,7 @@ app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => 
     const textContent = `
       Welcome to Elite Healthspan, ${name}!
 
-      We're thrilled to confirm that your annual membership subscription of $${(119.88 * (1 - discount / 100)).toFixed(2)} has been successfully activated.
+      We're thrilled to confirm that your annual membership subscription of $${finalPrice} has been successfully activated.
       You now have full access to Elite Healthspan's exclusive network and resources to enhance your wellness journey.
 
       What's Next?
