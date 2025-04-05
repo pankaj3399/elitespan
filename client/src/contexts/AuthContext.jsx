@@ -1,50 +1,55 @@
-// client/src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { setAuthToken } from '../services/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize auth state on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      if (token) {
-        setAuthToken(token);
-        if (!user) {
-          // If user is not in state but token exists, try to restore user from localStorage
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
-          } else {
-            // If no user data, clear token (invalid state)
-            setToken(null);
-            localStorage.removeItem('token');
-          }
+      console.log('Initializing AuthContext...');
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+
+      console.log('Stored token:', storedToken);
+      console.log('Stored user:', storedUser);
+
+      if (storedToken) {
+        setAuthToken(storedToken);
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setToken(storedToken);
+          setUser(parsedUser);
+          console.log('Restored user from localStorage:', parsedUser);
+        } else {
+          setToken(null);
+          localStorage.removeItem('token');
+          console.log('No user found in localStorage, clearing token.');
         }
+      } else {
+        console.log('No token found, user remains null.');
       }
       setLoading(false);
+      console.log('AuthContext initialized:', { token, user, loading: false });
     };
+
     initializeAuth();
   }, []);
 
-  // Update token and user after login
   const loginUser = (newToken, userData) => {
+    console.log('Logging in user:', { newToken, userData });
     setToken(newToken);
-    setUser(userData);
+    setUser({ ...userData, role: userData.role || 'user' }); // Ensure role is set
     localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify({ ...userData, role: userData.role || 'user' }));
     setAuthToken(newToken);
   };
 
-  // Logout function
   const logoutUser = () => {
+    console.log('Logging out user...');
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
@@ -52,7 +57,6 @@ export const AuthProvider = ({ children }) => {
     setAuthToken(null);
   };
 
-  // Derive userId from user object
   const userId = user?.id || null;
 
   return (
@@ -66,7 +70,7 @@ export const AuthProvider = ({ children }) => {
         loading,
       }}
     >
-      {children}
+      {loading ? null : children} {/* Render children only after loading */}
     </AuthContext.Provider>
   );
 };

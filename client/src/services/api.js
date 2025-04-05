@@ -223,4 +223,39 @@ export const sendSubscriptionEmail = async (token, userId) => {
   }
 };
 
+
+// New Promo Code Endpoints
+export const createPromoCode = async (token, promoCodeData) => {
+  try {
+    setAuthToken(token);
+    const response = await api.post('/promo-codes/create', promoCodeData);
+    return response.data;
+  } catch (error) {
+    console.error('Create promo code error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to create promo code');
+  }
+};
+
+export const getPromoCodes = async (token) => {
+  try {
+    setAuthToken(token);
+    const response = await api.get('/promo-codes/list');
+    return response.data;
+  } catch (error) {
+    console.error('Get promo codes error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to fetch promo codes');
+  }
+};
+
+export const validatePromoCode = async (token, code) => {
+  try {
+    setAuthToken(token);
+    const response = await api.post('/promo-codes/validate', { code });
+    return response.data;
+  } catch (error) {
+    console.error('Validate promo code error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Invalid or expired promo code');
+  }
+};
+
 export default api;

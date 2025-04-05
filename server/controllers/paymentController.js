@@ -1,9 +1,9 @@
-// backend/controllers/paymentController.js
 const Stripe = require('stripe');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const Analytics = require('../models/Analytics');
 const Doctor = require('../models/Doctor');
+const PromoCode = require('../models/PromoCode');
 require('dotenv').config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -22,6 +22,24 @@ exports.createPaymentIntent = async (req, res) => {
     if (!req.user) {
       console.error('req.user is undefined - Authentication middleware failed');
       return res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+    }
+
+    // Initialize adjustedAmount with the original amount
+    let adjustedAmount = amount;
+
+    // Apply promo code discount if provided
+    if (req.body.promoCode) {
+      const promoCode = await PromoCode.findOne({
+        code: req.body.promoCode,
+        isActive: true,
+        expiryDate: { $gte: new Date() },
+      });
+      if (promoCode) {
+        adjustedAmount = amount * (1 - promoCode.discountPercentage / 100);
+        console.log(`Promo code applied: ${req.body.promoCode}, New amount: ${adjustedAmount}`);
+      } else {
+        console.log(`Invalid or expired promo code: ${req.body.promoCode}`);
+      }
     }
 
     // Check Stripe secret key
@@ -55,7 +73,7 @@ exports.createPaymentIntent = async (req, res) => {
     // Create Payment Intent
     console.log('Creating Stripe payment intent...');
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: Math.round(adjustedAmount * 100), // Convert to cents
       currency: 'usd',
       payment_method_types: ['card'], // Remove 'apple_pay'
       metadata: {

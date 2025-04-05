@@ -1,38 +1,7 @@
-const Admin = require('../models/Admin');
 const Doctor = require('../models/Doctor');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
-
-// Admin Signup
-exports.signup = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { name, email, password } = req.body;
-
-  try {
-    let admin = await Admin.findOne({ email });
-    if (admin) {
-      return res.status(400).json({ message: 'Admin already exists' });
-    }
-
-    admin = new Admin({
-      name,
-      email,
-      password: await bcrypt.hash(password, 10),
-    });
-
-    await admin.save();
-
-    const token = jwt.sign({ id: admin._id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(201).json({ token, admin: { name: admin.name, email: admin.email } });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
-  }
-};
+require('dotenv').config();
 
 // Admin Login
 exports.login = async (req, res) => {
@@ -44,18 +13,19 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
+    // Check if the provided email matches the ADMIN_EMAIL from .env
+    if (email !== process.env.ADMIN_EMAIL) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
+    // Compare the provided password directly with the ADMIN_PASSWORD from .env
+    if (password !== process.env.ADMIN_PASSWORD) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: admin._id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token, admin: { name: admin.name, email: admin.email } });
+    // Generate a JWT token for the admin
+    const token = jwt.sign({ id: 'static_admin', role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, admin: { name: 'Admin', email: process.env.ADMIN_EMAIL } });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
