@@ -69,14 +69,17 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
   const handlePromoCode = async () => {
     if (!promoCode) return;
     try {
-      const response = await validatePromoCode(finalToken, promoCode);
+      console.log('Sending promo code validation request:', { code: promoCode });
+      const response = await validatePromoCode(finalToken, { code: promoCode }); // Ensure correct payload
+      console.log('Promo code validation response:', response);
       setDiscount(response.discountPercentage);
       fetchPaymentIntent(BASE_AMOUNT); // Re-fetch with discounted amount
       toast.success('Promo code applied successfully!');
     } catch (err) {
+      console.error('Validate promo code error:', err.response?.data || err.message);
       setDiscount(0);
-      setError(err.message);
-      toast.error(err.message);
+      setError(err.response?.data?.message || 'Invalid or expired promo code');
+      toast.error(err.response?.data?.message || 'Invalid or expired promo code');
     }
   };
 
@@ -318,6 +321,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
           </p>
         </div>
 
+        {/* Card Element */}
         <div ref={cardElementRef} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]" />
         <div className="flex flex-col gap-2 mt-4">
           <label className="text-gray-700 text-sm">Country</label>

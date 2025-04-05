@@ -7,30 +7,30 @@ import Footer from './components/common/Footer';
 import Sidebar from './components/common/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   return (
     <AuthProvider>
-        <div
-          style={{
-            minHeight: '100vh',
-            backgroundColor: '#FDF8F4',
-          }}
-        >
-          <Navbar />
-          <AppContent />
-          <Footer />
-          <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            closeOnClick
-            pauseOnHover
-            draggable
-          />
-        </div>
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#FDF8F4',
+        }}
+      >
+        <Navbar />
+        <AppContent />
+        <Footer />
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          closeOnClick
+          pauseOnHover
+          draggable
+        />
+      </div>
     </AuthProvider>
   );
 };
@@ -48,7 +48,9 @@ const AppContent = () => {
           <Route
             path="/admin/promo-codes"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute
+                redirectAction={() => toast.error('You are not authenticated to access this page.')}
+              >
                 <AdminPromoCodes />
               </ProtectedRoute>
             }
