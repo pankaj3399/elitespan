@@ -5,10 +5,11 @@ import Navbar from '../components/common/Navbar';
 
 const AdminPromoCodes = () => {
   const { token, user } = useAuth();
-  const [promoCode, setPromoCode] = useState({ code: '', discountPercentage: '', expiryDate: '' }); // Changed expiresAt to expiryDate
+  const [promoCode, setPromoCode] = useState({ code: '', discountPercentage: '', expiryDate: '' });
   const [promoCodes, setPromoCodes] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetchPromoCodes();
@@ -17,7 +18,7 @@ const AdminPromoCodes = () => {
   const fetchPromoCodes = async () => {
     try {
       const response = await getPromoCodes(token);
-      console.log('Fetched promo codes:', response.promoCodes); // Debug log
+      console.log('Fetched promo codes:', response.promoCodes);
       setPromoCodes(response.promoCodes);
     } catch (err) {
       setError('Failed to fetch promo codes');
@@ -32,9 +33,10 @@ const AdminPromoCodes = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsCreating(true);
     try {
-      await createPromoCode(token, { ...promoCode, expiryDate: promoCode.expiryDate || null }); // Changed expiresAt to expiryDate
-      setPromoCode({ code: '', discountPercentage: '', expiryDate: '' }); // Changed expiresAt to expiryDate
+      await createPromoCode(token, { ...promoCode, expiryDate: promoCode.expiryDate || null });
+      setPromoCode({ code: '', discountPercentage: '', expiryDate: '' });
       fetchPromoCodes();
       setSuccess('Promo code created successfully');
       setTimeout(() => setSuccess(''), 3000);
@@ -42,10 +44,11 @@ const AdminPromoCodes = () => {
     } catch (err) {
       setError('Failed to create promo code');
       setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsCreating(false);
     }
   };
 
-  // Helper function to format date safely
   const formatDate = (dateString) => {
     if (!dateString) return 'No expiry';
     const date = new Date(dateString);
@@ -122,7 +125,7 @@ const AdminPromoCodes = () => {
                     <label className="block text-gray-700 font-medium mb-2">Expiry Date</label>
                     <input
                       type="date"
-                      name="expiryDate" // Changed expiresAt to expiryDate
+                      name="expiryDate"
                       value={promoCode.expiryDate}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
@@ -132,9 +135,10 @@ const AdminPromoCodes = () => {
                 <div className="mt-6">
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-indigo-900 text-white font-medium rounded-lg hover:bg-indigo-800 transition-colors focus:ring-4 focus:ring-indigo-300"
+                    disabled={isCreating}
+                    className={`px-6 py-3 bg-indigo-900 text-white font-medium rounded-lg transition-colors focus:ring-4 focus:ring-indigo-300 ${!isCreating ? 'hover:bg-indigo-800 cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
                   >
-                    Create Promo Code
+                    {isCreating ? 'Creating...' : 'Create Promo Code'}
                   </button>
                 </div>
               </form>
