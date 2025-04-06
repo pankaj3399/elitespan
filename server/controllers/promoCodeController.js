@@ -47,9 +47,14 @@ exports.getPromoCodes = async (req, res) => {
 exports.validatePromoCode = async (req, res) => {
   try {
     const { code } = req.body;
-    console.log('Validating promo code:', code); // Debug log
+    console.log('Validating promo code (raw input):', code); // Debug log for raw input
+
+    // Ensure code is a string, default to empty string if not
+    const codeStr = typeof code === 'string' ? code : '';
+    console.log('Validating promo code (processed):', codeStr); // Debug log for processed input
+
     const promoCode = await PromoCode.findOne({
-      code: code.toUpperCase(), // Case-insensitive matching
+      code: codeStr.toUpperCase(), // Case-insensitive matching
       isActive: true,
       $or: [
         { expiresAt: { $gte: new Date() } },
@@ -57,7 +62,7 @@ exports.validatePromoCode = async (req, res) => {
       ],
     });
     if (!promoCode) {
-      console.log('Promo code not found or invalid:', code);
+      console.log('Promo code not found or invalid:', codeStr);
       return res.status(400).json({ message: 'Invalid or expired promo code' });
     }
     console.log('Promo code validated:', promoCode);

@@ -69,8 +69,8 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
   const handlePromoCode = async () => {
     if (!promoCode) return;
     try {
-      console.log('Sending promo code validation request:', { code: promoCode });
-      const response = await validatePromoCode(finalToken, { code: promoCode }); // Ensure correct payload
+      console.log('Sending promo code validation request with code:', promoCode); // Debug log
+      const response = await validatePromoCode(finalToken, promoCode); // Pass promoCode directly as a string
       console.log('Promo code validation response:', response);
       setDiscount(response.discountPercentage);
       fetchPaymentIntent(BASE_AMOUNT); // Re-fetch with discounted amount

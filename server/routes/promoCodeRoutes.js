@@ -13,7 +13,7 @@ router.post('/create', authAdmin, [
 router.get('/list', authAdmin, getPromoCodes);
 
 router.post('/validate', auth, [
-  check('code').not().isEmpty().withMessage('Promo code is required'),
+  check('code').not().isEmpty().withMessage('Promo code is required').isString().withMessage('Code must be a string'),
 ], validatePromoCode);
 
 module.exports = router;

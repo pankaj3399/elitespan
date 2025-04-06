@@ -223,7 +223,6 @@ export const sendSubscriptionEmail = async (token, userId) => {
   }
 };
 
-
 // New Promo Code Endpoints
 export const createPromoCode = async (token, promoCodeData) => {
   try {
@@ -250,10 +249,16 @@ export const getPromoCodes = async (token) => {
 export const validatePromoCode = async (token, code) => {
   try {
     setAuthToken(token);
-    const response = await api.post('/promo-codes/validate', { code });
+    console.log('Sending validatePromoCode request with code:', code); // Debug log
+    const response = await api.post('/promo-codes/validate', { code: code }); // Ensure code is sent as a string
+    console.log('Validate promo code response:', response.data); // Debug log
     return response.data;
   } catch (error) {
-    console.error('Validate promo code error:', error.response?.data || error.message);
+    console.error('Validate promo code error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
     throw new Error(error.response?.data?.message || 'Invalid or expired promo code');
   }
 };
