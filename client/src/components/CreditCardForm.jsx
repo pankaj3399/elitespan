@@ -24,7 +24,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
   const maxRetries = 2;
   const hasFetchedPaymentIntent = useRef(false);
 
-  const BASE_AMOUNT = 119.88; // Original amount before discount
+  const BASE_AMOUNT = 119.88; // Original amount before discount in dollars
   const discountedAmount = BASE_AMOUNT * (1 - discount / 100);
   const discountAmount = BASE_AMOUNT * (discount / 100);
 
@@ -39,7 +39,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
       return;
     }
 
-    const paymentData = { amount: amount * (1 - discount / 100), userId: finalUserId, doctorId: null };
+    const paymentData = { amount: Math.round(amount * 100), userId: finalUserId, doctorId: null }; // Convert to cents
     console.log('Fetching payment intent with payload:', paymentData);
 
     try {
@@ -69,11 +69,11 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
   const handlePromoCode = async () => {
     if (!promoCode) return;
     try {
-      console.log('Sending promo code validation request with code:', promoCode); // Debug log
-      const response = await validatePromoCode(finalToken, promoCode); // Pass promoCode directly as a string
+      console.log('Sending promo code validation request with code:', promoCode);
+      const response = await validatePromoCode(finalToken, promoCode);
       console.log('Promo code validation response:', response);
-      setDiscount(response.discountPercentage);
-      fetchPaymentIntent(BASE_AMOUNT); // Re-fetch with discounted amount
+      setDiscount(response.discountPercentage || 0);
+      fetchPaymentIntent(BASE_AMOUNT * (1 - (response.discountPercentage || 0) / 100)); // Re-fetch with discounted amount
       toast.success('Promo code applied successfully!');
     } catch (err) {
       console.error('Validate promo code error:', err.response?.data || err.message);
@@ -91,7 +91,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
       setIsLoading(true);
       const stripe = await stripePromise;
       if (!stripe || !cardElementRef.current) {
-        setError('Stripe initialization failed. Please refresh.');
+        setError('Stripe initialization failed. Please ensure the Stripe publishable key is set in the environment variables.');
         setIsLoading(false);
         return;
       }
@@ -116,7 +116,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
       setIsLoading(false);
     };
 
-    fetchPaymentIntent(BASE_AMOUNT * (1 - discount / 100));
+    fetchPaymentIntent(BASE_AMOUNT); // Initial fetch with base amount
     initializeStripeElements();
 
     return () => {
@@ -125,7 +125,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
         cardInstanceRef.current = null;
       }
     };
-  }, [finalUserId, finalToken, discount]);
+  }, [finalUserId, finalToken]); // Removed discount from dependencies to prevent re-fetch loop
 
   const handleCreditCard = async () => {
     if (!finalToken) {
@@ -322,7 +322,11 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
         </div>
 
         {/* Card Element */}
-        <div ref={cardElementRef} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]" />
+        <div ref={cardElementRef} className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]">
+          {error && error.includes('Stripe initialization failed') && (
+            <p className="text-red-500 text-sm">Error: Stripe not initialized. Check environment variables on deployment.</p>
+          )}
+        </div>
         <div className="flex flex-col gap-2 mt-4">
           <label className="text-gray-700 text-sm">Country</label>
           <select 
@@ -344,7 +348,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
           />
         </div>
 
-        {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
+        {error && !error.includes('Stripe initialization failed') && <p className="text-red-500 text-sm mt-4">{error}</p>}
 
         <div className="flex justify-between gap-4 mt-4">
           <button
@@ -355,7 +359,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
           </button>
           <button
             onClick={handleCreditCard}
-            disabled={isLoading}
+            disabled={isLoading || !cardInstanceRef.current}
             className="w-full py-3 bg-[#0B0757] text-white rounded-full font-medium text-base hover:bg-[#1a237e] disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Processing...' : 'Continue'}

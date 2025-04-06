@@ -249,9 +249,9 @@ export const getPromoCodes = async (token) => {
 export const validatePromoCode = async (token, code) => {
   try {
     setAuthToken(token);
-    console.log('Sending validatePromoCode request with code:', code); // Debug log
-    const response = await api.post('/promo-codes/validate', { code: code }); // Ensure code is sent as a string
-    console.log('Validate promo code response:', response.data); // Debug log
+    console.log('Sending validatePromoCode request with code:', code);
+    const response = await api.post('/promo-codes/validate', { code: code });
+    console.log('Validate promo code response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Validate promo code error:', {

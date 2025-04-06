@@ -24,19 +24,22 @@ exports.createPaymentIntent = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized: User not authenticated' });
     }
 
-    // Initialize adjustedAmount with the original amount
-    let adjustedAmount = amount;
+    // Initialize adjustedAmount with the original amount in cents
+    let adjustedAmount = Math.round(amount); // Assume amount is already in cents from frontend
 
     // Apply promo code discount if provided
     if (req.body.promoCode) {
       const promoCode = await PromoCode.findOne({
-        code: req.body.promoCode,
+        code: req.body.promoCode.toUpperCase(),
         isActive: true,
-        expiryDate: { $gte: new Date() },
+        $or: [
+          { expiresAt: { $gte: new Date() } },
+          { expiresAt: null },
+        ],
       });
       if (promoCode) {
-        adjustedAmount = amount * (1 - promoCode.discountPercentage / 100);
-        console.log(`Promo code applied: ${req.body.promoCode}, New amount: ${adjustedAmount}`);
+        adjustedAmount = Math.round(adjustedAmount * (1 - promoCode.discountPercentage / 100));
+        console.log(`Promo code applied: ${req.body.promoCode}, New amount: ${adjustedAmount} cents`);
       } else {
         console.log(`Invalid or expired promo code: ${req.body.promoCode}`);
       }
@@ -49,14 +52,14 @@ exports.createPaymentIntent = async (req, res) => {
     }
 
     // Validate amount
-    if (!amount || amount <= 0) {
-      console.log('Validation failed: Amount must be greater than 0');
-      return res.status(400).json({ message: 'Amount must be greater than 0' });
+    if (!adjustedAmount || adjustedAmount <= 0 || adjustedAmount > 99999999) { // Stripe limit is $999,999.99 (99999999 cents)
+      console.log('Validation failed: Amount must be between 1 and 99999999 cents');
+      return res.status(400).json({ message: 'Amount must be between 1 and $999,999.99' });
     }
 
     console.log('Stripe secret key (partial):', process.env.STRIPE_SECRET_KEY?.substring(0, 8) + '...');
 
-    // Test Stripe connection
+    // Test Stripe connection (run only once on server start if possible, but kept here for debugging)
     try {
       await stripe.paymentIntents.list({ limit: 1 });
       console.log('Stripe connection successful');
@@ -71,11 +74,11 @@ exports.createPaymentIntent = async (req, res) => {
     }
 
     // Create Payment Intent
-    console.log('Creating Stripe payment intent...');
+    console.log('Creating Stripe payment intent with amount:', adjustedAmount);
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(adjustedAmount * 100), // Convert to cents
+      amount: adjustedAmount,
       currency: 'usd',
-      payment_method_types: ['card'], // Remove 'apple_pay'
+      payment_method_types: ['card'],
       metadata: {
         userId: userId || req.user?.id || 'anonymous',
         doctorId,
@@ -96,7 +99,6 @@ exports.createPaymentIntent = async (req, res) => {
       raw: error.raw,
       httpStatus: error.statusCode,
     });
-    // Pass the Stripe error status code (e.g., 400) to the frontend
     res.status(error.statusCode || 500).json({ message: 'Payment intent creation failed', error: error.message });
   }
 };

@@ -5,7 +5,7 @@ const { createPaymentIntent, confirmPayment, getTransactions } = require('../con
 const { auth, authAdmin } = require('../middleware/auth');
 
 router.post('/create-payment-intent', auth, [
-  check('amount').isFloat({ min: 1 }).withMessage('Amount must be greater than 0'),
+  check('amount').isInt({ min: 1, max: 99999999 }).withMessage('Amount must be between 1 and 99999999 cents'),
   check('userId').optional().not().isEmpty().withMessage('User ID is required if applicable'),
   check('doctorId').optional().not().isEmpty().withMessage('Doctor ID is required if applicable'),
   check('promoCode').optional().not().isEmpty().withMessage('Promo code must be valid if provided'),
