@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSidebar } from '../../contexts/SidebarContext';
 import { 
   ChevronLeft, 
   LogOut, 
@@ -17,31 +18,12 @@ import {
 
 const Sidebar = () => {
   const { user, logoutUser } = useAuth();
+  const { isOpen, isMobile, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    document.body.setAttribute('data-sidebar-open', isOpen.toString());
-    return () => document.body.removeAttribute('data-sidebar-open');
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) setIsOpen(true);
-      else setIsOpen(false);
-    };
-
-    setIsOpen(!isMobile);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (isMobile) setIsOpen(false);
+    if (isMobile) toggleSidebar();
   }, [location.pathname, isMobile]);
 
   if (!user || user.role !== 'admin') return null;
@@ -49,10 +31,6 @@ const Sidebar = () => {
   const handleLogout = () => {
     logoutUser();
     navigate('/');
-  };
-
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
   };
 
   const navItems = [
@@ -67,7 +45,7 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile toggle button - fixed position outside the sidebar */}
+      {/* Mobile toggle button */}
       <div className="fixed top-4 left-4 z-50 md:hidden">
         <button
           onClick={toggleSidebar}
@@ -132,7 +110,6 @@ const Sidebar = () => {
                   key={item.name}
                   to={item.path}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-indigo-700 text-white shadow-md' : 'text-indigo-100 hover:bg-indigo-800'}`}
-                  onClick={() => isMobile && toggleSidebar()}
                 >
                   <span className={isActive ? 'text-white' : 'text-indigo-300'}>
                     {item.icon}

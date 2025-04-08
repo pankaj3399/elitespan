@@ -7,28 +7,26 @@ import Footer from './components/common/Footer';
 import Sidebar from './components/common/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   return (
     <AuthProvider>
-      <div
-        style={{
-          minHeight: '100vh',
-          backgroundColor: '#FDF8F4',
-        }}
-      >
-        <AppContent />
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnHover
-          draggable
-        />
-      </div>
+      <SidebarProvider>
+        <div style={{ minHeight: '100vh', backgroundColor: '#FDF8F4' }}>
+          <AppContent />
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            closeOnClick
+            pauseOnHover
+            draggable
+          />
+        </div>
+      </SidebarProvider>
     </AuthProvider>
   );
 };
@@ -36,6 +34,7 @@ const App = () => {
 const AppContent = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const { isOpen, isMobile } = useSidebar();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
@@ -48,11 +47,9 @@ const AppContent = () => {
       
       {/* Main content with appropriate margin based on route and sidebar state */}
       <div 
-        className={`flex-grow transition-all duration-300 ${isAdminRoute ? 'md:ml-64' : ''}`}
-        style={{
-          marginLeft: isAdminRoute && window.innerWidth < 768 ? (document.body.getAttribute('data-sidebar-open') === 'true' ? '64px' : '0') : '',
-        }}
-        id="main-content"
+        className={`flex-grow transition-all duration-300 ${
+          isAdminRoute ? (isMobile ? (isOpen ? 'md:ml-64' : '') : 'md:ml-64') : ''
+        }`}
       >
         <Routes>
           <Route path="/" element={<Home />} />
