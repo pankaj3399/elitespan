@@ -5,6 +5,7 @@ import AdminPromoCodes from './pages/AdminPromoCodes';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import Sidebar from './components/common/Sidebar';
+import ProviderPortal from './pages/ProviderPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
@@ -53,6 +54,7 @@ const AppContent = () => {
       >
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/provider-portal" element={<ProviderPortal />} />
           <Route
             path="/admin/promo-codes"
             element={

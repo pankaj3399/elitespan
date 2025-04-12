@@ -11,6 +11,7 @@ import CreditCardForm from '../CreditCardForm';
 // import ApplePayForm from '../ApplePayForm'; // Commented out
 import { useAuth } from '../../contexts/AuthContext';
 import { login, signup } from '../../services/api';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,9 +74,30 @@ const Navbar = () => {
       </div>
 
       <div className="hidden md:flex items-center gap-8">
-        <a href="#how" className="text-[#64748B] hover:text-[#0B0757] font-medium">Our Approach</a>
-        <a href="#about" className="text-[#64748B] hover:text-[#0B0757] font-medium">About Elite</a>
-        <a href="#faq" className="text-[#64748B] hover:text-[#0B0757] font-medium">FAQ</a>
+        <Link
+          to="/how"
+          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+        >
+          Our Approach
+        </Link>
+        <Link
+          to="/provider-portal"
+          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+        >
+          Provider Portal
+        </Link>
+        <Link
+          to="/about"
+          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+        >
+          About Elite
+        </Link>
+        <Link
+          to="/faq"
+          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+        >
+          FAQ
+        </Link>
         {token ? (
           <button onClick={handleLogout} className="text-[#64748B] hover:text-[#0B0757] font-medium">
             Logout
