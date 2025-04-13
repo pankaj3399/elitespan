@@ -24,9 +24,9 @@ function ProfileContent() {
             return;
         }
 
-        if (field === 'reviews' && 
+        if (field === 'reviews' &&
             !['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
-            .includes(file.type)) {
+                .includes(file.type)) {
             alert('Only .xls/.xlsx files are allowed for Client Reviews.');
             return;
         }
@@ -47,7 +47,16 @@ function ProfileContent() {
     const handleSubmit = (e) => {
         e.preventDefault();
         setSubmitted(true);
+
+        const { headshot, gallery, reviews } = uploadedFiles;
+
+        if (!headshot || !gallery || !reviews) {
+            alert("Please upload all required files before continuing.");
+            return;
+        }
+
         console.log('Submitted:', uploadedFiles);
+        navigate('/completion');
     };
 
     return (

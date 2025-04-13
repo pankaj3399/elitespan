@@ -13,6 +13,7 @@ import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProfileContent from './pages/ProfileContent';
+import Completion from './pages/Completion';
 
 const App = () => {
   return (
@@ -59,6 +60,7 @@ const AppContent = () => {
           <Route path="/provider-portal" element={<ProviderPortal />} />
           <Route path="/qualifications" element={<Qualifications />} />
           <Route path="/profile-content" element={<ProfileContent />} />
+          <Route path="/completion" element={<Completion />} />
           <Route
             path="/admin/promo-codes"
             element={
