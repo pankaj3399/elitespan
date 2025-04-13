@@ -8,15 +8,15 @@ function Qualifications() {
 
     const [formData, setFormData] = useState({
         specialties: '',
-        boardCertifications: '',
-        hospitalAffiliations: '',
-        educationAndTraining: '',
+        boardCertifications: [''],
+        hospitalAffiliations: [''],
+        educationAndTraining: [''],
     });
 
     const [uploadedFiles, setUploadedFiles] = useState({
-        boardCertifications: '',
-        hospitalAffiliations: '',
-        educationAndTraining: '',
+        boardCertifications: [''],
+        hospitalAffiliations: [''],
+        educationAndTraining: [''],
     });
 
     const handleChange = (e) => {
@@ -27,17 +27,49 @@ function Qualifications() {
         }));
     };
 
-    const handleFileSelect = (field, fileName) => {
+    const handleTextChange = (field, index, value) => {
+        setFormData((prev) => {
+            const updated = [...prev[field]];
+            updated[index] = value;
+            return { ...prev, [field]: updated };
+        });
+    };
+
+    const handleFileSelect = (field, fileName, index) => {
+        setUploadedFiles((prev) => {
+            const updated = [...prev[field]];
+            updated[index] = fileName;
+            return { ...prev, [field]: updated };
+        });
+    };
+
+    const handleClearFile = (field, index) => {
+        setUploadedFiles((prev) => {
+            const updated = [...prev[field]];
+            updated[index] = '';
+            return { ...prev, [field]: updated };
+        });
+    };
+
+    const addInputField = (field) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: [...prev[field], ''],
+        }));
         setUploadedFiles((prev) => ({
             ...prev,
-            [field]: fileName,
+            [field]: [...prev[field], ''],
         }));
     };
 
-    const handleClearFile = (field) => {
+    const removeInputField = (field, index) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: prev[field].filter((_, i) => i !== index),
+        }));
         setUploadedFiles((prev) => ({
             ...prev,
-            [field]: '',
+            [field]: prev[field].filter((_, i) => i !== index),
         }));
     };
 
@@ -91,39 +123,58 @@ function Qualifications() {
                                     placeholder="Specialties"
                                 />
                             </div>
+                            {formData.boardCertifications.map((value, index) => (
+                                <InputWithFileUpload
+                                    key={`board-${index}`}
+                                    label={index === 0 ? 'Board Certifications' : undefined}
+                                    name="boardCertifications"
+                                    index={index}
+                                    placeholder="Certification 1, School Name"
+                                    value={value}
+                                    onTextChange={(e) => handleTextChange('boardCertifications', index, e.target.value)}
+                                    onFileSelect={(name, fileName) => handleFileSelect(name, fileName, index)}
+                                    onClearFile={(name) => handleClearFile(name, index)}
+                                    fileName={uploadedFiles.boardCertifications[index]}
+                                    onAddField={() => addInputField('boardCertifications')}
+                                    onRemoveField={(i) => removeInputField('boardCertifications', i)}
+                                />
+                            ))}
 
-                            <InputWithFileUpload
-                                label="Board Certifications"
-                                name="boardCertifications"
-                                placeholder="Certification 1, School Name"
-                                value={formData.boardCertifications}
-                                onTextChange={handleChange}
-                                onFileSelect={handleFileSelect}
-                                onClearFile={handleClearFile}
-                                fileName={uploadedFiles.boardCertifications}
-                            />
+                            {formData.hospitalAffiliations.map((value, index) => (
+                                <InputWithFileUpload
+                                    key={`hospital-${index}`}
+                                    label={index === 0 ? 'Hospital Affiliations (Optional)' : undefined}
+                                    name="hospitalAffiliations"
+                                    index={index}
+                                    placeholder="Position, Hospital Name"
+                                    value={value}
+                                    onTextChange={(e) => handleTextChange('hospitalAffiliations', index, e.target.value)}
+                                    onFileSelect={(name, fileName) => handleFileSelect(name, fileName, index)}
+                                    onClearFile={(name) => handleClearFile(name, index)}
+                                    fileName={uploadedFiles.hospitalAffiliations[index]}
+                                    onAddField={() => addInputField('hospitalAffiliations')}
+                                    onRemoveField={(i) => removeInputField('hospitalAffiliations', i)}
+                                />
+                            ))}
 
-                            <InputWithFileUpload
-                                label="Hospital Affiliations (Optional)"
-                                name="hospitalAffiliations"
-                                placeholder="Position, Hospital Name"
-                                value={formData.hospitalAffiliations}
-                                onTextChange={handleChange}
-                                onFileSelect={handleFileSelect}
-                                onClearFile={handleClearFile}
-                                fileName={uploadedFiles.hospitalAffiliations}
-                            />
+                            {formData.educationAndTraining.map((value, index) => (
+                                <InputWithFileUpload
+                                    key={`education-${index}`}
+                                    label={index === 0 ? 'Education and Training' : undefined}
+                                    name="educationAndTraining"
+                                    index={index}
+                                    placeholder="University, Degree"
+                                    value={value}
+                                    onTextChange={(e) => handleTextChange('educationAndTraining', index, e.target.value)}
+                                    onFileSelect={(name, fileName) => handleFileSelect(name, fileName, index)}
+                                    onClearFile={(name) => handleClearFile(name, index)}
+                                    fileName={uploadedFiles.educationAndTraining[index]}
+                                    onAddField={() => addInputField('educationAndTraining')}
+                                    onRemoveField={(i) => removeInputField('educationAndTraining', i)}
+                                />
+                            ))}
 
-                            <InputWithFileUpload
-                                label="Education and Training"
-                                name="educationAndTraining"
-                                placeholder="University, Degree"
-                                value={formData.educationAndTraining}
-                                onTextChange={handleChange}
-                                onFileSelect={handleFileSelect}
-                                onClearFile={handleClearFile}
-                                fileName={uploadedFiles.educationAndTraining}
-                            />
+
 
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                                 <div className="col-span-1">

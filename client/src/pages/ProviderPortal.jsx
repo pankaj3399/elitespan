@@ -17,45 +17,69 @@ function ProviderPortal() {
     });
 
     const [errors, setErrors] = useState({
-        npiNumber: ''
+        practiceName: '',
+        providerName: '',
+        npiNumber: '',
+        address: '',
+        suite: '',
+        city: '',
+        state: '',
+        zip: ''
     });
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // Update form data
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
 
-        // Real-time validation for NPI Number
+        // Real-time validation
+        setErrors(prev => ({
+            ...prev,
+            [name]: value.trim() === '' ? 'This field is required.' : ''
+        }));
+
+        // Specific validation for NPI Number
         if (name === 'npiNumber') {
             const isValid = /^\d{10}$/.test(value);
             setErrors(prev => ({
                 ...prev,
-                npiNumber: isValid || value === '' ? '' : 'Invalid NPI Number. It must be 10 digits.',
+                npiNumber: isValid || value === '' ? '' : 'Invalid NPI Number. It must be 10 digits.'
             }));
         }
     };
 
+
     const handleSubmit = (e) => {
         e.preventDefault();
-      
-        // Final validation check before submission
-        const isValidNpi = /^\d{10}$/.test(formData.npiNumber);
-        if (!isValidNpi) {
-          setErrors(prev => ({
-            ...prev,
-            npiNumber: 'Invalid NPI Number. It must be 10 digits.'
-          }));
-          return;
+
+        const newErrors = {};
+
+        // Check for empty fields
+        Object.entries(formData).forEach(([key, value]) => {
+            if (!value.trim()) {
+                newErrors[key] = 'This field is required.';
+            }
+        });
+
+        // Specific validation for NPI Number
+        if (formData.npiNumber && !/^\d{10}$/.test(formData.npiNumber)) {
+            newErrors.npiNumber = 'Invalid NPI Number. It must be 10 digits.';
         }
-      
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
         console.log('Form submitted:', formData);
-        navigate('/qualifications'); // ✅ Navigate only if form is valid
-      };
-      
+        navigate('/qualifications');
+    };
+
+
 
     const states = [
         'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -96,29 +120,45 @@ function ProviderPortal() {
                     <div className="lg:col-span-2 lg:ml-25">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label htmlFor="practiceName" className="block text-[16px] font-normal text-[#484848]">Name of Practice</label>
+                                <label htmlFor="practiceName" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>Name of Practice</label>
                                 <input
                                     type="text"
                                     name="practiceName"
                                     id="practiceName"
                                     value={formData.practiceName}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
+                                    className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.practiceName
+                                        ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                        : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                        }`}
                                     placeholder="Practice"
                                 />
+
+                                {errors.practiceName && (
+                                    <p className="text-[#8D1315] text-[10px] mt-1">{errors.practiceName}</p>
+                                )}
+
                             </div>
 
                             <div>
-                                <label htmlFor="providerName" className="block text-[16px] font-normal text-[#484848]">Provider / Practitioner Name</label>
+                                <label htmlFor="providerName" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>Provider / Practitioner Name</label>
                                 <input
                                     type="text"
                                     name="providerName"
                                     id="providerName"
                                     value={formData.providerName}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
+                                    className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.providerName
+                                        ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                        : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                        }`}
                                     placeholder="Provider"
                                 />
+
+                                {errors.providerName && (
+                                    <p className="text-[#8D1315] text-[10px] mt-1">{errors.providerName}</p>
+                                )}
+
                             </div>
 
                             <div>
@@ -135,8 +175,8 @@ function ProviderPortal() {
                                         }
                                     }}
                                     className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.npiNumber
-                                            ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
-                                            : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                        ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                        : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
                                         }`}
                                     placeholder="0000000000"
                                     maxLength="10"
@@ -147,73 +187,113 @@ function ProviderPortal() {
                             </div>
 
                             <div>
-                                <label htmlFor="address" className="block text-[16px] font-normal text-[#484848]">Address</label>
+                                <label htmlFor="address" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>Address</label>
                                 <input
                                     type="text"
                                     name="address"
                                     id="address"
                                     value={formData.address}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
+                                    className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.address
+                                        ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                        : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                        }`}
                                     placeholder="Address"
                                 />
+
+                                {errors.address && (
+                                    <p className="text-[#8D1315] text-[10px] mt-1">{errors.address}</p>
+                                )}
+
                             </div>
 
                             <div>
-                                <label htmlFor="suite" className="block text-[16px] font-normal text-[#484848]">Apartment, Suite, etc.</label>
+                                <label htmlFor="suite" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>Apartment, Suite, etc.</label>
                                 <input
                                     type="text"
                                     name="suite"
                                     id="suite"
                                     value={formData.suite}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
+                                    className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.suite
+                                        ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                        : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                        }`}
                                     placeholder="Apartment, Suite, etc."
                                 />
+
+                                {errors.suite && (
+                                    <p className="text-[#8D1315] text-[10px] mt-1">{errors.suite}</p>
+                                )}
+
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="city" className="block text-[16px] font-normal text-[#484848]">City</label>
+                                    <label htmlFor="city" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>City</label>
                                     <input
                                         type="text"
                                         name="city"
                                         id="city"
                                         value={formData.city}
                                         onChange={handleChange}
-                                        className="mt-1 block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
+                                        className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.city
+                                            ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                            : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                            }`}
                                         placeholder="City"
                                     />
+
+                                    {errors.city && (
+                                        <p className="text-[#8D1315] text-[10px] mt-1">{errors.city}</p>
+                                    )}
+
                                 </div>
 
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="state" className="block text-[16px] font-normal text-[#484848]">State</label>
+                                    <label htmlFor="state" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>State</label>
                                     <select
                                         name="state"
                                         id="state"
                                         value={formData.state}
                                         onChange={handleChange}
-                                        className="mt-1 block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
+                                        className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.state
+                                            ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                            : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                            }`}
                                     >
                                         <option value="">State</option>
                                         {states.map(state => (
                                             <option key={state} value={state}>{state}</option>
                                         ))}
                                     </select>
+
+                                    {errors.state && (
+                                        <p className="text-[#8D1315] text-[10px] mt-1">{errors.state}</p>
+                                    )}
+
                                 </div>
 
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="zip" className="block text-sm font-normal text-[#484848]">ZIP</label>
+                                    <label htmlFor="zip" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>ZIP</label>
                                     <input
                                         type="text"
                                         name="zip"
                                         id="zip"
                                         value={formData.zip}
                                         onChange={handleChange}
-                                        className="mt-1 block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
+                                        className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.zip
+                                            ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                            : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                            }`}
                                         placeholder="ZIP"
                                         maxLength="5"
                                     />
+
+                                    {errors.zip && (
+                                        <p className="text-[#8D1315] text-[10px] mt-1">{errors.zip}</p>
+                                    )}
+
                                 </div>
                             </div>
 
