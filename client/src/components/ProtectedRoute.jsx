@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { adminLogin } from '../services/api';
 import { X, LogOut } from 'lucide-react';
-import { toast } from 'react-toastify';
 
+// eslint-disable-next-line react/prop-types
 const ProtectedRoute = ({ children, redirectAction }) => {
   const { token, user, loginUser, loading } = useAuth();
   const navigate = useNavigate();

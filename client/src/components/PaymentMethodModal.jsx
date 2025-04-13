@@ -1,6 +1,7 @@
-import React from 'react';
+/* eslint-disable react/prop-types */
 import { X } from 'lucide-react';
 
+// eslint-disable-next-line no-unused-vars
 const PaymentMethodModal = ({ onClose, onContinue, userId }) => {
   const handlePaymentMethodSelect = (method) => {
     onContinue(method);

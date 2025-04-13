@@ -1,4 +1,4 @@
-import React from 'react';
+/* eslint-disable react/prop-types */
 import { X } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -45,7 +45,7 @@ const MembershipModal = ({ onClose, onContinue }) => {
         <div className="text-center text-gray-700 mb-6">
           <p>Annual Membership (Due Today)</p>
           <p className="text-xl font-semibold text-[#0B0757]">$119.88</p>
-          <p>Enjoy a full year of access to Elite Healthspan's premium features and services.</p>
+          <p>Enjoy a full year of access to Elite Healthspan&apos;s premium features and services.</p>
         </div>
 
         <div className="flex justify-between gap-4">

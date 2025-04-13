@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSidebar } from '../../contexts/SidebarContext';
@@ -24,7 +24,7 @@ const Sidebar = () => {
 
   useEffect(() => {
     if (isMobile) toggleSidebar();
-  }, [location.pathname, isMobile]);
+  }, [location.pathname, isMobile, toggleSidebar]);
 
   if (!user || user.role !== 'admin') return null;
 

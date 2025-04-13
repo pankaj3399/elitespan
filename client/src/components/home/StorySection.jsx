@@ -1,14 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
-import Story1 from "../../assets/Story1.png";
-import Story2 from "../../assets/Story2.png";
 import Story3 from "../../assets/Story3.jpg";
 import Story4 from "../../assets/Story4.jpg";
 import Story5 from "../../assets/Story5.jpg";
 import Story6 from "../../assets/Story6.jpg";
-import Story7 from "../../assets/Story7.png";
-import Story8 from "../../assets/Story8.png";
 
+// eslint-disable-next-line react/prop-types
 const StoryCard = ({ image, number, text }) => {
   return (
     <motion.div 

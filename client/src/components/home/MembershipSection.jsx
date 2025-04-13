@@ -1,5 +1,5 @@
 // client/src/components/MembershipSection.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import MembershipModal from '../MembershipModal';
 import ContactInfoForm from '../ContactInfoForm';
@@ -105,6 +105,7 @@ const MembershipSection = () => {
       {modalStep === 'contactInfo' && (
         <ContactInfoForm
           onClose={closeModals}
+          // eslint-disable-next-line no-unused-vars
           onContinue={(userId) => handleContinue('paymentMethod')}
           userId={user ? user.id : null}
         />

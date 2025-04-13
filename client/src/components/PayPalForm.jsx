@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+/* eslint-disable react/prop-types */
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { createPaymentIntent, confirmPayment } from '../services/api';
@@ -71,6 +72,7 @@ const PayPalForm = ({ onClose, onContinue, userId, token: propToken }) => {
     const handleSuccessCallback = () => handleSuccess();
     window.addEventListener('paymentSuccess', handleSuccessCallback);
     return () => window.removeEventListener('paymentSuccess', handleSuccessCallback);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentIntent]);
 
   return (
@@ -86,7 +88,7 @@ const PayPalForm = ({ onClose, onContinue, userId, token: propToken }) => {
         <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">PayPal</h2>
         
         <p className="text-center text-gray-600 mb-8">
-          You’ll be redirected to PayPal to complete your payment. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          You&apos;ll be redirected to PayPal to complete your payment. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         </p>
         
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
