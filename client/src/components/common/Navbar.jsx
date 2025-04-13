@@ -1,5 +1,5 @@
 // client/src/components/Navbar.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X, LogIn } from 'lucide-react';
 import logo from '../../assets/logo.png';
@@ -10,6 +10,7 @@ import CreditCardForm from '../CreditCardForm';
 // import PayPalForm from '../PayPalForm'; // Commented out
 // import ApplePayForm from '../ApplePayForm'; // Commented out
 import { useAuth } from '../../contexts/AuthContext';
+// eslint-disable-next-line
 import { login, signup } from '../../services/api';
 import { Link } from 'react-router-dom';
 
@@ -179,6 +180,7 @@ const Navbar = () => {
       {modalStep === 'contactInfo' && (
         <ContactInfoForm
           onClose={closeModals}
+          // eslint-disable-next-line
           onContinue={(userId) => handleContinue('paymentMethod')}
           userId={user ? user.id : null}
         />
