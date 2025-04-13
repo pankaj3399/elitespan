@@ -1,5 +1,5 @@
 // client/src/components/Navbar.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X, LogIn } from 'lucide-react';
 import logo from '../../assets/logo.png';
@@ -10,7 +10,9 @@ import CreditCardForm from '../CreditCardForm';
 // import PayPalForm from '../PayPalForm'; // Commented out
 // import ApplePayForm from '../ApplePayForm'; // Commented out
 import { useAuth } from '../../contexts/AuthContext';
+// eslint-disable-next-line
 import { login, signup } from '../../services/api';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,9 +75,30 @@ const Navbar = () => {
       </div>
 
       <div className="hidden md:flex items-center gap-8">
-        <a href="#how" className="text-[#64748B] hover:text-[#0B0757] font-medium">Our Approach</a>
-        <a href="#about" className="text-[#64748B] hover:text-[#0B0757] font-medium">About Elite</a>
-        <a href="#faq" className="text-[#64748B] hover:text-[#0B0757] font-medium">FAQ</a>
+        <Link
+          to="/how"
+          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+        >
+          Our Approach
+        </Link>
+        <Link
+          to="/provider-portal"
+          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+        >
+          Provider Portal
+        </Link>
+        <Link
+          to="/about"
+          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+        >
+          About Elite
+        </Link>
+        <Link
+          to="/faq"
+          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+        >
+          FAQ
+        </Link>
         {token ? (
           <button onClick={handleLogout} className="text-[#64748B] hover:text-[#0B0757] font-medium">
             Logout
@@ -128,7 +151,7 @@ const Navbar = () => {
                 handleLoginClick();
                 setIsOpen(false);
               }}
-              className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium flex items-center"
+              className="py-2 text-[#64748B] hover:text-[#0B0757] font-medium flex items-center"
             >
               <LogIn className="w-4 h-4 mr-1" /> Login
             </a>
@@ -157,6 +180,7 @@ const Navbar = () => {
       {modalStep === 'contactInfo' && (
         <ContactInfoForm
           onClose={closeModals}
+          // eslint-disable-next-line
           onContinue={(userId) => handleContinue('paymentMethod')}
           userId={user ? user.id : null}
         />
