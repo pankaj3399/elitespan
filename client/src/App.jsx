@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SidebarProvider, useSidebar } from './contexts/SidebarContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ProfileContent from './pages/ProfileContent';
 
 const App = () => {
   return (
@@ -57,6 +58,7 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/provider-portal" element={<ProviderPortal />} />
           <Route path="/qualifications" element={<Qualifications />} />
+          <Route path="/profile-content" element={<ProfileContent />} />
           <Route
             path="/admin/promo-codes"
             element={
