@@ -14,14 +14,14 @@ function Completion() {
                                     <p className="text-sm text-[#484848]">Share your practice&apos;s name and address details.</p>
                                 </div>
                             </div>
-                            <div className="flex items-start opacity-50">
-                                <div className="md:border-l-3 border-l-[#7E7E7E] md:pl-4 hidden md:block">
+                            <div className="flex items-start">
+                                <div className="md:border-l-3 border-l-[#7F92E5] md:pl-4 hidden md:block">
                                     <h2 className="font-medium text-[16px] text-[#7E7E7E]">Practitioner Qualifications</h2>
                                     <p className="text-sm text-[#484848]">Outline your specialties, certifications, hospital affiliations, and training.</p>
                                 </div>
                             </div>
-                            <div className="flex items-start opacity-50">
-                                <div className="md:border-l-3 border-l-[#7E7E7E] md:pl-4 hidden md:block">
+                            <div className="flex items-start">
+                                <div className="md:border-l-3 border-l-[#7F92E5] md:pl-4 hidden md:block">
                                     <h2 className="font-medium text-[16px] text-[#7E7E7E]">Profile Content</h2>
                                     <p className="text-sm text-[#484848]">Customize your profile with a headshot, image gallery, and customer reviews.</p>
                                 </div>

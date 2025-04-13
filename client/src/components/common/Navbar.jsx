@@ -151,7 +151,7 @@ const Navbar = () => {
                 handleLoginClick();
                 setIsOpen(false);
               }}
-              className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium flex items-center"
+              className="py-2 text-[#64748B] hover:text-[#0B0757] font-medium flex items-center"
             >
               <LogIn className="w-4 h-4 mr-1" /> Login
             </a>
