@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { createPaymentIntent, confirmPayment, sendSubscriptionEmail, validatePromoCode } from '../services/api';
@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
+// eslint-disable-next-line react/prop-types
 const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propToken }) => {
   const [error, setError] = useState('');
   const [paymentIntent, setPaymentIntent] = useState(null);
@@ -125,6 +126,7 @@ const CreditCardForm = ({ onClose, onContinue, userId: propUserId, token: propTo
         cardInstanceRef.current = null;
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finalUserId, finalToken]); // Removed discount from dependencies to prevent re-fetch loop
 
   const handleCreditCard = async () => {

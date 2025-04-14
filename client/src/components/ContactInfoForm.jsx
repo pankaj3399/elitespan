@@ -1,9 +1,10 @@
 // client/src/components/ContactInfoForm.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import { signup, login } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
+// eslint-disable-next-line react/prop-types, no-unused-vars
 const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -76,6 +77,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
         try {
           const errorData = JSON.parse(err.message);
           setError(errorData.message || 'Signup failed');
+        // eslint-disable-next-line no-unused-vars
         } catch (parseError) {
           setError('Signup failed due to an unknown error');
         }

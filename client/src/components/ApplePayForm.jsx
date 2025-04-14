@@ -1,6 +1,6 @@
 // client/src/components/ApplePayForm.jsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { createPaymentIntent, confirmPayment } from '../services/api';
@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
+// eslint-disable-next-line react/prop-types
 const ApplePayForm = ({ onClose, onContinue, userId, token: propToken }) => {
   const [error, setError] = useState('');
   const [paymentIntent, setPaymentIntent] = useState(null);

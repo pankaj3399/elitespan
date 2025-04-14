@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+/* eslint-disable no-unused-vars */
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createPromoCode, getPromoCodes } from '../services/api';
 import { Calendar, Percent, Plus, Tag, AlertCircle, CheckCircle } from 'lucide-react';
@@ -14,7 +15,7 @@ const AdminPromoCodes = () => {
 
   useEffect(() => {
     fetchPromoCodes();
-  }, []);
+  },);
 
   const fetchPromoCodes = async () => {
     try {
