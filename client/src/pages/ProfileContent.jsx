@@ -44,20 +44,68 @@ function ProfileContent() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const getCloudinarySignature = async () => {
+        const res = await fetch('http://localhost:3000/signature', {
+            method: 'POST',
+        });
+        return res.json();
+    };
+
+    const uploadToCloudinary = async (file, signatureData) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', signatureData.apiKey);
+        formData.append('timestamp', signatureData.timestamp);
+        formData.append('signature', signatureData.signature);
+    
+        // For non-image files (like Excel), use `raw`
+        const isExcel = file.type.includes('spreadsheet') || file.name.endsWith('.xls') || file.name.endsWith('.xlsx');
+        const resourceType = isExcel ? 'raw' : 'image';
+    
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/${resourceType}/upload`;
+    
+        const res = await fetch(uploadUrl, {
+            method: 'POST',
+            body: formData,
+        });
+    
+        const data = await res.json();
+        return data.secure_url;
+    };
+    
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitted(true);
-
+    
         const { headshot, gallery, reviews } = uploadedFiles;
-
+    
         if (!headshot || !gallery || !reviews) {
             alert("Please upload all required files before continuing.");
             return;
         }
-
-        console.log('Submitted:', uploadedFiles);
-        navigate('/completion');
+    
+        try {
+            const signatureData = await getCloudinarySignature();
+    
+            const headshotUrl = await uploadToCloudinary(headshot, signatureData);
+            const galleryUrl = await uploadToCloudinary(gallery, signatureData);
+            const reviewsUrl = await uploadToCloudinary(reviews, signatureData); // Excel file as raw
+    
+            await fetch('http://localhost:3000/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ headshotUrl, galleryUrl, reviewsUrl }),
+            });
+    
+            console.log('Uploaded successfully:', { headshotUrl, galleryUrl, reviewsUrl });
+            navigate('/completion');
+        } catch (err) {
+            console.error('Upload failed:', err);
+            alert('Upload failed, please try again.');
+        }
     };
+    
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-white via-white to-[#d9dff4]">

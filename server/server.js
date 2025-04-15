@@ -1,4 +1,6 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const crypto = require('crypto');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const waitlistRoutes = require('./routes/waitlistRoutes');
@@ -14,6 +16,7 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 const PromoCode = require('./models/PromoCode');
+const Image = require('./models/Image');
 
 // Load environment variables
 dotenv.config();
@@ -95,6 +98,41 @@ app.use('/api/admins', adminRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin-panel', adminPanelRoutes);
 app.use('/api/promo-codes', promoCodeRoutes); // New route
+
+// Endpoint: Generate signature for Cloudinary
+app.post('/signature', (req, res) => {
+  const timestamp = Math.round((new Date).getTime() / 1000);
+  const paramsToSign = `timestamp=${timestamp}`;
+  const signature = crypto
+    .createHash('sha1')
+    .update(paramsToSign + process.env.CLOUDINARY_API_SECRET)
+    .digest('hex');
+
+  res.json({
+    timestamp,
+    signature,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME
+  });
+});
+
+// Endpoint: Save image URLs
+app.post('/save', async (req, res) => {
+  const { headshotUrl, galleryUrl, reviewsUrl } = req.body;
+
+  if (!headshotUrl || !galleryUrl || !reviewsUrl) {
+    return res.status(400).json({ message: 'Missing one or more required URLs' });
+  }
+
+  try {
+    const newImageEntry = new Image({ headshotUrl, galleryUrl, reviewsUrl });
+    await newImageEntry.save();
+    res.status(200).json({ message: 'Image URLs saved successfully' });
+  } catch (err) {
+    console.error('Error saving image URLs:', err);
+    res.status(500).json({ message: 'Error saving URLs' });
+  }
+});
 
 // Endpoint: Send Subscription Email
 app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => {
