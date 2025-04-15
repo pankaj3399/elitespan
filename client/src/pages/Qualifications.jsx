@@ -1,7 +1,7 @@
 // client/src/pages/Qualifications.jsx
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import InputWithFileUpload from '../components/common/InputWithFileUpload';
+import QualificationInput from '../components/common/QualificationInput';
 
 function Qualifications() {
     const navigate = useNavigate();
@@ -124,7 +124,7 @@ function Qualifications() {
                                 />
                             </div>
                             {formData.boardCertifications.map((value, index) => (
-                                <InputWithFileUpload
+                                <QualificationInput
                                     key={`board-${index}`}
                                     label={index === 0 ? 'Board Certifications' : undefined}
                                     name="boardCertifications"
@@ -141,7 +141,7 @@ function Qualifications() {
                             ))}
 
                             {formData.hospitalAffiliations.map((value, index) => (
-                                <InputWithFileUpload
+                                <QualificationInput
                                     key={`hospital-${index}`}
                                     label={index === 0 ? 'Hospital Affiliations (Optional)' : undefined}
                                     name="hospitalAffiliations"
@@ -158,7 +158,7 @@ function Qualifications() {
                             ))}
 
                             {formData.educationAndTraining.map((value, index) => (
-                                <InputWithFileUpload
+                                <QualificationInput
                                     key={`education-${index}`}
                                     label={index === 0 ? 'Education and Training' : undefined}
                                     name="educationAndTraining"

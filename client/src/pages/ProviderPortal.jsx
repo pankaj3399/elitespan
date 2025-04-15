@@ -120,7 +120,7 @@ function ProviderPortal() {
                     <div className="lg:col-span-2 lg:ml-25">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label htmlFor="practiceName" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>Name of Practice</label>
+                                <label htmlFor="practiceName" className={`block text-[16px] font-normal ${errors.practiceName ? `text-[#8D1315]` : `text-[#484848]`}`}>Name of Practice</label>
                                 <input
                                     type="text"
                                     name="practiceName"
@@ -141,7 +141,7 @@ function ProviderPortal() {
                             </div>
 
                             <div>
-                                <label htmlFor="providerName" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>Provider / Practitioner Name</label>
+                                <label htmlFor="providerName" className={`block text-[16px] font-normal ${errors.providerName ? `text-[#8D1315]` : `text-[#484848]`}`}>Provider / Practitioner Name</label>
                                 <input
                                     type="text"
                                     name="providerName"
@@ -187,7 +187,7 @@ function ProviderPortal() {
                             </div>
 
                             <div>
-                                <label htmlFor="address" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>Address</label>
+                                <label htmlFor="address" className={`block text-[16px] font-normal ${errors.address ? `text-[#8D1315]` : `text-[#484848]`}`}>Address</label>
                                 <input
                                     type="text"
                                     name="address"
@@ -208,7 +208,7 @@ function ProviderPortal() {
                             </div>
 
                             <div>
-                                <label htmlFor="suite" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>Apartment, Suite, etc.</label>
+                                <label htmlFor="suite" className={`block text-[16px] font-normal ${errors.suite ? `text-[#8D1315]` : `text-[#484848]`}`}>Apartment, Suite, etc.</label>
                                 <input
                                     type="text"
                                     name="suite"
@@ -230,7 +230,7 @@ function ProviderPortal() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="city" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>City</label>
+                                    <label htmlFor="city" className={`block text-[16px] font-normal ${errors.city ? `text-[#8D1315]` : `text-[#484848]`}`}>City</label>
                                     <input
                                         type="text"
                                         name="city"
@@ -251,7 +251,7 @@ function ProviderPortal() {
                                 </div>
 
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="state" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>State</label>
+                                    <label htmlFor="state" className={`block text-[16px] font-normal ${errors.state ? `text-[#8D1315]` : `text-[#484848]`}`}>State</label>
                                     <select
                                         name="state"
                                         id="state"
@@ -275,7 +275,7 @@ function ProviderPortal() {
                                 </div>
 
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="zip" className={`block text-[16px] font-normal ${errors.npiNumber ? `text-[#8D1315]` : `text-[#484848]`}`}>ZIP</label>
+                                    <label htmlFor="zip" className={`block text-[16px] font-normal ${errors.zip ? `text-[#8D1315]` : `text-[#484848]`}`}>ZIP</label>
                                     <input
                                         type="text"
                                         name="zip"

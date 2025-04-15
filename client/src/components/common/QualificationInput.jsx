@@ -1,25 +1,17 @@
 /* eslint-disable react/prop-types */
-// client/src/components/common/InputWithFileUpload.jsx
-import { useRef } from 'react';
 import plusCircle from '/public/plusCircle.svg';
 import { RxCross2 } from 'react-icons/rx';
 
-const InputWithFileUpload = ({
+const QualificationInput = ({
   label,
   name,
   placeholder,
   value,
   onTextChange,
-  onFileSelect,
-  fileName,
-  showClear = true,
-  onClearFile,
   onAddField,
   onRemoveField,
   index = 0,
 }) => {
-  const fileInputRef = useRef(null);
-
   return (
     <div className="relative mt-4">
       {label && (
@@ -39,7 +31,6 @@ const InputWithFileUpload = ({
           className="block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 pr-10 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
         />
 
-        {/* Plus icon on first input, Cross icon on additional ones */}
         {index === 0 ? (
           <button
             type="button"
@@ -60,34 +51,8 @@ const InputWithFileUpload = ({
           </button>
         )}
       </div>
-
-      <input
-        type="file"
-        accept=".pdf,.doc,.docx"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          if (file) onFileSelect(name, file.name, index);
-        }}
-      />
-
-      {fileName && (
-        <div className="flex items-center gap-2 mt-2 text-sm text-[#061140]">
-          📄 {fileName}
-          {showClear && (
-            <button
-              type="button"
-              className="text-red-600 text-xs"
-              onClick={() => onClearFile(name, index)}
-            >
-              ❌
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 };
 
-export default InputWithFileUpload;
+export default QualificationInput;
