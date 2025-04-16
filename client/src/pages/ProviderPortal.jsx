@@ -1,6 +1,7 @@
 // client/src/pages/ProviderPortal.jsx
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { saveProviderInfo } from '../services/api';
 
 function ProviderPortal() {
     const navigate = useNavigate();
@@ -55,40 +56,29 @@ function ProviderPortal() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         const newErrors = {};
         Object.entries(formData).forEach(([key, value]) => {
             if (!value.trim()) {
                 newErrors[key] = 'This field is required.';
             }
         });
-
+    
         if (formData.npiNumber && !/^\d{10}$/.test(formData.npiNumber)) {
             newErrors.npiNumber = 'Invalid NPI Number. It must be 10 digits.';
         }
-
+    
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
         }
-
+    
         try {
-            const response = await fetch('http://localhost:3000/api/provider-info', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            });
-
-            if (response.ok) {
-                console.log('Form submitted and saved to DB');
-                navigate('/qualifications');
-            } else {
-                console.error('Server error while saving:', await response.text());
-            }
+            await saveProviderInfo(formData);
+            console.log('Form submitted and saved to DB');
+            navigate('/qualifications');
         } catch (error) {
-            console.error('Error submitting form:', error);
+            console.error('Error submitting provider info:', error.message);
         }
     };
 

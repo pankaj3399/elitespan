@@ -104,7 +104,7 @@ app.use('/api/provider-info', providerRoutes);
 app.use('/api/qualifications', qualificationRoutes);
 
 // Endpoint: Generate signature for Cloudinary
-app.post('/signature', (req, res) => {
+app.post('/api/signature', (req, res) => {
   const timestamp = Math.round((new Date).getTime() / 1000);
   const paramsToSign = `timestamp=${timestamp}`;
   const signature = crypto
@@ -121,7 +121,7 @@ app.post('/signature', (req, res) => {
 });
 
 // Endpoint: Save image URLs
-app.post('/save', async (req, res) => {
+app.post('/api/save', async (req, res) => {
   const { headshotUrl, galleryUrl, reviewsUrl } = req.body;
 
   if (!headshotUrl || !galleryUrl || !reviewsUrl) {

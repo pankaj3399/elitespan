@@ -1,8 +1,9 @@
+/* eslint-disable no-undef */
 // client/src/pages/Qualifications.jsx
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import QualificationInput from '../components/common/QualificationInput';
-import axios from 'axios';
+import { saveQualifications } from '../services/api';
 
 function Qualifications() {
     const navigate = useNavigate();
@@ -44,11 +45,11 @@ function Qualifications() {
         }));
     };
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:3000/api/qualifications', formData);
-            console.log('Saved to DB:', response.data);
+            await saveQualifications(formData);
             navigate('/profile-content');
         } catch (error) {
             console.error('Error saving qualifications:', error);

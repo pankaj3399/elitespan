@@ -3,6 +3,7 @@ import { useState } from 'react';
 import StyledFileInput from '../components/common/StyledFileInput';
 import { MdOutlineFileUpload } from "react-icons/md";
 import { IoMdArrowDown } from "react-icons/io";
+import { getCloudinarySignature, saveImageUrls } from '../services/api';
 
 function ProfileContent() {
     const navigate = useNavigate();
@@ -45,12 +46,12 @@ function ProfileContent() {
         }));
     };
 
-    const getCloudinarySignature = async () => {
-        const res = await fetch('http://localhost:3000/signature', {
-            method: 'POST',
-        });
-        return res.json();
-    };
+    // const getCloudinarySignature = async () => {
+    //     const res = await fetch('http://localhost:3000/signature', {
+    //         method: 'POST',
+    //     });
+    //     return res.json();
+    // };
 
     const uploadToCloudinary = async (file, signatureData) => {
         const formData = new FormData();
@@ -84,7 +85,7 @@ function ProfileContent() {
             return;
         }
 
-        setLoading(true); // Show loader
+        setLoading(true);
 
         try {
             const signatureData = await getCloudinarySignature();
@@ -93,11 +94,7 @@ function ProfileContent() {
             const galleryUrl = await uploadToCloudinary(gallery, signatureData);
             const reviewsUrl = await uploadToCloudinary(reviews, signatureData);
 
-            await fetch('http://localhost:3000/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ headshotUrl, galleryUrl, reviewsUrl }),
-            });
+            await saveImageUrls({ headshotUrl, galleryUrl, reviewsUrl });
 
             console.log('Uploaded successfully:', { headshotUrl, galleryUrl, reviewsUrl });
             navigate('/completion');
@@ -105,9 +102,10 @@ function ProfileContent() {
             console.error('Upload failed:', err);
             alert('Upload failed, please try again.');
         } finally {
-            setLoading(false); // Hide loader
+            setLoading(false);
         }
     };
+
 
     if (loading) {
         return (
