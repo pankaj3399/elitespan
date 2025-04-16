@@ -14,6 +14,7 @@ function ProfileContent() {
     });
 
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleFileSelect = (field, file) => {
         if (!file) return;
@@ -57,55 +58,67 @@ function ProfileContent() {
         formData.append('api_key', signatureData.apiKey);
         formData.append('timestamp', signatureData.timestamp);
         formData.append('signature', signatureData.signature);
-    
-        // For non-image files (like Excel), use `raw`
+
         const isExcel = file.type.includes('spreadsheet') || file.name.endsWith('.xls') || file.name.endsWith('.xlsx');
         const resourceType = isExcel ? 'raw' : 'image';
-    
+
         const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/${resourceType}/upload`;
-    
+
         const res = await fetch(uploadUrl, {
             method: 'POST',
             body: formData,
         });
-    
+
         const data = await res.json();
         return data.secure_url;
     };
-    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitted(true);
-    
+
         const { headshot, gallery, reviews } = uploadedFiles;
-    
+
         if (!headshot || !gallery || !reviews) {
             alert("Please upload all required files before continuing.");
             return;
         }
-    
+
+        setLoading(true); // Show loader
+
         try {
             const signatureData = await getCloudinarySignature();
-    
+
             const headshotUrl = await uploadToCloudinary(headshot, signatureData);
             const galleryUrl = await uploadToCloudinary(gallery, signatureData);
-            const reviewsUrl = await uploadToCloudinary(reviews, signatureData); // Excel file as raw
-    
+            const reviewsUrl = await uploadToCloudinary(reviews, signatureData);
+
             await fetch('http://localhost:3000/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ headshotUrl, galleryUrl, reviewsUrl }),
             });
-    
+
             console.log('Uploaded successfully:', { headshotUrl, galleryUrl, reviewsUrl });
             navigate('/completion');
         } catch (err) {
             console.error('Upload failed:', err);
             alert('Upload failed, please try again.');
+        } finally {
+            setLoading(false); // Hide loader
         }
     };
-    
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="mt-4 text-[#061140] font-medium">Uploading your files, please wait...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-white via-white to-[#d9dff4]">
