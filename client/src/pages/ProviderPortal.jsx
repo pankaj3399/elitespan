@@ -53,19 +53,16 @@ function ProviderPortal() {
     };
 
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const newErrors = {};
-
-        // Check for empty fields
         Object.entries(formData).forEach(([key, value]) => {
             if (!value.trim()) {
                 newErrors[key] = 'This field is required.';
             }
         });
 
-        // Specific validation for NPI Number
         if (formData.npiNumber && !/^\d{10}$/.test(formData.npiNumber)) {
             newErrors.npiNumber = 'Invalid NPI Number. It must be 10 digits.';
         }
@@ -75,9 +72,26 @@ function ProviderPortal() {
             return;
         }
 
-        console.log('Form submitted:', formData);
-        navigate('/qualifications');
+        try {
+            const response = await fetch('http://localhost:3000/api/provider-info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                console.log('Form submitted and saved to DB');
+                navigate('/qualifications');
+            } else {
+                console.error('Server error while saving:', await response.text());
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+        }
     };
+
 
 
 

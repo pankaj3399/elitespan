@@ -2,18 +2,13 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import QualificationInput from '../components/common/QualificationInput';
+import axios from 'axios';
 
 function Qualifications() {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         specialties: '',
-        boardCertifications: [''],
-        hospitalAffiliations: [''],
-        educationAndTraining: [''],
-    });
-
-    const [uploadedFiles, setUploadedFiles] = useState({
         boardCertifications: [''],
         hospitalAffiliations: [''],
         educationAndTraining: [''],
@@ -35,28 +30,8 @@ function Qualifications() {
         });
     };
 
-    const handleFileSelect = (field, fileName, index) => {
-        setUploadedFiles((prev) => {
-            const updated = [...prev[field]];
-            updated[index] = fileName;
-            return { ...prev, [field]: updated };
-        });
-    };
-
-    const handleClearFile = (field, index) => {
-        setUploadedFiles((prev) => {
-            const updated = [...prev[field]];
-            updated[index] = '';
-            return { ...prev, [field]: updated };
-        });
-    };
-
     const addInputField = (field) => {
         setFormData((prev) => ({
-            ...prev,
-            [field]: [...prev[field], ''],
-        }));
-        setUploadedFiles((prev) => ({
             ...prev,
             [field]: [...prev[field], ''],
         }));
@@ -67,16 +42,17 @@ function Qualifications() {
             ...prev,
             [field]: prev[field].filter((_, i) => i !== index),
         }));
-        setUploadedFiles((prev) => ({
-            ...prev,
-            [field]: prev[field].filter((_, i) => i !== index),
-        }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form submitted:', formData, uploadedFiles);
-        navigate('/profile-content');
+        try {
+            const response = await axios.post('http://localhost:3000/api/qualifications', formData);
+            console.log('Saved to DB:', response.data);
+            navigate('/profile-content');
+        } catch (error) {
+            console.error('Error saving qualifications:', error);
+        }
     };
 
     return (
@@ -123,6 +99,7 @@ function Qualifications() {
                                     placeholder="Specialties"
                                 />
                             </div>
+
                             {formData.boardCertifications.map((value, index) => (
                                 <QualificationInput
                                     key={`board-${index}`}
@@ -132,9 +109,6 @@ function Qualifications() {
                                     placeholder="Certification 1, School Name"
                                     value={value}
                                     onTextChange={(e) => handleTextChange('boardCertifications', index, e.target.value)}
-                                    onFileSelect={(name, fileName) => handleFileSelect(name, fileName, index)}
-                                    onClearFile={(name) => handleClearFile(name, index)}
-                                    fileName={uploadedFiles.boardCertifications[index]}
                                     onAddField={() => addInputField('boardCertifications')}
                                     onRemoveField={(i) => removeInputField('boardCertifications', i)}
                                 />
@@ -149,9 +123,6 @@ function Qualifications() {
                                     placeholder="Position, Hospital Name"
                                     value={value}
                                     onTextChange={(e) => handleTextChange('hospitalAffiliations', index, e.target.value)}
-                                    onFileSelect={(name, fileName) => handleFileSelect(name, fileName, index)}
-                                    onClearFile={(name) => handleClearFile(name, index)}
-                                    fileName={uploadedFiles.hospitalAffiliations[index]}
                                     onAddField={() => addInputField('hospitalAffiliations')}
                                     onRemoveField={(i) => removeInputField('hospitalAffiliations', i)}
                                 />
@@ -166,15 +137,10 @@ function Qualifications() {
                                     placeholder="University, Degree"
                                     value={value}
                                     onTextChange={(e) => handleTextChange('educationAndTraining', index, e.target.value)}
-                                    onFileSelect={(name, fileName) => handleFileSelect(name, fileName, index)}
-                                    onClearFile={(name) => handleClearFile(name, index)}
-                                    fileName={uploadedFiles.educationAndTraining[index]}
                                     onAddField={() => addInputField('educationAndTraining')}
                                     onRemoveField={(i) => removeInputField('educationAndTraining', i)}
                                 />
                             ))}
-
-
 
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                                 <div className="col-span-1">
