@@ -204,6 +204,49 @@ export const getTransactions = async (token) => {
   }
 };
 
+// Provider Portal Endpoints
+export const saveProviderInfo = async (providerData) => {
+  try {
+    const response = await api.post('/provider-info', providerData);
+    return response.data;
+  } catch (error) {
+    console.error('Save provider info error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to save provider info');
+  }
+};
+
+export const saveQualifications = async (formData) => {
+  try {
+    const response = await api.post('/qualifications', formData);
+    return response.data;
+  } catch (error) {
+    console.error('Save qualifications error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to save qualifications');
+  }
+};
+
+export const getCloudinarySignature = async () => {
+  try {
+    const response = await api.post('/signature');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching Cloudinary signature:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to get Cloudinary signature');
+  }
+};
+
+export const saveImageUrls = async (imageData) => {
+  try {
+    const response = await api.post('/save', imageData);
+    return response.data;
+  } catch (error) {
+    console.error('Error saving image URLs:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to save uploaded files');
+  }
+};
+
+
+
 // Send Subscription Email
 export const sendSubscriptionEmail = async (token, userId) => {
   try {

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import StyledFileInput from '../components/common/StyledFileInput';
 import { MdOutlineFileUpload } from "react-icons/md";
 import { IoMdArrowDown } from "react-icons/io";
+import { getCloudinarySignature, saveImageUrls } from '../services/api';
 
 function ProfileContent() {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ function ProfileContent() {
     });
 
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleFileSelect = (field, file) => {
         if (!file) return;
@@ -44,7 +46,35 @@ function ProfileContent() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    // const getCloudinarySignature = async () => {
+    //     const res = await fetch('http://localhost:3000/signature', {
+    //         method: 'POST',
+    //     });
+    //     return res.json();
+    // };
+
+    const uploadToCloudinary = async (file, signatureData) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', signatureData.apiKey);
+        formData.append('timestamp', signatureData.timestamp);
+        formData.append('signature', signatureData.signature);
+
+        const isExcel = file.type.includes('spreadsheet') || file.name.endsWith('.xls') || file.name.endsWith('.xlsx');
+        const resourceType = isExcel ? 'raw' : 'image';
+
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/${resourceType}/upload`;
+
+        const res = await fetch(uploadUrl, {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await res.json();
+        return data.secure_url;
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitted(true);
 
@@ -55,9 +85,38 @@ function ProfileContent() {
             return;
         }
 
-        console.log('Submitted:', uploadedFiles);
-        navigate('/completion');
+        setLoading(true);
+
+        try {
+            const signatureData = await getCloudinarySignature();
+
+            const headshotUrl = await uploadToCloudinary(headshot, signatureData);
+            const galleryUrl = await uploadToCloudinary(gallery, signatureData);
+            const reviewsUrl = await uploadToCloudinary(reviews, signatureData);
+
+            await saveImageUrls({ headshotUrl, galleryUrl, reviewsUrl });
+
+            console.log('Uploaded successfully:', { headshotUrl, galleryUrl, reviewsUrl });
+            navigate('/completion');
+        } catch (err) {
+            console.error('Upload failed:', err);
+            alert('Upload failed, please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
+
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="mt-4 text-[#061140] font-medium">Uploading your files, please wait...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-white via-white to-[#d9dff4]">
