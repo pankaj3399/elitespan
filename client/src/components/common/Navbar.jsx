@@ -79,7 +79,7 @@ const Navbar = () => {
           to="/how"
           className="text-[#64748B] hover:text-[#0B0757] font-medium"
         >
-          Our Approach
+          How it works
         </Link>
         <Link
           to="/provider-portal"
