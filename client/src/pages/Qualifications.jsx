@@ -193,7 +193,7 @@ function Qualifications() {
                                         {specialtiesOptions.map((option) => (
                                             <label
                                                 key={option}
-                                                className="flex items-center px-4 py-2 text-sm text-[#484848] hover:bg-gray-100 cursor-pointer"
+                                                className="flex items-center px-4 py-2 text-sm text-[#484848] hover:bg-[#DFE3F2] cursor-pointer"
                                             >
                                                 <input
                                                     type="checkbox"
