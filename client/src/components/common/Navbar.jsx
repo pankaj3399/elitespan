@@ -69,7 +69,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="w-full py-2 px-6 flex items-center justify-between top-0 z-50"> {/*  removed fixed */}
+    <nav className="w-full py-2 px-6 flex items-center justify-between absolute top-0 z-50"> {/*  replaced fixed with absolute */}
       <div className="text-2xl font-bold text-[#0B0757]">
         <img src={logo} alt="Elite Healthspan" className="h-15" />
       </div>
