@@ -105,6 +105,49 @@ function Qualifications() {
 
                     <div className="lg:col-span-2 lg:ml-25">
                         <form onSubmit={handleSubmit} className="space-y-6">
+
+                            {formData.boardCertifications.map((value, index) => (
+                                <QualificationInput
+                                    key={`board-${index}`}
+                                    label={index === 0 ? 'Type of Medicine' : undefined}
+                                    name="boardCertifications"
+                                    index={index}
+                                    placeholder="Certification"
+                                    value={value}
+                                    onTextChange={(e) => handleTextChange('boardCertifications', index, e.target.value)}
+                                    onAddField={() => addInputField('boardCertifications')}
+                                    onRemoveField={(i) => removeInputField('boardCertifications', i)}
+                                />
+                            ))}
+
+                            {formData.hospitalAffiliations.map((value, index) => (
+                                <QualificationInput
+                                    key={`hospital-${index}`}
+                                    label={index === 0 ? 'Hospital Affiliations (Optional)' : undefined}
+                                    name="hospitalAffiliations"
+                                    index={index}
+                                    placeholder="Position, Hospital Name"
+                                    value={value}
+                                    onTextChange={(e) => handleTextChange('hospitalAffiliations', index, e.target.value)}
+                                    onAddField={() => addInputField('hospitalAffiliations')}
+                                    onRemoveField={(i) => removeInputField('hospitalAffiliations', i)}
+                                />
+                            ))}
+
+                            {formData.educationAndTraining.map((value, index) => (
+                                <QualificationInput
+                                    key={`education-${index}`}
+                                    label={index === 0 ? 'Education and Training' : undefined}
+                                    name="educationAndTraining"
+                                    index={index}
+                                    placeholder="University, Degree"
+                                    value={value}
+                                    onTextChange={(e) => handleTextChange('educationAndTraining', index, e.target.value)}
+                                    onAddField={() => addInputField('educationAndTraining')}
+                                    onRemoveField={(i) => removeInputField('educationAndTraining', i)}
+                                />
+                            ))}
+
                             <div className="relative">
                                 <label htmlFor="specialties" className="block text-[16px] font-normal text-[#484848]">
                                     Specialties (Select all that apply)
@@ -146,7 +189,7 @@ function Qualifications() {
                                 </div>
 
                                 {dropdownOpen && (
-                                    <div className="absolute z-10 mt-1 w-full bg-white border border-[#7E7E7E] rounded-md shadow-md max-h-48 overflow-y-auto">
+                                    <div className="z-10 mt-2 w-full border border-[#7E7E7E] rounded-md shadow-md max-h-48 overflow-y-auto">
                                         {specialtiesOptions.map((option) => (
                                             <label
                                                 key={option}
@@ -156,7 +199,7 @@ function Qualifications() {
                                                     type="checkbox"
                                                     checked={formData.specialties.includes(option)}
                                                     onChange={() => toggleSpecialty(option)}
-                                                    className="mr-2"
+                                                    className="mr-2 accent-[#0C1F6D] text-[#0C1F6D] rounded border-[#7E7E7E] focus:ring-[#0C1F6D] cursor-pointer"
                                                 />
                                                 {option}
                                             </label>
@@ -164,48 +207,6 @@ function Qualifications() {
                                     </div>
                                 )}
                             </div>
-
-                            {formData.boardCertifications.map((value, index) => (
-                                <QualificationInput
-                                    key={`board-${index}`}
-                                    label={index === 0 ? 'Board Certifications' : undefined}
-                                    name="boardCertifications"
-                                    index={index}
-                                    placeholder="Certification 1, School Name"
-                                    value={value}
-                                    onTextChange={(e) => handleTextChange('boardCertifications', index, e.target.value)}
-                                    onAddField={() => addInputField('boardCertifications')}
-                                    onRemoveField={(i) => removeInputField('boardCertifications', i)}
-                                />
-                            ))}
-
-                            {formData.hospitalAffiliations.map((value, index) => (
-                                <QualificationInput
-                                    key={`hospital-${index}`}
-                                    label={index === 0 ? 'Hospital Affiliations (Optional)' : undefined}
-                                    name="hospitalAffiliations"
-                                    index={index}
-                                    placeholder="Position, Hospital Name"
-                                    value={value}
-                                    onTextChange={(e) => handleTextChange('hospitalAffiliations', index, e.target.value)}
-                                    onAddField={() => addInputField('hospitalAffiliations')}
-                                    onRemoveField={(i) => removeInputField('hospitalAffiliations', i)}
-                                />
-                            ))}
-
-                            {formData.educationAndTraining.map((value, index) => (
-                                <QualificationInput
-                                    key={`education-${index}`}
-                                    label={index === 0 ? 'Education and Training' : undefined}
-                                    name="educationAndTraining"
-                                    index={index}
-                                    placeholder="University, Degree"
-                                    value={value}
-                                    onTextChange={(e) => handleTextChange('educationAndTraining', index, e.target.value)}
-                                    onAddField={() => addInputField('educationAndTraining')}
-                                    onRemoveField={(i) => removeInputField('educationAndTraining', i)}
-                                />
-                            ))}
 
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                                 <div className="col-span-1">
