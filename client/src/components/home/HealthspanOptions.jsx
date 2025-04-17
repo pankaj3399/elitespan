@@ -24,7 +24,7 @@ export default function HealthspanOptions() {
     const visibleOptions = options.slice(0, 6); // First 6
 
     return (
-        <section className="bg-[#fdf9f6] py-16 px-4 text-center relative">
+        <section className="bg-[#fdf9f6] mt-20 py-16 px-4 text-center relative">
             <h2 className="text-2xl md:text-[40px] font-bold text-[#0a0a33] mb-10">
                 Which Elite Healthspan Journey is Yours?
             </h2>
