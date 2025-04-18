@@ -5,6 +5,7 @@ import { saveProviderInfo } from '../services/api';
 
 function ProviderPortal() {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         practiceName: '',
@@ -56,31 +57,35 @@ function ProviderPortal() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         const newErrors = {};
         Object.entries(formData).forEach(([key, value]) => {
             if (!value.trim()) {
                 newErrors[key] = 'This field is required.';
             }
         });
-    
+
         if (formData.npiNumber && !/^\d{10}$/.test(formData.npiNumber)) {
             newErrors.npiNumber = 'Invalid NPI Number. It must be 10 digits.';
         }
-    
+
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
         }
-    
+
         try {
+            setIsLoading(true);
             await saveProviderInfo(formData);
             console.log('Form submitted and saved to DB');
             navigate('/qualifications');
         } catch (error) {
             console.error('Error submitting provider info:', error.message);
+        } finally {
+            setIsLoading(false);
         }
     };
+
 
 
 
@@ -304,9 +309,20 @@ function ProviderPortal() {
                             <div>
                                 <button
                                     type="submit"
-                                    className="w-full sm:w-32 flex justify-center py-4 px-4 md:px-20 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-[#0C1F6D] hover:bg-[#162241]"
+                                    className="w-full sm:w-32 flex justify-center items-center gap-2 py-4 px-4 md:px-20 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-[#0C1F6D] hover:bg-[#162241]"
+                                    disabled={isLoading}
                                 >
-                                    Continue
+                                    {isLoading ? (
+                                        <>
+                                            <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                            </svg>
+                                            <span>Loading...</span>
+                                        </>
+                                    ) : (
+                                        "Continue"
+                                    )}
                                 </button>
                             </div>
                         </form>
