@@ -136,12 +136,12 @@ const Navbar = () => {
           exit={{ opacity: 0, y: -20 }}
           className="absolute top-16 right-0 w-64 bg-white shadow-lg rounded-lg p-4 md:hidden"
         >
-          <a href="/how" className="block py-2 text-[#FFFFFF] hover:text-[#0B0757] font-medium">How it works</a>
-          <a href="/provider-portal" className="block py-2 text-[#FFFFFF] hover:text-[#0B0757] font-medium">Provider Portal</a>
-          <a href="/about" className="block py-2 text-[#FFFFFF] hover:text-[#0B0757] font-medium">About Elite</a>
-          <a href="/faq" className="block py-2 text-[#FFFFFF] hover:text-[#0B0757] font-medium">FAQ</a>
+          <a href="/how" className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">How it works</a>
+          <a href="/provider-portal" className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">Provider Portal</a>
+          <a href="/about" className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">About Elite</a>
+          <a href="/faq" className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">FAQ</a>
           {token ? (
-            <button onClick={handleLogout} className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">
+            <button onClick={handleLogout} className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">
               Logout
             </button>
           ) : (
