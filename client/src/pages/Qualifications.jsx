@@ -21,6 +21,7 @@ const specialtiesOptions = [
 
 function Qualifications() {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         specialties: [],
@@ -65,13 +66,17 @@ function Qualifications() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             await saveQualifications(formData);
             navigate('/profile-content');
         } catch (error) {
             console.error('Error saving qualifications:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-white via-white to-[#d9dff4]">
@@ -221,9 +226,32 @@ function Qualifications() {
                                 <div className="col-span-1">
                                     <button
                                         type="submit"
-                                        className="w-full sm:w-32 flex justify-center py-4 px-4 md:px-20 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-[#0C1F6D] hover:bg-[#162241]"
+                                        className="w-full sm:w-32 flex justify-center items-center gap-2 py-4 px-4 md:px-20 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-[#0C1F6D] hover:bg-[#162241]"
+                                        disabled={isLoading}
                                     >
-                                        Continue
+                                        {isLoading ? (
+                                            <>
+                                                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                                                    <circle
+                                                        className="opacity-25"
+                                                        cx="12"
+                                                        cy="12"
+                                                        r="10"
+                                                        stroke="currentColor"
+                                                        strokeWidth="4"
+                                                        fill="none"
+                                                    />
+                                                    <path
+                                                        className="opacity-75"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                    />
+                                                </svg>
+                                                <span>Loading...</span>
+                                            </>
+                                        ) : (
+                                            "Continue"
+                                        )}
                                     </button>
                                 </div>
                             </div>
