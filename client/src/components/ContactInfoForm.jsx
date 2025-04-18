@@ -1,10 +1,12 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/prop-types */
 // client/src/components/ContactInfoForm.jsx
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { signup, login } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
-// eslint-disable-next-line react/prop-types, no-unused-vars
 const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -16,6 +18,25 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const [error, setError] = useState('');
   const { loginUser } = useAuth();
 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [formData, setFormData] = useState({ specialties: [] });
+  const specialtiesOptions = [
+    'Primary Care', 'Functional Medicine', 'Aesthetics',
+    'Longevity', 'Hormone Therapy', 'Nutrition', 'Fitness',
+  ];
+
+  const toggleSpecialty = (specialty) => {
+    setFormData((prev) => {
+      const alreadySelected = prev.specialties.includes(specialty);
+      return {
+        ...prev,
+        specialties: alreadySelected
+          ? prev.specialties.filter((s) => s !== specialty)
+          : [...prev.specialties, specialty],
+      };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!terms) {
@@ -23,7 +44,6 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
       return;
     }
 
-    // Validate inputs
     if (!firstName.trim() || !lastName.trim()) {
       setError('First Name and Last Name are required');
       return;
@@ -36,6 +56,14 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
       setError('Password must be at least 6 characters long');
       return;
     }
+    if (!phoneNumber.trim() || !/^\d{3}-\d{3}-\d{4}$/.test(phoneNumber)) {
+      setError('Phone number must be in the format 000-000-0000');
+      return;
+    }
+    if (formData.specialties.length === 0) {
+      setError('Please select at least one area of interest');
+      return;
+    }
 
     const payload = {
       name: `${firstName.trim()} ${lastName.trim()}`,
@@ -44,13 +72,13 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
       contactInfo: {
         phone: phoneNumber.trim() || '',
         address: address.trim() || '',
+        specialties: formData.specialties,
       },
     };
     console.log('Signup payload:', JSON.stringify(payload, null, 2));
 
     try {
       let response;
-      // Try to log in the user first
       try {
         response = await login({ email: email.trim(), password: password.trim() });
         console.log('Login response:', response);
@@ -61,23 +89,19 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
         onContinue(response.user.id);
       } catch (loginError) {
         console.log('Login failed, proceeding with signup:', loginError.message);
-        // If login fails (user doesn't exist), proceed with signup
         response = await signup(payload);
         console.log('Signup response:', response);
         if (!response.user || !response.user.id) {
           throw new Error('Signup response does not contain user ID');
         }
-        // Use the token and user data from signup directly
         loginUser(response.token, response.user);
         onContinue(response.user.id);
       }
     } catch (err) {
-      // Parse the error response for specific messages
       if (err.message && err.message.includes('{')) {
         try {
           const errorData = JSON.parse(err.message);
           setError(errorData.message || 'Signup failed');
-        // eslint-disable-next-line no-unused-vars
         } catch (parseError) {
           setError('Signup failed due to an unknown error');
         }
@@ -88,7 +112,6 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
     }
   };
 
-  // Inline styles for scrollbar
   const formContainerStyle = {
     maxHeight: '400px',
     overflowY: 'auto',
@@ -96,7 +119,6 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
     scrollbarColor: 'rgba(11, 7, 87, 0.1) transparent',
   };
 
-  // Add webkit scrollbar styles directly to a style tag
   const scrollbarStyles = `
     .form-container::-webkit-scrollbar {
       width: 5px;
@@ -197,6 +219,66 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
               />
+            </div>
+
+            {/* Specialties Dropdown */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="specialties" className="block text-sm font-normal text-gray-700">
+              Areas of Interest (Select all that apply)
+              </label>
+              <div
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="mt-1 flex items-center justify-between w-full px-4 py-3 border border-gray-200 rounded-md cursor-pointer focus:outline-none"
+              >
+                <div
+                  className="flex flex-wrap gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {formData.specialties.length > 0 ? (
+                    formData.specialties.map((spec) => (
+                      <div
+                        key={spec}
+                        className="flex items-center bg-[#DFE3F2] text-[#061140] px-2 rounded-xs text-xs"
+                      >
+                        <span className="mr-1">{spec}</span>
+                        <button
+                          type="button"
+                          onClick={() => toggleSpecialty(spec)}
+                          className="text-black text-[18px] focus:outline-none pb-[2px]"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-[#7E7E7E]">Specialties</span>
+                  )}
+                </div>
+                {dropdownOpen ? (
+                  <FaChevronUp className="ml-2 h-[18px] w-[18px] text-gray-400" />
+                ) : (
+                  <FaChevronDown className="ml-2 h-[18px] w-[18px] text-gray-400" />
+                )}
+              </div>
+
+              {dropdownOpen && (
+                <div className="z-10 mt-2 w-full border border-gray-200 rounded-md shadow-md max-h-48 overflow-y-auto">
+                  {specialtiesOptions.map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-center px-4 py-2 text-sm text-[#484848] hover:bg-[#DFE3F2] cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.specialties.includes(option)}
+                        onChange={() => toggleSpecialty(option)}
+                        className="mr-2 accent-[#0C1F6D] text-[#0C1F6D] rounded border-[#7E7E7E] focus:ring-[#0C1F6D] cursor-pointer"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">

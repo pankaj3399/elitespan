@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 const QualificationSchema = new mongoose.Schema({
-    specialties: String,
+    specialties: [String], // changed from String to [String]
     boardCertifications: [String],
     hospitalAffiliations: [String],
     educationAndTraining: [String],

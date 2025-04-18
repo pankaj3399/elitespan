@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const contactInfoSchema = new mongoose.Schema({
   phone: { type: String, required: false, trim: true },
   address: { type: String, required: false, trim: true },
-  // Add other fields as needed
+  specialties: [{ type: String, trim: true }], // Added specialties as an array of strings
 });
 
 const userSchema = new mongoose.Schema({

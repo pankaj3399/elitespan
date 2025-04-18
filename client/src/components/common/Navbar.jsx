@@ -69,7 +69,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="w-full py-4 px-6 flex items-center justify-between fixed top-0 z-50 bg-white shadow-md">
+    <nav className="w-full py-2 px-6 flex items-center justify-between absolute top-0 z-50"> {/*  replaced fixed with absolute */}
       <div className="text-2xl font-bold text-[#0B0757]">
         <img src={logo} alt="Elite Healthspan" className="h-15" />
       </div>
@@ -79,7 +79,7 @@ const Navbar = () => {
           to="/how"
           className="text-[#64748B] hover:text-[#0B0757] font-medium"
         >
-          Our Approach
+          How it works
         </Link>
         <Link
           to="/provider-portal"
@@ -136,10 +136,10 @@ const Navbar = () => {
           exit={{ opacity: 0, y: -20 }}
           className="absolute top-16 right-0 w-64 bg-white shadow-lg rounded-lg p-4 md:hidden"
         >
-          <a href="/how" className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">Our Approach</a>
-          <a href="/provider-portal" className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">Provider Portal</a>
-          <a href="/about" className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">About Elite</a>
-          <a href="/faq" className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">FAQ</a>
+          <a href="/how" className="block py-2 text-[#FFFFFF] hover:text-[#0B0757] font-medium">How it works</a>
+          <a href="/provider-portal" className="block py-2 text-[#FFFFFF] hover:text-[#0B0757] font-medium">Provider Portal</a>
+          <a href="/about" className="block py-2 text-[#FFFFFF] hover:text-[#0B0757] font-medium">About Elite</a>
+          <a href="/faq" className="block py-2 text-[#FFFFFF] hover:text-[#0B0757] font-medium">FAQ</a>
           {token ? (
             <button onClick={handleLogout} className="block py-2 text-[#64748B] hover:text-[#0B0757] font-medium">
               Logout

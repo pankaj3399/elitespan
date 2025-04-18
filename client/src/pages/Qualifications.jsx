@@ -1,26 +1,44 @@
-/* eslint-disable no-undef */
 // client/src/pages/Qualifications.jsx
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import QualificationInput from '../components/common/QualificationInput';
 import { saveQualifications } from '../services/api';
+import { FaChevronUp, FaChevronDown } from "react-icons/fa6";
+
+const specialtiesOptions = [
+    'Autoimmune',
+    'Dentistry',
+    'Functional Medicine',
+    'Longevity Medicine',
+    'Men\'s Health',
+    'Nutrition',
+    'Obesity Medicine',
+    'Pediatrics',
+    'Preventive Medicine',
+    'Psychiatry',
+    'Regenerative Medicine',
+];
 
 function Qualifications() {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
-        specialties: '',
+        specialties: [],
         boardCertifications: [''],
         hospitalAffiliations: [''],
         educationAndTraining: [''],
     });
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
+    const toggleSpecialty = (specialty) => {
+        setFormData((prev) => {
+            const current = prev.specialties;
+            const updated = current.includes(specialty)
+                ? current.filter((s) => s !== specialty)
+                : [...current, specialty];
+            return { ...prev, specialties: updated };
+        });
     };
 
     const handleTextChange = (field, index, value) => {
@@ -44,7 +62,6 @@ function Qualifications() {
             [field]: prev[field].filter((_, i) => i !== index),
         }));
     };
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -88,26 +105,14 @@ function Qualifications() {
 
                     <div className="lg:col-span-2 lg:ml-25">
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            <div>
-                                <label htmlFor="specialties" className="block text-[16px] font-normal text-[#484848]">Specialties</label>
-                                <input
-                                    type="text"
-                                    name="specialties"
-                                    id="specialties"
-                                    value={formData.specialties}
-                                    onChange={handleChange}
-                                    className="mt-1 block w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#061140] focus:border-[#061140]"
-                                    placeholder="Specialties"
-                                />
-                            </div>
 
                             {formData.boardCertifications.map((value, index) => (
                                 <QualificationInput
                                     key={`board-${index}`}
-                                    label={index === 0 ? 'Board Certifications' : undefined}
+                                    label={index === 0 ? 'Type of Medicine' : undefined}
                                     name="boardCertifications"
                                     index={index}
-                                    placeholder="Certification 1, School Name"
+                                    placeholder="Certification"
                                     value={value}
                                     onTextChange={(e) => handleTextChange('boardCertifications', index, e.target.value)}
                                     onAddField={() => addInputField('boardCertifications')}
@@ -142,6 +147,66 @@ function Qualifications() {
                                     onRemoveField={(i) => removeInputField('educationAndTraining', i)}
                                 />
                             ))}
+
+                            <div className="relative">
+                                <label htmlFor="specialties" className="block text-[16px] font-normal text-[#484848]">
+                                    Specialties (Select all that apply)
+                                </label>
+                                <div
+                                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                                    className="mt-1 flex items-center justify-between w-full border border-[#7E7E7E] text-sm text-[#7E7E7E] rounded-md py-2 px-3 cursor-pointer focus:outline-none"
+                                >
+                                    <div
+                                        className="flex flex-wrap gap-2"
+                                        onClick={(e) => e.stopPropagation()} // prevent reopening dropdown when clicking chips
+                                    >
+                                        {formData.specialties.length > 0 ? (
+                                            formData.specialties.map((spec) => (
+                                                <div
+                                                    key={spec}
+                                                    className="flex items-center bg-[#DFE3F2] text-[#061140] px-2 rounded-xs text-xs"
+                                                >
+                                                    <span className="mr-1">{spec}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleSpecialty(spec)}
+                                                        className="text-black text-[18px] focus:outline-none pb-[2px]"
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <span className="text-[#7E7E7E]">Select Specialties</span>
+                                        )}
+                                    </div>
+                                    {dropdownOpen ? (
+                                        <FaChevronUp className="ml-2 h-[18px] w-[18px] text-[#484848]" />
+                                    ) : (
+                                        <FaChevronDown className="ml-2 h-[18px] w-[18px] text-[#484848]" />
+                                    )}
+
+                                </div>
+
+                                {dropdownOpen && (
+                                    <div className="z-10 mt-2 w-full border border-[#7E7E7E] rounded-md shadow-md max-h-48 overflow-y-auto">
+                                        {specialtiesOptions.map((option) => (
+                                            <label
+                                                key={option}
+                                                className="flex items-center px-4 py-2 text-sm text-[#484848] hover:bg-[#DFE3F2] cursor-pointer"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.specialties.includes(option)}
+                                                    onChange={() => toggleSpecialty(option)}
+                                                    className="mr-2 accent-[#0C1F6D] text-[#0C1F6D] rounded border-[#7E7E7E] focus:ring-[#0C1F6D] cursor-pointer"
+                                                />
+                                                {option}
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                                 <div className="col-span-1">
