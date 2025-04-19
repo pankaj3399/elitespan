@@ -39,7 +39,7 @@ const Hero = () => {
         }}
       >
         <h1
-          className="text-[30px] md:text-5xl font-bold text-[#FFFFFF] mb-4 mt-16"
+          className="text-[30px] md:text-5xl font-bold text-[#FFFFFF] md:mb-4 mt-16"
         >
           Empowering You
           to Optimize Your Health
@@ -58,7 +58,7 @@ const Hero = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          className="px-8 py-3 bg-[#0B0757] text-white rounded-full text-lg hover:bg-[#1a237e]"
+          className="px-12 md:px-8 py-3 bg-[#0B0757] text-white rounded-full text-lg hover:bg-[#1a237e]"
           onClick={handleJoinClick}
         >
           Join Elite Healthspan
