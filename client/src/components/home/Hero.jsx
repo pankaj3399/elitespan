@@ -30,19 +30,26 @@ const Hero = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="text-center pt-30 px-6"
+        className="text-center pt-30 px-6 bg-cover bg-center bg-no-repeat min-h-[85vh]"
+        style={{
+          backgroundImage: 'url("/hero.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'top',
+          backgroundRepeat: 'no-repeat',
+        }}
       >
         <h1
-          className="text-4xl md:text-5xl font-bold text-[#061140] mb-4"
-          style={{ fontWeight: 700, fontSize: '48px' }}
+          className="text-[30px] md:text-5xl font-bold text-[#FFFFFF] md:mb-4 mt-16"
         >
-          Unleash the Power of Optimal Health
+          Empowering You
+          to Optimize Your Health
         </h1>
         <p
-          className="text-xl text-[#061140] mb-8"
-          style={{ fontWeight: 300, fontSize: '48px' }}
+          className=" text-[27px] md:text-5xl text-[#FFFFFF] mb-8"
+          style={{ fontWeight: 300 }}
         >
-          Through Education, Innovation and Expertise
+          Access our trusted education, innovation
+          and expertise
         </p>
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -51,10 +58,10 @@ const Hero = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          className="px-8 py-3 bg-[#0B0757] text-white rounded-full text-lg hover:bg-[#1a237e]"
+          className="px-12 md:px-8 py-3 bg-[#0B0757] text-white rounded-full text-lg hover:bg-[#1a237e]"
           onClick={handleJoinClick}
         >
-          Get Started
+          Join Elite Healthspan
         </motion.button>
       </motion.section>
 

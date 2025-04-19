@@ -77,30 +77,30 @@ const Navbar = () => {
       <div className="hidden md:flex items-center gap-8">
         <Link
           to="/how"
-          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+          className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           How it works
         </Link>
         <Link
           to="/provider-portal"
-          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+          className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           Provider Portal
         </Link>
         <Link
           to="/about"
-          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+          className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           About Elite
         </Link>
         <Link
           to="/faq"
-          className="text-[#64748B] hover:text-[#0B0757] font-medium"
+          className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           FAQ
         </Link>
         {token ? (
-          <button onClick={handleLogout} className="text-[#64748B] hover:text-[#0B0757] font-medium">
+          <button onClick={handleLogout} className="text-[#FFFFFF] hover:text-[#0B0757] font-medium">
             Logout
           </button>
         ) : (
@@ -110,7 +110,7 @@ const Navbar = () => {
               e.preventDefault();
               handleLoginClick();
             }}
-            className="text-[#64748B] hover:text-[#0B0757] font-medium flex items-center"
+            className="text-[#FFFFFF] hover:text-[#0B0757] font-medium flex items-center"
           >
             <LogIn className="w-4 h-4 mr-1" /> Login
           </a>
@@ -125,7 +125,7 @@ const Navbar = () => {
         </motion.button>
       </div>
 
-      <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+      <button className="md:hidden absolute top-4 right-4 text-[#0B0757] z-50" onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? <X className="w-6 h-6 text-[#0B0757]" /> : <Menu className="w-6 h-6 text-[#0B0757]" />}
       </button>
 
@@ -134,14 +134,14 @@ const Navbar = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="absolute top-16 right-0 w-64 bg-white shadow-lg rounded-lg p-4 md:hidden"
+          className="fixed inset-0 z-40 bg-[#FDF8F4] p-6 flex flex-col gap-4 md:hidden"
         >
-          <a href="/how" className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">How it works</a>
-          <a href="/provider-portal" className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">Provider Portal</a>
-          <a href="/about" className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">About Elite</a>
-          <a href="/faq" className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">FAQ</a>
+          <a href="/how" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">How it works</a>
+          <a href="/provider-portal" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">Provider Portal</a>
+          <a href="/about" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">About Elite</a>
+          <a href="/faq" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">FAQ</a>
           {token ? (
-            <button onClick={handleLogout} className="block py-2 text-[#061140] hover:text-[#0B0757] font-medium">
+            <button onClick={handleLogout} className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">
               Logout
             </button>
           ) : (
@@ -152,7 +152,7 @@ const Navbar = () => {
                 handleLoginClick();
                 setIsOpen(false);
               }}
-              className="py-2 text-[#64748B] hover:text-[#0B0757] font-medium flex items-center"
+              className="py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium flex items-center"
             >
               <LogIn className="w-4 h-4 mr-1" /> Login
             </a>
