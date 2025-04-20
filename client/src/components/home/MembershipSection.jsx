@@ -51,14 +51,14 @@ const MembershipSection = () => {
         className="flex flex-col md:flex-row justify-between items-start gap-12 p-8 max-w-7xl w-[80%] mx-auto bg-white rounded-lg shadow-lg"
       >
         <div className="flex-1">
-          <h2 className="text-4xl font-bold text-[#0A0F40] mb-2">
+          <h2 className="text-2xl md:text-[40px] font-medium text-[#061140] mb-2">
             Membership starts at
           </h2>
           <div className="flex items-baseline">
-            <span className="text-7xl font-bold text-[#0A0F40]">$119.88</span>
-            <span className="text-xl text-[#0A0F40] ml-1">/year</span>
+            <span className="text-[75px] md:text-[120px] font-medium text-[#0A0F40]">$9.99</span>
+            <span className="text-[20px] md:text-4xl font-medium text-[#0A0F40] ml-1">/month</span>
           </div>
-          <p className="text-[#6B7280] mt-2">Charged annually</p>
+          <p className="text-[14px] md:text-[#7E7E7E] font-normal md:text-2xl mt-2">Charged annually at $119.88</p>
         </div>
 
         <div className="flex-1 space-y-8">
@@ -75,10 +75,10 @@ const MembershipSection = () => {
                 <span className="text-xl">{feature.icon}</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-[#0A0F40] mb-1">
+                <h3 className="text-[16px] md:text-xl font-bold text-[#0C1F6D] mb-1">
                   {feature.title}
                 </h3>
-                <p className="text-[#4B5563]">{feature.description}</p>
+                <p className="text-[#484848] text-sm font-normal">{feature.description}</p>
               </div>
             </motion.div>
           ))}
@@ -87,7 +87,7 @@ const MembershipSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-            className="w-full bg-[#0A0F40] text-white py-4 rounded-lg font-medium hover:bg-[#151b5e] transition-colors"
+            className="w-full bg-[#0C1F6D] text-[#FFFFFF] py-4 rounded-full font-bold text-[16px] hover:bg-[#151b5e] transition-colors"
             onClick={handleJoinClick}
           >
             Join Elite Healthspan
