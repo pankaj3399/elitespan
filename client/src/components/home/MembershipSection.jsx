@@ -48,20 +48,21 @@ const MembershipSection = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex flex-col md:flex-row justify-between border border-[#7E7E7E] items-start gap-12 p-8 max-w-7xl w-[80%] mx-auto bg-white rounded-lg shadow-lg"
+        className="grid grid-cols-1 md:grid-cols-2 gap-12 justify-between border border-[#7E7E7E] px-4 md:px-8 py-8 w-full max-w-7xl mx-auto bg-white rounded-lg shadow-lg"
       >
-        <div className="flex-1">
+
+        <div className="flex-1 min-w-0">
           <h2 className="text-2xl md:text-[40px] font-medium text-[#061140] mb-2">
             Membership starts at
           </h2>
           <div className="flex items-baseline">
-            <span className="text-[75px] md:text-[120px] font-medium text-[#0A0F40]">$9.99</span>
-            <span className="text-[20px] md:text-4xl font-medium text-[#0A0F40] ml-1">/month</span>
+            <span className="text-[72px] md:text-[120px] font-medium text-[#0A0F40]">$9.99</span>
+            <span className="text-lg md:text-4xl font-medium text-[#0A0F40] ml-1">/month</span>
           </div>
           <p className="text-[14px] md:text-[#7E7E7E] font-normal md:text-2xl mt-2">Charged annually at $119.88</p>
         </div>
 
-        <div className="flex-1 space-y-8">
+        <div className="flex-1 min-w-0 space-y-8">
           {features.map((feature, index) => (
             <motion.div
               key={index}
