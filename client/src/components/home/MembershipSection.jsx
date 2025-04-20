@@ -48,7 +48,7 @@ const MembershipSection = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex flex-col md:flex-row justify-between items-start gap-12 p-8 max-w-7xl w-[80%] mx-auto bg-white rounded-lg shadow-lg"
+        className="flex flex-col md:flex-row justify-between border border-[#7E7E7E] items-start gap-12 p-8 max-w-7xl w-[80%] mx-auto bg-white rounded-lg shadow-lg"
       >
         <div className="flex-1">
           <h2 className="text-2xl md:text-[40px] font-medium text-[#061140] mb-2">
