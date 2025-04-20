@@ -7,16 +7,12 @@ const options = [
     "Functional Medicine",
     "Longevity Medicine",
     "Men's Health",
-    "Women's Health",
-    "Pediatrics",
-    "Mental Health",
+    "Neurodegenerative Disease",
     "Nutrition",
-    "Physical Therapy",
-    "Sleep Medicine",
-    "Sports Medicine",
-    "Weight Management",
-    "Wellness",
-    "Hormone Therapy",
+    "Orthopedic",
+    "Regenerative Aesthetics",
+    "Vision",
+    "Women's Health",
 ];
 
 export default function HealthspanOptions() {

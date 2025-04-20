@@ -6,17 +6,17 @@ import { saveQualifications } from '../services/api';
 import { FaChevronUp, FaChevronDown } from "react-icons/fa6";
 
 const specialtiesOptions = [
-    'Autoimmune',
-    'Dentistry',
-    'Functional Medicine',
-    'Longevity Medicine',
-    'Men\'s Health',
-    'Nutrition',
-    'Obesity Medicine',
-    'Pediatrics',
-    'Preventive Medicine',
-    'Psychiatry',
-    'Regenerative Medicine',
+    "Autoimmune",
+    "Dentistry",
+    "Functional Medicine",
+    "Longevity Medicine",
+    "Men's Health",
+    "Neurodegenerative Disease",
+    "Nutrition",
+    "Orthopedic",
+    "Regenerative Aesthetics",
+    "Vision",
+    "Women's Health",
 ];
 
 function Qualifications() {

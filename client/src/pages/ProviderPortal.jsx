@@ -10,6 +10,7 @@ function ProviderPortal() {
     const [formData, setFormData] = useState({
         practiceName: '',
         providerName: '',
+        email: '',
         npiNumber: '',
         address: '',
         suite: '',
@@ -21,6 +22,7 @@ function ProviderPortal() {
     const [errors, setErrors] = useState({
         practiceName: '',
         providerName: '',
+        email: '',
         npiNumber: '',
         address: '',
         suite: '',
@@ -52,6 +54,13 @@ function ProviderPortal() {
                 npiNumber: isValid || value === '' ? '' : 'Invalid NPI Number. It must be 10 digits.'
             }));
         }
+        if (name === 'email') {
+            const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+            setErrors(prev => ({
+                ...prev,
+                email: isValidEmail || value === '' ? '' : 'Invalid email address.'
+            }));
+        }
     };
 
 
@@ -72,6 +81,9 @@ function ProviderPortal() {
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
+        }
+        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Invalid email address.';
         }
 
         try {
@@ -303,6 +315,25 @@ function ProviderPortal() {
                                         <p className="text-[#8D1315] text-[10px] mt-1">{errors.zip}</p>
                                     )}
 
+                                </div>
+
+                                <div className="sm:col-span-2">
+                                    <label htmlFor="email" className={`block text-[16px] font-normal ${errors.email ? `text-[#8D1315]` : `text-[#484848]`}`}>Email</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        id="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        className={`mt-1 block w-full border text-sm rounded-md py-2 px-3 focus:outline-none focus:ring-1 ${errors.email
+                                            ? 'border-[#8D1315] text-[#8D1315] focus:ring-[#8D1315] focus:border-[#8D1315]'
+                                            : 'border-[#7E7E7E] text-[#7E7E7E] focus:ring-[#061140] focus:border-[#061140]'
+                                            }`}
+                                        placeholder="email@example.com"
+                                    />
+                                    {errors.email && (
+                                        <p className="text-[#8D1315] text-[10px] mt-1">{errors.email}</p>
+                                    )}
                                 </div>
                             </div>
 

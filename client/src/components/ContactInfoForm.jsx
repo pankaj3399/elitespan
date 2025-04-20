@@ -21,17 +21,17 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({ specialties: [] });
   const specialtiesOptions = [
-    'Autoimmune',
-    'Dentistry',
-    'Functional Medicine',
-    'Longevity Medicine',
-    'Men\'s Health',
-    'Nutrition',
-    'Obesity Medicine',
-    'Pediatrics',
-    'Preventive Medicine',
-    'Psychiatry',
-    'Regenerative Medicine',
+      "Autoimmune",
+      "Dentistry",
+      "Functional Medicine",
+      "Longevity Medicine",
+      "Men's Health",
+      "Neurodegenerative Disease",
+      "Nutrition",
+      "Orthopedic",
+      "Regenerative Aesthetics",
+      "Vision",
+      "Women's Health",
   ];
 
   const toggleSpecialty = (specialty) => {

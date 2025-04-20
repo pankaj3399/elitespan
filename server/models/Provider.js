@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const providerSchema = new mongoose.Schema({
     practiceName: String,
     providerName: String,
+    email: String,
     npiNumber: String,
     address: String,
     suite: String,
