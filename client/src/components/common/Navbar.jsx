@@ -154,7 +154,7 @@ const Navbar = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleJoinClick}
-            className="px-6 py-2 bg-[#0B0757] text-white rounded-full hover:bg-[#1a237e] font-medium"
+            className="px-6 py-2 bg-[#0C1F6D] text-white rounded-full hover:bg-[#1a237e] font-medium"
           >
             Join Elite Healthspan
           </motion.button>
