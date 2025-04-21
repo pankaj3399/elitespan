@@ -66,7 +66,7 @@ const Hero = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            className="px-12 md:px-8 py-3 bg-[#0B0757] text-white rounded-full text-lg hover:bg-[#1a237e]"
+            className="px-12 md:px-8 py-3 bg-[#0C1F6D] text-white rounded-full text-lg hover:bg-[#1a237e]"
             onClick={handleJoinClick}
           >
             Join Elite Healthspan

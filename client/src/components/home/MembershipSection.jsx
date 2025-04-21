@@ -15,17 +15,14 @@ const MembershipSection = () => {
     {
       title: "Connections",
       description: "Connect with providers, scientists, and advisors providing innovative healthcare solutions.",
-      icon: "📱",
     },
     {
       title: "Learning",
       description: "Access state of the art knowledge and insights from industry leaders.",
-      icon: "📚",
     },
     {
       title: "Exploration",
       description: "Discover innovative therapies, treatments and products that go beyond conventional approaches.",
-      icon: "🔍",
     },
   ];
 
@@ -73,7 +70,11 @@ const MembershipSection = () => {
               className="flex gap-4"
             >
               <div className="w-8 h-8 flex items-center justify-center bg-blue-50 rounded">
-                <span className="text-xl">{feature.icon}</span>
+                <img
+                  src="/icon_image.png"
+                  alt="Feature Icon"
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div>
                 <h3 className="text-[16px] md:text-xl font-bold text-[#0C1F6D] mb-1">
@@ -83,6 +84,7 @@ const MembershipSection = () => {
               </div>
             </motion.div>
           ))}
+
           <motion.button
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}

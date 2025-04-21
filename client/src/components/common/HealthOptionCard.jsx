@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-import { ImageIcon } from "lucide-react";
 import clsx from "clsx";
 
 export default function HealthOptionCard({ label, variant }) {
@@ -15,9 +14,11 @@ export default function HealthOptionCard({ label, variant }) {
                 }
             )}
         >
-            <span className="w-8 h-8 md:w-5 md:h-5 flex items-center justify-center bg-white border border-blue-500 rounded-sm shrink-0">
-                <ImageIcon className="w-4 h-4 md:w-3.5 md:h-3.5 text-blue-500" />
-            </span>
+            <img
+                src="/icon_image.png"
+                alt="icon"
+                className="w-8 h-8 md:w-5 md:h-5 rounded-sm object-contain"
+            />
             <span className="text-sm text-[#061140] font-bold text-left">{label}</span>
         </div>
     );
