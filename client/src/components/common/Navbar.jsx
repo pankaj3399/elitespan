@@ -30,7 +30,7 @@ const Navbar = () => {
   const handleLoginClick = () => {
     setModalStep('login');
   };
-  
+
   const handleClientLoginClick = () => {
     setModalStep('clientLogin');
   };
@@ -83,28 +83,28 @@ const Navbar = () => {
       <div className="hidden md:flex items-center gap-8">
         <Link
           to="/how"
-            style={{ fontFamily: 'Karla' }}
+          style={{ fontFamily: 'Karla' }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           How it works
         </Link>
         <Link
           to="/provider-portal"
-            style={{ fontFamily: 'Karla' }}
+          style={{ fontFamily: 'Karla' }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           Provider Portal
         </Link>
         <Link
           to="/about"
-            style={{ fontFamily: 'Karla' }}
+          style={{ fontFamily: 'Karla' }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           About Elite
         </Link>
         <Link
           to="/faq"
-            style={{ fontFamily: 'Karla' }}
+          style={{ fontFamily: 'Karla' }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           FAQ
@@ -137,7 +137,7 @@ const Navbar = () => {
                       setLoginDropdownOpen(false);
                       handleClientLoginClick(); // You can adjust this to a separate modal if needed
                     }}
-                    
+
                     className="w-full px-4 py-2 text-sm font-bold text-[#FFFFFF] bg-[#BA8E00] rounded-full mb-4 hover:bg-[#c39015]"
                   >
                     Client Login
@@ -167,7 +167,7 @@ const Navbar = () => {
       </div>
 
       <button className="md:hidden absolute top-4 right-4 text-[#0B0757] z-50" onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? <X className="w-6 h-6 text-[#0B0757]" /> : <Menu className="w-6 h-6 text-[#0B0757]" />}
+        {isOpen ? <X className="w-6 h-6 text-[#0B0757]" /> : <Menu className="w-6 h-6 text-[#FFFFFF]" />}
       </button>
 
       {isOpen && (
@@ -175,6 +175,7 @@ const Navbar = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
+          style={{ fontFamily: 'Montserrat' }}
           className="fixed inset-0 z-40 bg-[#FDF8F4] p-6 flex flex-col gap-4 md:hidden"
         >
           <a href="/how" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">How it works</a>
@@ -182,8 +183,11 @@ const Navbar = () => {
           <a href="/about" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">About Elite</a>
           <a href="/faq" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">FAQ</a>
           {token ? (
-            <button onClick={handleLogout} className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">
-              Logout
+            <button
+              onClick={handleLogout}
+              className="py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium flex items-center"
+            >
+              <span>Logout</span>
             </button>
           ) : (
             <a
@@ -199,6 +203,7 @@ const Navbar = () => {
               <ChevronRight className="w-6 h-6 ml-2 mt-2" />
             </a>
           )}
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -206,7 +211,7 @@ const Navbar = () => {
               handleJoinClick();
               setIsOpen(false);
             }}
-            className="mt-4 w-full py-2 text-[#0B0757] font-semibold border border-[#0B0757] rounded-full hover:bg-[#0B0757] hover:text-white"
+            className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium text-left"
           >
             Join Elite Healthspan
           </motion.button>
@@ -262,7 +267,7 @@ const Navbar = () => {
         />
       )} */}
       {modalStep === 'clientLogin' && (
-        <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
+        <div style={{ fontFamily: 'Montserrat' }} className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
           <div className="bg-[#FDF9F6] p-8 rounded-3xl shadow-lg relative max-w-sm w-full mx-4">
             <button
               onClick={closeModals}
@@ -273,7 +278,7 @@ const Navbar = () => {
 
             <h2 className="text-2xl font-semibold text-[#0B0757] mb-8">Login</h2>
 
-            <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
+            <form style={{ fontFamily: 'Karla' }} onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-gray-700 text-sm">Email</label>
                 <input
@@ -282,6 +287,7 @@ const Navbar = () => {
                   placeholder="Email Address"
                   value={loginCredentials.email}
                   onChange={handleLoginChange}
+                  style={{ fontFamily: 'Karla' }}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
                   required
                 />
@@ -295,6 +301,7 @@ const Navbar = () => {
                   placeholder="Password"
                   value={loginCredentials.password}
                   onChange={handleLoginChange}
+                  style={{ fontFamily: 'Karla' }}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
                   required
                 />

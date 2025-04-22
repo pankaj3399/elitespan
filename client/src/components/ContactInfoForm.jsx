@@ -145,7 +145,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   `;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
+    <div style={{ fontFamily: 'Karla' }} className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
       <style>{scrollbarStyles}</style>
       <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-md w-full mx-4 max-h-screen overflow-y-auto">
         <button
@@ -155,7 +155,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
           <X className="w-6 h-6" />
         </button>
 
-        <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Contact Information</h2>
+        <h2 style={{ fontFamily: 'Montserrat' }} className="text-2xl font-semibold text-[#0B0757] mb-4">Contact Information</h2>
 
         <p className="text-center text-gray-600 mb-8">
           Please provide your contact details to join Elite Healthspan. This information will help us personalize your experience and connect you with our network of providers.
