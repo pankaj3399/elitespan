@@ -83,31 +83,35 @@ const Navbar = () => {
       <div className="hidden md:flex items-center gap-8">
         <Link
           to="/how"
+            style={{ fontFamily: 'Karla' }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           How it works
         </Link>
         <Link
           to="/provider-portal"
+            style={{ fontFamily: 'Karla' }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           Provider Portal
         </Link>
         <Link
           to="/about"
+            style={{ fontFamily: 'Karla' }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           About Elite
         </Link>
         <Link
           to="/faq"
+            style={{ fontFamily: 'Karla' }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           FAQ
         </Link>
-        <div className="flex items-center gap-2">
+        <div style={{ fontFamily: 'Karla' }} className="flex items-center gap-2">
           {token ? (
-            <button onClick={handleLogout} className="text-[#FFFFFF] hover:text-[#0B0757] font-medium">
+            <button onClick={handleLogout} className="text-[#FFFFFF] font-karla hover:text-[#0B0757] font-medium">
               Logout
             </button>
           ) : (
@@ -127,17 +131,18 @@ const Navbar = () => {
 
               {loginDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-52 bg-white shadow-xl rounded-lg z-50 py-4 px-6">
-                  <div className="py-2 font-normal text-sm text-[#000000]">For Clients</div>
+                  <div style={{ fontFamily: 'Montserrat' }} className="py-2 font-normal text-sm text-[#000000]">For Clients</div>
                   <button
                     onClick={() => {
                       setLoginDropdownOpen(false);
                       handleClientLoginClick(); // You can adjust this to a separate modal if needed
                     }}
+                    
                     className="w-full px-4 py-2 text-sm font-bold text-[#FFFFFF] bg-[#BA8E00] rounded-full mb-4 hover:bg-[#c39015]"
                   >
                     Client Login
                   </button>
-                  <div className="py-2 font-normal text-sm text-[#000000]">For Providers</div>
+                  <div style={{ fontFamily: 'Montserrat' }} className="py-2 font-normal text-sm text-[#000000]">For Providers</div>
                   <Link
                     to="/provider-portal"
                     onClick={() => setLoginDropdownOpen(false)}

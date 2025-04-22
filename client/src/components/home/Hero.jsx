@@ -51,6 +51,7 @@ const Hero = () => {
         {/* Content Overlay */}
         <div className="relative z-10">
           <h1
+            style={{ fontFamily: 'Monsterrat' }}
             className="text-[30px] md:text-5xl font-bold text-[#FFFFFF] md:mb-4 mt-16"
           >
             Empowering You
@@ -58,7 +59,7 @@ const Hero = () => {
           </h1>
           <p
             className=" text-[27px] md:text-5xl text-[#FFFFFF] mb-8"
-            style={{ fontWeight: 300 }}
+            style={{ fontWeight: 300, fontFamily: 'Monsterrat' }}
           >
             Access our trusted education, innovation
             and expertise
@@ -70,6 +71,7 @@ const Hero = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            style={{ fontFamily: 'Karla' }}
             className="px-12 md:px-8 py-3 bg-[#0C1F6D] text-white rounded-full text-lg hover:bg-[#1a237e]"
             onClick={handleJoinClick}
           >

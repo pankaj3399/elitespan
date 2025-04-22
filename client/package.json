@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/karla": "^5.2.5",
+    "@fontsource/montserrat": "^5.2.5",
     "@stripe/react-stripe-js": "^3.3.0",
     "@stripe/stripe-js": "^5.9.2",
     "@tailwindcss/vite": "^4.0.8",

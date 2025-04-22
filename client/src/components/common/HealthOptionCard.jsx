@@ -19,7 +19,7 @@ export default function HealthOptionCard({ label, variant }) {
                 alt="icon"
                 className="w-8 h-8 md:w-5 md:h-5 rounded-sm object-contain"
             />
-            <span className="text-sm text-[#061140] font-bold text-left">{label}</span>
+            <span style={{ fontFamily: 'Karla' }} className="text-sm text-[#061140] font-bold text-left">{label}</span>
         </div>
     );
 }
