@@ -44,6 +44,10 @@ const Hero = () => {
           Your browser does not support the video tag.
         </video>
 
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/50 z-0" />
+
+
         {/* Content Overlay */}
         <div className="relative z-10">
           <h1
