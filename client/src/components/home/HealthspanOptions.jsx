@@ -21,7 +21,7 @@ export default function HealthspanOptions() {
 
     return (
         <section className="bg-[#fdf9f6] mt-20 py-16 px-4 text-center relative">
-            <h2 className="text-2xl md:text-[40px] font-bold text-[#0a0a33] mb-10">
+            <h2 style={{ fontFamily: 'Montserrat' }} className="text-2xl md:text-[40px] font-bold text-[#0a0a33] mb-10">
                 Which Elite Healthspan Journey is Yours?
             </h2>
 
@@ -35,6 +35,7 @@ export default function HealthspanOptions() {
             {/* See All Button (only on mobile, when drawer is closed) */}
             {!isDrawerOpen && (
                 <button
+                    style={{ fontFamily: 'Montserrat' }}
                     className="block md:hidden bg-[#0a0a33] w-full text-white text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition"
                     onClick={() => setDrawerOpen(true)}
                 >

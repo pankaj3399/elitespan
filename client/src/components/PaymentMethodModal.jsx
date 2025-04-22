@@ -8,7 +8,7 @@ const PaymentMethodModal = ({ onClose, onContinue, userId }) => {
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
+    <div style={{ fontFamily: 'Karla' }} className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
       <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-md w-full mx-4">
         <button 
           onClick={onClose} 
@@ -17,7 +17,7 @@ const PaymentMethodModal = ({ onClose, onContinue, userId }) => {
           <X className="w-6 h-6" />
         </button>
         
-        <h2 className="text-2xl font-semibold text-[#0B0757] mb-4">Choose Payment Method</h2>
+        <h2 style={{ fontFamily: 'Montserrat' }} className="text-2xl font-semibold text-[#0B0757] mb-4">Choose Payment Method</h2>
         
         <p className="text-center text-gray-600 mb-8">
           Select a payment method to proceed with your annual membership payment of $119.88.

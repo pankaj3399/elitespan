@@ -49,14 +49,14 @@ const MembershipSection = () => {
       >
 
         <div className="flex-1 min-w-0">
-          <h2 className="text-2xl md:text-[40px] font-medium text-[#061140] mb-2">
+          <h2 style={{ fontFamily: 'Montserrat' }} className="text-2xl md:text-[40px] font-medium text-[#061140] mb-2">
             Membership starts at
           </h2>
-          <div className="flex items-baseline">
+          <div style={{ fontFamily: 'Montserrat' }} className="flex items-baseline">
             <span className="text-[72px] md:text-[120px] font-medium text-[#0A0F40]">$9.99</span>
             <span className="text-lg md:text-4xl font-medium text-[#0A0F40] ml-1">/month</span>
           </div>
-          <p className="text-[14px] md:text-[#7E7E7E] font-normal md:text-2xl mt-2">Charged annually at $119.88</p>
+          <p style={{ fontFamily: 'Karla' }} className="text-[14px] md:text-[#7E7E7E] font-normal md:text-2xl mt-2">Charged annually at $119.88</p>
         </div>
 
         <div className="flex-1 min-w-0 space-y-8">
@@ -77,10 +77,10 @@ const MembershipSection = () => {
                 />
               </div>
               <div>
-                <h3 className="text-[16px] md:text-xl font-bold text-[#0C1F6D] mb-1">
+                <h3 style={{ fontFamily: 'Montserrat' }} className="text-[16px] md:text-xl font-bold text-[#0C1F6D] mb-1">
                   {feature.title}
                 </h3>
-                <p className="text-[#484848] text-sm font-normal">{feature.description}</p>
+                <p style={{ fontFamily: 'Karla' }} className="text-[#484848] text-sm font-normal">{feature.description}</p>
               </div>
             </motion.div>
           ))}
@@ -90,6 +90,7 @@ const MembershipSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
+            style={{ fontFamily: 'Karla' }}
             className="w-full bg-[#0C1F6D] text-[#FFFFFF] py-4 rounded-full font-bold text-[16px] hover:bg-[#151b5e] transition-colors"
             onClick={handleJoinClick}
           >

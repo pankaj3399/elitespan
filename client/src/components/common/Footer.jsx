@@ -28,13 +28,14 @@ const Footer = () => {
         <div className="flex flex-wrap justify-between items-center text-center sm:text-left gap-4 sm:gap-0">
           {/* Brand Info */}
           <div className="w-full sm:w-auto">
-            <h3 className="text-lg font-semibold text-gray-800">Elite Healthspan</h3>
-            <p className="text-sm text-gray-600">Your partner in optimal health and longevity</p>
+            <h3 style={{ fontFamily: 'Montserrat' }} className="text-lg font-semibold text-gray-800">Elite Healthspan</h3>
+            <p style={{ fontFamily: 'Karla' }} className="text-sm text-gray-600">Your partner in optimal health and longevity</p>
           </div>
 
           {/* Hidden Admin Dot */}
           <div className="w-full flex justify-center sm:w-auto order-last sm:order-none">
             <button
+              style={{ fontFamily: 'Karla' }}
               onClick={handleAdminAccess}
               className="h-1 w-1 bg-gray-300 rounded-full hover:bg-gray-400 focus:outline-none"
               aria-label="Hidden admin access"
@@ -42,7 +43,7 @@ const Footer = () => {
           </div>
 
           {/* Links */}
-          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center sm:space-x-6 space-y-2 sm:space-y-0">
+          <div style={{ fontFamily: 'Karla' }} className="w-full sm:w-auto flex flex-col sm:flex-row items-center sm:space-x-6 space-y-2 sm:space-y-0">
             <a href="/about" className="text-sm text-gray-600 hover:text-gray-800">About Us</a>
             <a href="/contact" className="text-sm text-gray-600 hover:text-gray-800">Contact</a>
             <a href="/privacy" className="text-sm text-gray-600 hover:text-gray-800">Privacy Policy</a>
@@ -52,7 +53,7 @@ const Footer = () => {
 
         {/* Bottom Text */}
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">© 2025 Elite Healthspan. All rights reserved.</p>
+          <p style={{ fontFamily: 'Karla' }} className="text-sm text-gray-600">© 2025 Elite Healthspan. All rights reserved.</p>
         </div>
       </div>
     </footer>

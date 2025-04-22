@@ -123,15 +123,15 @@ function ProfileContent() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-35 pb-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div className="lg:col-span-1">
-                        <h1 className="text-[40px] font-medium text-[#061140] mb-6">
+                        <h1 style={{fontFamily:'Montserrat'}} className="text-[40px] font-medium text-[#061140] mb-6">
                             Provider Portal Account
                         </h1>
                         <div className="space-y-4">
                             {["Practice Information", "Practitioner Qualifications", "Profile Content"].map((title, i) => (
                                 <div className="flex items-start" key={i}>
                                     <div className={`md:border-l-3 border-l-[#7F92E5] md:pl-4 ${i < 2 ? 'hidden md:block' : ''}`}>
-                                        <h2 className="font-medium text-[16px] text-[#061140]">{title}</h2>
-                                        <p className="text-sm text-[#484848]">
+                                        <h2 style={{fontFamily:'Montserrat'}} className="font-medium text-[16px] text-[#061140]">{title}</h2>
+                                        <p style={{fontFamily:'Karla'}} className="text-sm text-[#484848]">
                                             {{
                                                 0: "Share your practice's name and address details.",
                                                 1: "Outline your specialties, certifications, hospital affiliations, and training.",
@@ -145,7 +145,7 @@ function ProfileContent() {
                     </div>
 
                     <div className="lg:col-span-2 lg:ml-25">
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form style={{fontFamily:'Karla'}} onSubmit={handleSubmit} className="space-y-6">
                             <StyledFileInput
                                 label="Professional Headshot"
                                 subLabel="Image dimensions are 400PX x 400PX (1:1)"
