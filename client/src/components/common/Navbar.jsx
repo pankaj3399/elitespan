@@ -1,44 +1,48 @@
 // client/src/components/Navbar.jsx
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, Menu, X } from 'lucide-react';
-import logo from '../../assets/logo.png';
-import MembershipModal from '../MembershipModal';
-import ContactInfoForm from '../ContactInfoForm';
-import PaymentMethodModal from '../PaymentMethodModal';
-import CreditCardForm from '../CreditCardForm';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { ChevronLeft, Menu, X } from "lucide-react";
+// import logo from "../../assets/logo.png";
+import MembershipModal from "../MembershipModal";
+import ContactInfoForm from "../ContactInfoForm";
+import PaymentMethodModal from "../PaymentMethodModal";
+import CreditCardForm from "../CreditCardForm";
 // import PayPalForm from '../PayPalForm'; // Commented out
 // import ApplePayForm from '../ApplePayForm'; // Commented out
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from "../../contexts/AuthContext";
 // eslint-disable-next-line
-import { login, signup } from '../../services/api';
-import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { login, signup } from "../../services/api";
+import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
+import logo from "../../assets/Frame.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
   const [modalStep, setModalStep] = useState(null);
   const { token, user, loginUser, logoutUser } = useAuth();
-  const [loginError, setLoginError] = useState('');
-  const [loginCredentials, setLoginCredentials] = useState({ email: '', password: '' });
+  const [loginError, setLoginError] = useState("");
+  const [loginCredentials, setLoginCredentials] = useState({
+    email: "",
+    password: "",
+  });
 
   const handleJoinClick = () => {
-    setModalStep('membership');
+    setModalStep("membership");
   };
 
   const handleLoginClick = () => {
-    setModalStep('login');
+    setModalStep("login");
   };
 
   const handleClientLoginClick = () => {
-    setModalStep('clientLogin');
+    setModalStep("clientLogin");
   };
 
   const closeModals = () => {
     setModalStep(null);
-    setLoginError('');
-    setLoginCredentials({ email: '', password: '' });
+    setLoginError("");
+    setLoginCredentials({ email: "", password: "" });
   };
 
   const handleContinue = (nextStep) => {
@@ -56,17 +60,17 @@ const Navbar = () => {
 
     try {
       const response = await login({ email, password });
-      console.log('Login response:', response);
+      console.log("Login response:", response);
       loginUser(response.token, response.user); // Use loginUser to set token and user
       closeModals();
-      alert('Logged in successfully!');
+      alert("Logged in successfully!");
     } catch (error) {
       setLoginError(
-        error.message === 'Login failed' || error.message.includes('Invalid')
-          ? 'Invalid credentials. If you\'re new, please join Elite Healthspan.'
-          : 'Server error during login. Please try again.'
+        error.message === "Login failed" || error.message.includes("Invalid")
+          ? "Invalid credentials. If you're new, please join Elite Healthspan."
+          : "Server error during login. Please try again."
       );
-      console.error('Login error:', error);
+      console.error("Login error:", error);
     }
   };
 
@@ -75,43 +79,53 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="w-full py-2 px-6 flex items-center justify-between absolute top-0 z-50"> {/*  replaced fixed with absolute */}
-      <div className="text-2xl font-bold text-[#0B0757]">
-        <img src={logo} alt="Elite Healthspan" className="h-15" />
+    <nav className="w-full py-2 px-6 sm:px-12 flex items-center justify-between absolute top-0 z-50 mt-4">
+      {" "}
+      {/*  replaced fixed with absolute */}
+      <div className="text-2xl font-bold text-[#0B0757] flex items-center gap-2">
+        <img src={logo} alt="Elite Healthspan" className="h-6 sm:h-8" />
+        <span className="sm:text-2xl text-base font-light text-[#FFFFFF]/90 font-karla tracking-wider">
+          ELITE HEALTHSPAN
+        </span>
       </div>
-
       <div className="hidden md:flex items-center gap-8">
         <Link
           to="/how"
-          style={{ fontFamily: 'Karla' }}
+          style={{ fontFamily: "Karla" }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           How it works
         </Link>
         <Link
           to="/provider-portal"
-          style={{ fontFamily: 'Karla' }}
+          style={{ fontFamily: "Karla" }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           Provider Portal
         </Link>
         <Link
           to="/about"
-          style={{ fontFamily: 'Karla' }}
+          style={{ fontFamily: "Karla" }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           About Elite
         </Link>
         <Link
           to="/faq"
-          style={{ fontFamily: 'Karla' }}
+          style={{ fontFamily: "Karla" }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
           FAQ
         </Link>
-        <div style={{ fontFamily: 'Karla' }} className="flex items-center gap-2">
+        <div
+          style={{ fontFamily: "Karla" }}
+          className="flex items-center gap-2"
+        >
           {token ? (
-            <button onClick={handleLogout} className="text-[#FFFFFF] font-karla hover:text-[#0B0757] font-medium">
+            <button
+              onClick={handleLogout}
+              className="text-[#FFFFFF] font-karla hover:text-[#0B0757] font-medium"
+            >
               Logout
             </button>
           ) : (
@@ -122,27 +136,45 @@ const Navbar = () => {
               >
                 Login
                 <svg
-                  className={`w-4 h-4 transition-transform ${loginDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  className={`w-4 h-4 transition-transform ${
+                    loginDropdownOpen ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
 
               {loginDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-52 bg-white shadow-xl rounded-lg z-50 py-4 px-6">
-                  <div style={{ fontFamily: 'Montserrat' }} className="py-2 font-normal text-sm text-[#000000]">For Clients</div>
+                  <div
+                    style={{ fontFamily: "Montserrat" }}
+                    className="py-2 font-normal text-sm text-[#000000]"
+                  >
+                    For Clients
+                  </div>
                   <button
                     onClick={() => {
                       setLoginDropdownOpen(false);
                       handleClientLoginClick(); // You can adjust this to a separate modal if needed
                     }}
-
                     className="w-full px-4 py-2 text-sm font-bold text-[#FFFFFF] bg-[#BA8E00] rounded-full mb-4 hover:bg-[#c39015]"
                   >
                     Client Login
                   </button>
-                  <div style={{ fontFamily: 'Montserrat' }} className="py-2 font-normal text-sm text-[#000000]">For Providers</div>
+                  <div
+                    style={{ fontFamily: "Montserrat" }}
+                    className="py-2 font-normal text-sm text-[#000000]"
+                  >
+                    For Providers
+                  </div>
                   <Link
                     to="/provider-portal"
                     onClick={() => setLoginDropdownOpen(false)}
@@ -153,35 +185,59 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-
           )}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleJoinClick}
-            className="px-6 py-2 bg-[#0C1F6D] text-white rounded-full hover:bg-[#1a237e] font-medium"
+            className="px-6 py-3 bg-[#0C1F6D] text-white rounded-full hover:bg-[#1a237e] font-medium"
           >
             Join Elite Healthspan
           </motion.button>
         </div>
       </div>
-
-      <button className="md:hidden absolute top-4 right-4 text-[#0B0757] z-50" onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? <X className="w-6 h-6 text-[#0B0757]" /> : <Menu className="w-6 h-6 text-[#FFFFFF]" />}
+      <button
+        className="md:hidden absolute  right-4 text-[#0B0757] z-50"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? (
+          <X className="w-6 h-6 text-[#0B0757]" />
+        ) : (
+          <Menu className="w-6 h-6 text-[#FFFFFF]" />
+        )}
       </button>
-
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          style={{ fontFamily: 'Montserrat' }}
+          style={{ fontFamily: "Montserrat" }}
           className="fixed inset-0 z-40 bg-[#FDF8F4] p-6 flex flex-col gap-4 md:hidden"
         >
-          <a href="/how" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">How it works</a>
-          <a href="/provider-portal" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">Provider Portal</a>
-          <a href="/about" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">About Elite</a>
-          <a href="/faq" className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium">FAQ</a>
+          <a
+            href="/how"
+            className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium"
+          >
+            How it works
+          </a>
+          <a
+            href="/provider-portal"
+            className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium"
+          >
+            Provider Portal
+          </a>
+          <a
+            href="/about"
+            className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium"
+          >
+            About Elite
+          </a>
+          <a
+            href="/faq"
+            className="block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium"
+          >
+            FAQ
+          </a>
           {token ? (
             <button
               onClick={handleLogout}
@@ -217,30 +273,31 @@ const Navbar = () => {
           </motion.button>
         </motion.div>
       )}
-
       {/* Modals */}
-      {modalStep === 'membership' && (
+      {modalStep === "membership" && (
         <MembershipModal
           onClose={closeModals}
-          onContinue={() => handleContinue('contactInfo')}
+          onContinue={() => handleContinue("contactInfo")}
         />
       )}
-      {modalStep === 'contactInfo' && (
+      {modalStep === "contactInfo" && (
         <ContactInfoForm
           onClose={closeModals}
           // eslint-disable-next-line
-          onContinue={(userId) => handleContinue('paymentMethod')}
+          onContinue={(userId) => handleContinue("paymentMethod")}
           userId={user ? user.id : null}
         />
       )}
-      {modalStep === 'paymentMethod' && (
+      {modalStep === "paymentMethod" && (
         <PaymentMethodModal
           onClose={closeModals}
-          onContinue={(paymentMethod) => handleContinue(`paymentForm_${paymentMethod}`)}
+          onContinue={(paymentMethod) =>
+            handleContinue(`paymentForm_${paymentMethod}`)
+          }
           userId={user ? user.id : null}
         />
       )}
-      {modalStep === 'paymentForm_creditCard' && (
+      {modalStep === "paymentForm_creditCard" && (
         <CreditCardForm
           onClose={closeModals}
           onContinue={closeModals}
@@ -266,8 +323,11 @@ const Navbar = () => {
           token={token}
         />
       )} */}
-      {modalStep === 'clientLogin' && (
-        <div style={{ fontFamily: 'Montserrat' }} className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
+      {modalStep === "clientLogin" && (
+        <div
+          style={{ fontFamily: "Montserrat" }}
+          className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50"
+        >
           <div className="bg-[#FDF9F6] p-8 rounded-3xl shadow-lg relative max-w-sm w-full mx-4">
             <button
               onClick={closeModals}
@@ -276,9 +336,15 @@ const Navbar = () => {
               <X className="w-6 h-6" />
             </button>
 
-            <h2 className="text-2xl font-semibold text-[#0B0757] mb-8">Login</h2>
+            <h2 className="text-2xl font-semibold text-[#0B0757] mb-8">
+              Login
+            </h2>
 
-            <form style={{ fontFamily: 'Karla' }} onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
+            <form
+              style={{ fontFamily: "Karla" }}
+              onSubmit={handleLoginSubmit}
+              className="flex flex-col gap-4"
+            >
               <div className="flex flex-col gap-2">
                 <label className="text-gray-700 text-sm">Email</label>
                 <input
@@ -287,7 +353,7 @@ const Navbar = () => {
                   placeholder="Email Address"
                   value={loginCredentials.email}
                   onChange={handleLoginChange}
-                  style={{ fontFamily: 'Karla' }}
+                  style={{ fontFamily: "Karla" }}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
                   required
                 />
@@ -301,13 +367,15 @@ const Navbar = () => {
                   placeholder="Password"
                   value={loginCredentials.password}
                   onChange={handleLoginChange}
-                  style={{ fontFamily: 'Karla' }}
+                  style={{ fontFamily: "Karla" }}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]"
                   required
                 />
               </div>
 
-              {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
+              {loginError && (
+                <p className="text-red-500 text-sm">{loginError}</p>
+              )}
 
               <button
                 type="submit"
@@ -318,7 +386,8 @@ const Navbar = () => {
             </form>
 
             <p className="text-center text-gray-600 text-sm mt-6">
-              New to Elite? {loginError.includes('new') ? (
+              New to Elite?{" "}
+              {loginError.includes("new") ? (
                 <button
                   onClick={() => {
                     closeModals();
@@ -328,7 +397,9 @@ const Navbar = () => {
                 >
                   Join Elite Healthspan
                 </button>
-              ) : 'Join the waitlist for access.'}
+              ) : (
+                "Join the waitlist for access."
+              )}
             </p>
 
             <button
@@ -343,7 +414,7 @@ const Navbar = () => {
           </div>
         </div>
       )}
-      {modalStep === 'login' && (
+      {modalStep === "login" && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -354,8 +425,8 @@ const Navbar = () => {
           <div className="flex justify-between items-center mb-8">
             <button
               onClick={() => {
-                setModalStep(null);     // close modal
-                setIsOpen(true);        // re-open mobile navbar menu
+                setModalStep(null); // close modal
+                setIsOpen(true); // re-open mobile navbar menu
               }}
               className="text-[#0B0757] hover:text-[#1a237e] flex items-center"
             >
@@ -372,10 +443,12 @@ const Navbar = () => {
           <div className="flex flex-col gap-10 mt-10">
             {/* For Clients */}
             <div>
-              <p className="text-[#061140] text-[32px] font-normal mb-3">For Clients</p>
+              <p className="text-[#061140] text-[32px] font-normal mb-3">
+                For Clients
+              </p>
               <button
                 onClick={() => {
-                  setModalStep('emailLogin'); // or 'loginForm'
+                  setModalStep("emailLogin"); // or 'loginForm'
                   handleClientLoginClick(); // open client login modal
                 }}
                 className="w-full py-4 mb-4 bg-[#BA8E00] text-[#FFFFFF] rounded-full text-base font-bold"
@@ -386,7 +459,9 @@ const Navbar = () => {
 
             {/* For Providers */}
             <div>
-              <p className="text-[#061140] text-[32px] font-normal mb-3">For Providers</p>
+              <p className="text-[#061140] text-[32px] font-normal mb-3">
+                For Providers
+              </p>
               <Link
                 to="/provider-portal"
                 onClick={closeModals}
