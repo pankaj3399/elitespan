@@ -50,10 +50,10 @@ const Hero = () => {
         {/* Content Overlay */}
         <div className="relative z-10">
           <h1 className="text-[30px] md:text-5xl font-bold text-[#FFFFFF] md:mb-4 mt-0 sm:mt-40">
-            Empowering You to Optimize Your Health
+            Empowering You To Optimize Your Health
           </h1>
           <p className="text-[27px] md:text-5xl text-[#FFFFFF] mb-8 font-extralight">
-            Access our trusted education, innovation and expertise
+            Access our trusted providers, education, and innovation
           </p>
           <button
             className="px-14 md:px-8 py-4 bg-[#0C1F6D] cursor-pointer text-white font-bold rounded-full text-[15px] hover:bg-[#1a237e] font-karla"

@@ -6,7 +6,7 @@ const FAQSection = () => {
     {
       question: "How does Elite Healthspan work?",
       answer:
-        "Find and compare Highly Vetted Alternative Medicine doctors, watch masterclasses and find innovation!",
+        "Find and compare highly vetted Alternative Medicine doctors, watch masterclasses and find innovation!",
     },
     {
       question: "Is the Elite Healthspan membership free?",
@@ -43,7 +43,7 @@ const FAQSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, delay: index * 0.2, ease: "easeOut" }}
-            className="bg-white rounded-3xl p-8 shadow-sm border border-[#7E7E7E] pt-[80px]"
+            className="bg-white rounded-3xl p-8 shadow-sm border border-[#7E7E7E]/40 pt-[80px]"
           >
             <h3 className="text-[16px] md:text-2xl font-medium text-[#061140] mb-4">
               {faq.question}
@@ -62,7 +62,7 @@ const FAQSection = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="text-center sm:mt-16 mt-6"
       >
-        <button className="px-[108px] md:px-[135px] py-4 bg-[#0C1F6D] text-[#FFFFFF] rounded-full text-[16px] text-sm font-bold font-karla">
+        <button className="px-[108px] cursor-pointer md:px-[135px] py-4 bg-[#0C1F6D] text-[#FFFFFF] rounded-full text-[16px] text-sm font-bold font-karla">
           View All Questions
         </button>
       </motion.div>
