@@ -1,37 +1,37 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 // client/src/components/ContactInfoForm.jsx
-import { useState } from 'react';
-import { X } from 'lucide-react';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import { signup, login } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import { useState } from "react";
+import { X } from "lucide-react";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { signup, login } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const ContactInfoForm = ({ onClose, onContinue, userId }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [address, setAddress] = useState('');
-  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [address, setAddress] = useState("");
+  const [password, setPassword] = useState("");
   const [terms, setTerms] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { loginUser } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({ specialties: [] });
   const specialtiesOptions = [
-      "Autoimmune",
-      "Dentistry",
-      "Functional Medicine",
-      "Longevity Medicine",
-      "Men's Health",
-      "Neurodegenerative Disease",
-      "Nutrition",
-      "Orthopedic",
-      "Regenerative Aesthetics",
-      "Vision",
-      "Women's Health",
+    "Autoimmune",
+    "Dentistry",
+    "Functional Medicine",
+    "Longevity Medicine",
+    "Men's Health",
+    "Neurodegenerative Disease",
+    "Nutrition",
+    "Orthopedic",
+    "Regenerative Aesthetics",
+    "Vision",
+    "Women's Health",
   ];
 
   const toggleSpecialty = (specialty) => {
@@ -49,28 +49,28 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!terms) {
-      setError('You must agree to the Terms & Services');
+      setError("You must agree to the Terms & Services");
       return;
     }
 
     if (!firstName.trim() || !lastName.trim()) {
-      setError('First Name and Last Name are required');
+      setError("First Name and Last Name are required");
       return;
     }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('A valid email address is required');
+      setError("A valid email address is required");
       return;
     }
     if (!password.trim() || password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       return;
     }
     if (!phoneNumber.trim() || !/^\d{3}-\d{3}-\d{4}$/.test(phoneNumber)) {
-      setError('Phone number must be in the format 000-000-0000');
+      setError("Phone number must be in the format 000-000-0000");
       return;
     }
     if (formData.specialties.length === 0) {
-      setError('Please select at least one area of interest');
+      setError("Please select at least one area of interest");
       return;
     }
 
@@ -79,53 +79,59 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
       email: email.trim(),
       password: password.trim(),
       contactInfo: {
-        phone: phoneNumber.trim() || '',
-        address: address.trim() || '',
+        phone: phoneNumber.trim() || "",
+        address: address.trim() || "",
         specialties: formData.specialties,
       },
     };
-    console.log('Signup payload:', JSON.stringify(payload, null, 2));
+    console.log("Signup payload:", JSON.stringify(payload, null, 2));
 
     try {
       let response;
       try {
-        response = await login({ email: email.trim(), password: password.trim() });
-        console.log('Login response:', response);
+        response = await login({
+          email: email.trim(),
+          password: password.trim(),
+        });
+        console.log("Login response:", response);
         if (!response.user || !response.user.id) {
-          throw new Error('Login response does not contain user ID');
+          throw new Error("Login response does not contain user ID");
         }
         loginUser(response.token, response.user);
         onContinue(response.user.id);
       } catch (loginError) {
-        console.log('Login failed, proceeding with signup:', loginError.message);
+        console.log(
+          "Login failed, proceeding with signup:",
+          loginError.message
+        );
         response = await signup(payload);
-        console.log('Signup response:', response);
+        console.log("Signup response:", response);
         if (!response.user || !response.user.id) {
-          throw new Error('Signup response does not contain user ID');
+          throw new Error("Signup response does not contain user ID");
         }
         loginUser(response.token, response.user);
         onContinue(response.user.id);
       }
     } catch (err) {
-      if (err.message && err.message.includes('{')) {
+      if (err.message && err.message.includes("{")) {
         try {
           const errorData = JSON.parse(err.message);
-          setError(errorData.message || 'Signup failed');
+          setError(errorData.message || "Signup failed");
         } catch (parseError) {
-          setError('Signup failed due to an unknown error');
+          setError("Signup failed due to an unknown error");
         }
       } else {
-        setError(err.message || 'Server error during signup/login');
+        setError(err.message || "Server error during signup/login");
       }
-      console.error('Error in signup/login:', err);
+      console.error("Error in signup/login:", err);
     }
   };
 
   const formContainerStyle = {
-    maxHeight: '400px',
-    overflowY: 'auto',
-    scrollbarWidth: 'thin',
-    scrollbarColor: 'rgba(11, 7, 87, 0.1) transparent',
+    maxHeight: "400px",
+    overflowY: "auto",
+    scrollbarWidth: "thin",
+    scrollbarColor: "rgba(11, 7, 87, 0.1) transparent",
   };
 
   const scrollbarStyles = `
@@ -145,7 +151,10 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   `;
 
   return (
-    <div style={{ fontFamily: 'Karla' }} className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50">
+    <div
+      style={{ fontFamily: "Karla" }}
+      className="fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50"
+    >
       <style>{scrollbarStyles}</style>
       <div className="bg-white p-8 rounded-3xl shadow-lg relative max-w-md w-full mx-4 max-h-screen overflow-y-auto">
         <button
@@ -155,10 +164,17 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
           <X className="w-6 h-6" />
         </button>
 
-        <h2 style={{ fontFamily: 'Montserrat' }} className="text-2xl font-semibold text-[#0B0757] mb-4">Contact Information</h2>
+        <h2
+          style={{ fontFamily: "Montserrat" }}
+          className="text-2xl font-semibold text-[#0B0757] mb-4"
+        >
+          Contact Information
+        </h2>
 
         <p className="text-center text-gray-600 mb-8">
-          Please provide your contact details to join Elite Healthspan. This information will help us personalize your experience and connect you with our network of providers.
+          Please provide your contact details to join Elite Healthspan. This
+          information will help us personalize your experience and connect you
+          with our network of providers.
         </p>
 
         <div className="form-container" style={formContainerStyle}>
@@ -232,8 +248,11 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
 
             {/* Specialties Dropdown */}
             <div className="flex flex-col gap-2">
-              <label htmlFor="specialties" className="block text-sm font-normal text-gray-700">
-              Areas of Interest (Select all that apply)
+              <label
+                htmlFor="specialties"
+                className="block text-sm font-normal text-gray-700"
+              >
+                Areas of Interest (Select all that apply)
               </label>
               <div
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -297,7 +316,9 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                 onChange={(e) => setTerms(e.target.checked)}
                 className="w-4 h-4 text-[#0B0757] border-gray-200 rounded focus:ring-[#0B0757]"
               />
-              <label className="text-gray-700 text-sm">Use this information when contacting providers & clinics.</label>
+              <label className="text-gray-700 text-sm">
+                Use this information when contacting providers & clinics.
+              </label>
             </div>
 
             <div className="flex items-center gap-2">
@@ -307,7 +328,9 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                 onChange={(e) => setTerms(e.target.checked)}
                 className="w-4 h-4 text-[#0B0757] border-gray-200 rounded focus:ring-[#0B0757]"
               />
-              <label className="text-gray-700 text-sm">By joining, you agree to our Terms & Services.</label>
+              <label className="text-gray-700 text-sm">
+                By joining, you agree to our Terms & Services.
+              </label>
             </div>
           </form>
         </div>
@@ -324,7 +347,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
           <button
             type="submit"
             onClick={handleSubmit}
-            className="w-full py-3 bg-[#0B0757] text-white rounded-full font-medium text-base hover:bg-[#1a237e]"
+            className="w-full py-3 bg-[#0C1F6D] text-white rounded-full font-medium text-base hover:bg-[#1a237e]"
           >
             Continue
           </button>

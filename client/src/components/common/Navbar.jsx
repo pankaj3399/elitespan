@@ -94,7 +94,7 @@ const Navbar = () => {
           style={{ fontFamily: "Karla" }}
           className="text-[#FFFFFF] hover:text-[#0B0757] font-medium"
         >
-          How it works
+          How It Works
         </Link>
         <Link
           to="/provider-portal"
