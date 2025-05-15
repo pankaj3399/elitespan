@@ -3,7 +3,7 @@ import { useState } from 'react';
 import StyledFileInput from '../components/common/StyledFileInput';
 import { MdOutlineFileUpload } from "react-icons/md";
 import { IoMdArrowDown } from "react-icons/io";
-import { getCloudinarySignature, saveImageUrls } from '../services/api';
+import { getUploadSignature, uploadToS3, saveImageUrls } from '../services/api';
 
 function ProfileContent() {
     const navigate = useNavigate();
@@ -46,32 +46,15 @@ function ProfileContent() {
         }));
     };
 
-    // const getCloudinarySignature = async () => {
-    //     const res = await fetch('http://localhost:3000/signature', {
-    //         method: 'POST',
-    //     });
-    //     return res.json();
-    // };
-
-    const uploadToCloudinary = async (file, signatureData) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('api_key', signatureData.apiKey);
-        formData.append('timestamp', signatureData.timestamp);
-        formData.append('signature', signatureData.signature);
-
-        const isExcel = file.type.includes('spreadsheet') || file.name.endsWith('.xls') || file.name.endsWith('.xlsx');
-        const resourceType = isExcel ? 'raw' : 'image';
-
-        const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/${resourceType}/upload`;
-
-        const res = await fetch(uploadUrl, {
-            method: 'POST',
-            body: formData,
-        });
-
-        const data = await res.json();
-        return data.secure_url;
+    const uploadFile = async (file) => {
+        // Get presigned URL for S3 upload
+        const { presignedUrl, key } = await getUploadSignature(file.name, file.type);
+        
+        // Upload file to S3 using presigned URL
+        await uploadToS3(file, presignedUrl);
+        
+        // Return the key which will be used to construct the full URL
+        return key;
     };
 
     const handleSubmit = async (e) => {
@@ -88,15 +71,21 @@ function ProfileContent() {
         setLoading(true);
 
         try {
-            const signatureData = await getCloudinarySignature();
+            // Upload all files to S3
+            const [headshotKey, galleryKey, reviewsKey] = await Promise.all([
+                uploadFile(headshot),
+                uploadFile(gallery),
+                uploadFile(reviews)
+            ]);
 
-            const headshotUrl = await uploadToCloudinary(headshot, signatureData);
-            const galleryUrl = await uploadToCloudinary(gallery, signatureData);
-            const reviewsUrl = await uploadToCloudinary(reviews, signatureData);
+            // Save the file keys to the database
+            await saveImageUrls({
+                headshotUrl: headshotKey,
+                galleryUrl: galleryKey,
+                reviewsUrl: reviewsKey
+            });
 
-            await saveImageUrls({ headshotUrl, galleryUrl, reviewsUrl });
-
-            console.log('Uploaded successfully:', { headshotUrl, galleryUrl, reviewsUrl });
+            console.log('Uploaded successfully:', { headshotKey, galleryKey, reviewsKey });
             navigate('/completion');
         } catch (err) {
             console.error('Upload failed:', err);
@@ -105,7 +94,6 @@ function ProfileContent() {
             setLoading(false);
         }
     };
-
 
     if (loading) {
         return (

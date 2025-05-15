@@ -225,13 +225,34 @@ export const saveQualifications = async (formData) => {
   }
 };
 
-export const getCloudinarySignature = async () => {
+export const getUploadSignature = async (fileName, fileType) => {
   try {
-    const response = await api.post('/signature');
+    const response = await api.post('/signature', { fileName, fileType });
     return response.data;
   } catch (error) {
-    console.error('Error fetching Cloudinary signature:', error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to get Cloudinary signature');
+    console.error('Error getting upload signature:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to get upload signature');
+  }
+};
+
+export const uploadToS3 = async (file, presignedUrl) => {
+  try {
+    const response = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload file to S3');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error uploading to S3:', error);
+    throw new Error('Failed to upload file');
   }
 };
 
@@ -244,8 +265,6 @@ export const saveImageUrls = async (imageData) => {
     throw new Error(error.response?.data?.message || 'Failed to save uploaded files');
   }
 };
-
-
 
 // Send Subscription Email
 export const sendSubscriptionEmail = async (token, userId) => {

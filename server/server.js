@@ -3,15 +3,17 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const AWS = require('aws-sdk');
 const waitlistRoutes = require('./routes/waitlistRoutes');
 const userRoutes = require('./routes/userRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const adminPanelRoutes = require('./routes/adminPanelRoutes');
-const promoCodeRoutes = require('./routes/promoCodeRoutes'); // New route
+const promoCodeRoutes = require('./routes/promoCodeRoutes');
 const cors = require('cors');
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
@@ -44,7 +46,6 @@ app.options('*', cors({
 
 app.use(express.json());
 
-// General CORS configuration
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -54,6 +55,15 @@ app.use(cors({
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize AWS S3 client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 // Configure Email Service based on EMAIL_SERVICE
 let emailTransport;
@@ -99,28 +109,42 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin-panel', adminPanelRoutes);
-app.use('/api/promo-codes', promoCodeRoutes); // New route
+app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/provider-info', providerRoutes);
 app.use('/api/qualifications', qualificationRoutes);
 
-// Endpoint: Generate signature for Cloudinary
-app.post('/api/signature', (req, res) => {
-  const timestamp = Math.round((new Date).getTime() / 1000);
-  const paramsToSign = `timestamp=${timestamp}`;
-  const signature = crypto
-    .createHash('sha1')
-    .update(paramsToSign + process.env.CLOUDINARY_API_SECRET)
-    .digest('hex');
+// Endpoint: Generate presigned URL for S3 upload
+app.post('/api/signature', async (req, res) => {
+  try {
+    const { fileName, fileType } = req.body;
+    
+    if (!fileName || !fileType) {
+      return res.status(400).json({ message: 'File name and type are required' });
+    }
 
-  res.json({
-    timestamp,
-    signature,
-    apiKey: process.env.CLOUDINARY_API_KEY,
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME
-  });
+    const key = `${Date.now()}-${fileName}`;
+    
+    // Create the command for uploading to S3
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+      ContentType: fileType,
+    });
+
+    // Generate a presigned URL that expires in 15 minutes
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+
+    res.json({
+      presignedUrl,
+      key,
+      bucketUrl: process.env.AWS_S3_BUCKET_URL,
+    });
+  } catch (error) {
+    console.error('Error generating presigned URL:', error);
+    res.status(500).json({ message: 'Error generating upload URL' });
+  }
 });
 
-// Endpoint: Save image URLs
 app.post('/api/save', async (req, res) => {
   const { headshotUrl, galleryUrl, reviewsUrl } = req.body;
 
@@ -129,7 +153,16 @@ app.post('/api/save', async (req, res) => {
   }
 
   try {
-    const newImageEntry = new Image({ headshotUrl, galleryUrl, reviewsUrl });
+    const headshotFullUrl = `${process.env.AWS_S3_BUCKET_URL}/${headshotUrl}`;
+    const galleryFullUrl = `${process.env.AWS_S3_BUCKET_URL}/${galleryUrl}`;
+    const reviewsFullUrl = `${process.env.AWS_S3_BUCKET_URL}/${reviewsUrl}`;
+
+    const newImageEntry = new Image({
+      headshotUrl: headshotFullUrl,
+      galleryUrl: galleryFullUrl,
+      reviewsUrl: reviewsFullUrl,
+    });
+    
     await newImageEntry.save();
     res.status(200).json({ message: 'Image URLs saved successfully' });
   } catch (err) {
