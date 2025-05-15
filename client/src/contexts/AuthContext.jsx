@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
-  }, );
+  }, []);
 
   const loginUser = (newToken, userData) => {
     console.log('Logging in user:', { newToken, userData });
