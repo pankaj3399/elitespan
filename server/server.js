@@ -25,6 +25,9 @@ const qualificationRoutes = require('./routes/qualifications.js');
 // Load environment variables
 dotenv.config();
 
+// Connect to MongoDB
+connectDB();
+
 const app = express();
 
 // Middleware to log incoming requests
@@ -52,9 +55,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false,
 }));
-
-// Connect to MongoDB
-connectDB();
 
 // Initialize AWS S3 client
 const s3Client = new S3Client({
