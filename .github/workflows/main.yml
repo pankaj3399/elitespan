@@ -26,7 +26,7 @@ jobs:
           if [ -n "${{ secrets.DOMAIN_NAME }}" ]; then
             echo "API_URL=https://${{ secrets.DOMAIN_NAME }}/api" >> $GITHUB_OUTPUT
           else
-            echo "API_URL=http://${{ secrets.AWS_EC2_HOST }}/api" >> $GITHUB_OUTPUT
+            echo "API_URL=http://${{ secrets.EC2_HOST }}/api" >> $GITHUB_OUTPUT
           fi
       
       - name: Build and push Frontend
@@ -37,6 +37,8 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/elitespan-frontend:latest
           build-args: |
             VITE_API_URL=${{ steps.api-url.outputs.API_URL }}
+            VITE_BASE_URL=https://${{ secrets.DOMAIN_NAME }}
+            VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}
       
       - name: Build and push Backend
         uses: docker/build-push-action@v4
@@ -145,7 +147,7 @@ jobs:
               image: ${{ secrets.DOCKER_USERNAME }}/elitespan-backend:latest
               restart: always
               ports:
-                - "5000:5000"
+                - "5000:3000"
               environment:
                 - MONGO_URI=${MONGO_URI}
                 - JWT_SECRET=${JWT_SECRET}
@@ -175,7 +177,7 @@ jobs:
           EOL
           else
             cat >> ~/app/docker-compose.yml << 'EOL'
-                - FRONTEND_URL=http://${{ secrets.AWS_EC2_HOST }}
+                - FRONTEND_URL=http://${{ secrets.EC2_HOST }}
           EOL
           fi
       
@@ -228,7 +230,7 @@ jobs:
           EOL
           else
             cat >> ~/app/.env << 'EOL'
-          FRONTEND_URL=http://${{ secrets.AWS_EC2_HOST }}
+          FRONTEND_URL=http://${{ secrets.EC2_HOST }}
           EOL
           fi
           
@@ -317,7 +319,7 @@ jobs:
               }
               
               location /api/ {
-                  proxy_pass http://backend:5000;
+                  proxy_pass http://backend:3000;
                   proxy_http_version 1.1;
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection 'upgrade';
@@ -341,7 +343,7 @@ jobs:
               }
               
               location /api/ {
-                  proxy_pass http://backend:5000;
+                  proxy_pass http://backend:3000;
                   proxy_http_version 1.1;
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection 'upgrade';
