@@ -16,7 +16,8 @@
    - `DOMAIN_NAME`
    - `EC2_HOST`:`13.203.222.192`
    - `EC2_USERNAME`: `ubuntu`
-   - `EMAIL_SERVICE`
+   - `EMAIL_SERVICE`: `sendgrid`
+   - `SENDGRID_API_KEY`: Your SendGrid API key
    - `JWT_SECRET`
    - `MONGO_URI`
    - `SSH_PRIVATE_KEY`:
