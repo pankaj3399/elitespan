@@ -25,6 +25,9 @@ const qualificationRoutes = require('./routes/qualifications.js');
 // Load environment variables
 dotenv.config();
 
+// Connect to MongoDB
+connectDB();
+
 const app = express();
 
 // Middleware to log incoming requests
@@ -53,9 +56,6 @@ app.use(cors({
   credentials: false,
 }));
 
-// Connect to MongoDB
-connectDB();
-
 // Initialize AWS S3 client
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -68,14 +68,11 @@ const s3Client = new S3Client({
 // Configure Email Service based on EMAIL_SERVICE
 let emailTransport;
 
-if (process.env.EMAIL_SERVICE === 'ses') {
-  AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-  });
-  emailTransport = new AWS.SES({ apiVersion: '2010-12-01' });
-  console.log('Email service configured: AWS SES');
+if (process.env.EMAIL_SERVICE === 'sendgrid') {
+  const sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  emailTransport = sgMail;
+  console.log('Email service configured: SendGrid');
 } else if (process.env.EMAIL_SERVICE === 'nodemailer') {
   emailTransport = nodemailer.createTransport({
     service: 'Gmail',
@@ -86,7 +83,7 @@ if (process.env.EMAIL_SERVICE === 'ses') {
   });
   console.log('Email service configured: Nodemailer (Gmail)');
 } else {
-  console.error('Invalid EMAIL_SERVICE value in .env. Must be "ses" or "nodemailer".');
+  console.error('Invalid EMAIL_SERVICE value in .env. Must be "sendgrid" or "nodemailer".');
   process.exit(1);
 }
 
@@ -268,29 +265,29 @@ app.post('/api/users/send-subscription-email', verifyToken, async (req, res) => 
       © ${new Date().getFullYear()} Elite Healthspan. All rights reserved.
     `;
 
-    if (process.env.EMAIL_SERVICE === 'ses') {
-      const params = {
-        Source: sourceEmail,
-        Destination: {
-          ToAddresses: [email],
+    if (process.env.EMAIL_SERVICE === 'sendgrid') {
+      const msg = {
+        to: email,
+        from: {
+          email: sourceEmail,
+          name: 'Elite Healthspan'
         },
-        Message: {
-          Subject: {
-            Data: subject,
-          },
-          Body: {
-            Html: {
-              Data: htmlContent,
-            },
-            Text: {
-              Data: textContent,
-            },
-          },
-        },
+        subject: subject,
+        text: textContent,
+        html: htmlContent,
       };
 
-      const result = await emailTransport.sendEmail(params).promise();
-      console.log(`Subscription email sent to ${email} via SES:`, result);
+      try {
+        const result = await emailTransport.send(msg);
+        console.log(`Subscription email sent to ${email} via SendGrid:`, result);
+      } catch (error) {
+        console.error('Error sending subscription email via SendGrid:', {
+          message: error.message,
+          response: error.response?.body,
+          code: error.code
+        });
+        throw error;
+      }
     } else if (process.env.EMAIL_SERVICE === 'nodemailer') {
       const mailOptions = {
         from: sourceEmail,

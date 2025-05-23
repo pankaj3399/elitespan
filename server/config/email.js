@@ -1,50 +1,64 @@
 const nodemailer = require('nodemailer');
-const AWS = require('aws-sdk'); // Add AWS SDK
+const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
 
 let transporter;
 
 // Configure based on EMAIL_SERVICE environment variable
-if (process.env.EMAIL_SERVICE === 'ses') {
-  // AWS SES Configuration
-  AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION,
-  });
+if (process.env.EMAIL_SERVICE === 'sendgrid') {
+  // SendGrid Configuration
+  if (!process.env.SENDGRID_API_KEY) {
+    console.error('SENDGRID_API_KEY is not set in environment variables');
+    process.exit(1);
+  }
 
-  const ses = new AWS.SES();
-
+  if (!process.env.EMAIL_USER) {
+    console.error('EMAIL_USER is not set in environment variables');
+    process.exit(1);
+  }
+  
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  
   transporter = {
     sendMail: async (mailOptions) => {
-      const params = {
-        Source: process.env.EMAIL_USER, // Verified SES sender email
-        Destination: {
-          ToAddresses: [mailOptions.to],
+      if (!mailOptions.to) {
+        throw new Error('Recipient email address is required');
+      }
+
+      const msg = {
+        to: mailOptions.to,
+        from: {
+          email: process.env.EMAIL_USER,
+          name: 'Elite Healthspan'
         },
-        Message: {
-          Subject: {
-            Data: mailOptions.subject,
-          },
-          Body: {
-            Text: {
-              Data: mailOptions.text,
-            },
-          },
-        },
+        subject: mailOptions.subject,
+        text: mailOptions.text,
+        html: mailOptions.html,
       };
 
       try {
-        await ses.sendEmail(params).promise();
-        console.log(`Email sent via AWS SES to ${mailOptions.to}`);
+        console.log('Attempting to send email via SendGrid:', {
+          to: msg.to,
+          from: msg.from,
+          subject: msg.subject
+        });
+        
+        const response = await sgMail.send(msg);
+        console.log('SendGrid response:', response);
+        return response;
       } catch (error) {
-        console.error('Error sending email via AWS SES:', error);
+        console.error('SendGrid Error Details:', {
+          message: error.message,
+          code: error.code,
+          response: error.response?.body,
+          stack: error.stack
+        });
         throw error;
       }
     },
   };
 } else {
-  // Nodemailer (Gmail) Configuration (default if EMAIL_SERVICE is not "ses")
+  // Nodemailer (Gmail) Configuration (default if EMAIL_SERVICE is not "sendgrid")
   transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -54,13 +68,14 @@ if (process.env.EMAIL_SERVICE === 'ses') {
   });
 }
 
-const sendEmail = async (to, subject, text) => {
+const sendEmail = async (to, subject, text, html = null) => {
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to,
       subject,
       text,
+      html,
     });
     console.log(`Email sent to ${to}`);
   } catch (error) {
