@@ -38,3 +38,36 @@
    - `STRIPE_WEBHOOK_SECRET`
    - `SUPPORT_EMAIL`
    - `VITE_STRIPE_PUBLISHABLE_KEY`
+
+## AWS EC2 Setup and Deployment
+
+### 1. Launch EC2 Instance
+1. Log in to AWS Console and navigate to EC2
+2. Click "Launch Instance"
+3. Configure the instance:
+   - Name: `elitespan`
+   - AMI: Ubuntu Server 22.04 LTS
+   - Instance type: t2.micro (or your preferred size)
+   - Key pair: Create new or use existing (pem file should be stored in github secret in SSH_PRIVATE_KEY field)
+   - Network settings: Allow HTTP (80), HTTPS (443), and SSH (22)
+
+### 2. Configure Security Group
+1. Create a new security group or modify existing:
+   - Allow inbound SSH (22) from your IP
+   - Allow HTTP (80) from anywhere
+   - Allow HTTPS (443) from anywhere
+   - Allow custom TCP (3000) for Node.js app
+
+### 3. DNS Configuration
+1. Go to your domain registrar's DNS management page
+2. Add an A record:
+   - Type: A
+   - Name: @ (or your subdomain)
+   - Value: Your EC2 instance's public IP
+   - TTL: default
+
+3. Add a CNAME record for www:
+   - Type: CNAME
+   - Name: www
+   - Value: your-domain.com
+   - TTL: default
