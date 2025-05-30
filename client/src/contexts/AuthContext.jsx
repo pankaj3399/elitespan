@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { setAuthToken } from '../services/api';
 
 const AuthContext = createContext();
@@ -8,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -47,6 +49,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify({ ...userData, role: userData.role || 'user' }));
     setAuthToken(newToken);
+
+    // Check if user is admin and redirect accordingly
+    const isAdmin = userData.role === 'admin' || userData.isAdmin === true;
+    if (isAdmin) {
+      console.log('Admin user detected, redirecting to admin/providers');
+      navigate('/admin/providers');
+    } else {
+      console.log('Regular user logged in');
+      // Optionally redirect regular users to a default route
+      // navigate('/dashboard'); // Uncomment if you want to redirect regular users
+    }
   };
 
   const logoutUser = () => {
@@ -56,6 +69,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setAuthToken(null);
+    // Redirect to login page after logout
+    navigate('/login');
   };
 
   const userId = user?.id || null;

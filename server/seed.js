@@ -21,12 +21,12 @@ const seedAdmin = async () => {
     }
 
     // Hash password for admin
-    const hashedPassword = await bcrypt.hash('password', 12);
+    const hashedPassword = await bcrypt.hash('khushijoy', 12);
 
     // Create admin user
     const adminUser = new User({
       name: 'Admin User',
-      email: 'admin@gmail.com',
+      email: 'ana@gmail.com',
       password: hashedPassword,
       role: 'admin',
       isAdmin: true, // Set isAdmin to true for admin user

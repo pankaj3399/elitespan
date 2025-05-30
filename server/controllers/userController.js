@@ -13,7 +13,9 @@ exports.signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.error('Validation errors:', errors.array());
-    return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
+    return res
+      .status(400)
+      .json({ message: 'Validation failed', errors: errors.array() });
   }
 
   try {
@@ -22,28 +24,47 @@ exports.signup = async (req, res) => {
 
     // Validate required fields
     if (!name || !name.trim()) {
-      return res.status(400).json({ message: 'Name is required and cannot be empty' });
+      return res
+        .status(400)
+        .json({ message: 'Name is required and cannot be empty' });
     }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      return res.status(400).json({ message: 'A valid email address is required' });
+      return res
+        .status(400)
+        .json({ message: 'A valid email address is required' });
     }
     if (!password || password.trim().length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+      return res
+        .status(400)
+        .json({ message: 'Password must be at least 6 characters long' });
     }
 
     // Ensure contactInfo is an object, even if empty
     if (contactInfo && typeof contactInfo !== 'object') {
-      return res.status(400).json({ message: 'Contact info must be an object' });
+      return res
+        .status(400)
+        .json({ message: 'Contact info must be an object' });
     }
 
     // Check if email already exists
     const existingUser = await User.findOne({ email: email.trim() });
     if (existingUser) {
       // User exists, return their data to proceed to payment (premium status updated after payment)
-      const token = jwt.sign({ id: existingUser._id, role: 'user' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const userRole = existingUser.isAdmin ? 'admin' : 'user';
+      const token = jwt.sign(
+        { id: existingUser._id, role: userRole },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
       return res.status(200).json({
         message: 'User already exists, proceeding to payment',
-        user: { id: existingUser._id, name: existingUser.name, email: existingUser.email, role: 'user' },
+        user: {
+          id: existingUser._id,
+          name: existingUser.name,
+          email: existingUser.email,
+          role: userRole,
+          isAdmin: existingUser.isAdmin,
+        },
         token,
       });
     }
@@ -62,17 +83,32 @@ exports.signup = async (req, res) => {
 
     await user.save();
 
+    // Determine role based on isAdmin field
+    const userRole = user.isAdmin ? 'admin' : 'user';
+
     // Generate JWT token
-    const token = jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { id: user._id, role: userRole },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     res.status(201).json({
       message: 'User created successfully',
-      user: { id: user._id, name: user.name, email: user.email, role: 'user' },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: userRole,
+        isAdmin: user.isAdmin,
+      },
       token,
     });
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ message: 'Server error during signup', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Server error during signup', error: error.message });
   }
 };
 
@@ -90,7 +126,14 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Determine role based on isAdmin field
+    const userRole = user.isAdmin ? 'admin' : 'user';
+
+    const token = jwt.sign(
+      { id: user._id, role: userRole },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     res.json({
       message: 'Logged in successfully',
@@ -99,12 +142,15 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: 'user',
+        role: userRole,
+        isAdmin: user.isAdmin,
       },
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Server error during login', error: error.message });
   }
 };
 
@@ -127,6 +173,11 @@ exports.editProfile = async (req, res) => {
     res.json({ message: 'Profile updated successfully', user });
   } catch (error) {
     console.error('Edit profile error:', error);
-    res.status(500).json({ message: 'Server error during profile update', error: error.message });
+    res
+      .status(500)
+      .json({
+        message: 'Server error during profile update',
+        error: error.message,
+      });
   }
 };
