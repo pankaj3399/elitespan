@@ -13,12 +13,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('Initializing AuthContext...');
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
-
-      console.log('Stored token:', storedToken);
-      console.log('Stored user:', storedUser);
 
       if (storedToken) {
         setAuthToken(storedToken);
@@ -36,7 +32,6 @@ export const AuthProvider = ({ children }) => {
         console.log('No token found, user remains null.');
       }
       setLoading(false);
-      console.log('AuthContext initialized:', { token, user, loading: false });
     };
 
     initializeAuth();

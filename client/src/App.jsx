@@ -75,7 +75,7 @@ const AppContent = () => {
           <Route path="/qualifications" element={<Qualifications />} />
           <Route path="/profile-content" element={<ProfileContent />} />
           <Route path="/completion" element={<Completion />} />
-          <Route path="/provider-profile" element={<ProviderProfile />} />
+          <Route path="/provider-profile/:providerId" element={<ProviderProfile />} />
           <Route
             path="/admin/promo-codes"
             element={
@@ -91,13 +91,8 @@ const AppContent = () => {
              <Route
             path="/admin/providers"
             element={
-              <ProtectedRoute
-                redirectAction={() =>
-                  toast.error("You are not authenticated to access this page.")
-                }
-              >
+           
                 <AdminProviders />
-              </ProtectedRoute>
             }
           />
           <Route

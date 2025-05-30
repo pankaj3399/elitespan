@@ -1,25 +1,150 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { getProvider } from "../services/api";
 import Navbar from "../components/common/Navbar";
-import hero from "../assets/hero.png";
 import { CiMobile2 } from "react-icons/ci";
 import { FiSend } from "react-icons/fi";
 import { IoBookmarkOutline } from "react-icons/io5";
 import { FaRegStar, FaRegThumbsUp } from "react-icons/fa";
 
 function ProviderProfile() {
+  const { providerId } = useParams();
+  const [provider, setProvider] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchProviderData();
+  }, [providerId]);
+
+  const getEmbeddedMapUrl = () => {
+    const address = `${provider.address}, ${provider.city}, ${provider.state} ${provider.zip}`;
+    const encodedAddress = encodeURIComponent(address);
+    
+    // Using OpenStreetMap export/embed - completely free
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(`${provider.city}, ${provider.state}`)}&layer=mapnik&marker=${encodedAddress}`;
+  };
+
+  const getMapBoxURL = () => {
+    // Alternative: Generate a more precise OpenStreetMap embed URL
+    const lat = 40.7128; // Default to NYC, will be replaced by actual coordinates if available
+    const lon = -74.0060;
+    const zoom = 15;
+    
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}&layer=mapnik`;
+  };
+
+  const fetchProviderData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await getProvider(providerId);
+      setProvider(data.provider || data);
+    } catch (err) {
+      console.error('Error fetching provider data:', err);
+      setError('Failed to load provider information. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FCF8F4]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0C1F6D] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading provider information...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FCF8F4]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-500 text-lg mb-4">⚠️</div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Profile</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button 
+              onClick={fetchProviderData}
+              className="px-4 py-2 bg-[#0C1F6D] text-white rounded-lg hover:bg-[#0C1F6D]/90"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No provider found
+  if (!provider) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FCF8F4]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Provider Not Found</h2>
+            <p className="text-gray-600">The provider you're looking for doesn't exist or has been removed.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Helper function to format specialties
+  const formatSpecialties = () => {
+    if (!provider.specialties || provider.specialties.length === 0) {
+      return "Specialty information not available";
+    }
+    return provider.specialties.join(", ");
+  };
+
+  // Helper function to get the first specialty or a default
+  const getPrimarySpecialty = () => {
+    if (provider.specialties && provider.specialties.length > 0) {
+      return provider.specialties[0];
+    }
+    return "Healthcare Provider";
+  };
+
+  // Helper function to format address parts
+  const getFormattedAddress = () => {
+    const parts = [];
+    if (provider.address) parts.push(provider.address);
+    if (provider.suite) parts.push(provider.suite);
+    return parts.join(", ");
+  };
+
+  const getCityStateZip = () => {
+    return `${provider.city}, ${provider.state} ${provider.zip}`;
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FCF8F4]">
       <Navbar />
-      {/* Header Section with Image and Back Button */}
+      
+      {/* Header Section with Image */}
       <div className="relative w-full h-full bg-[#F5F5F5] flex items-center justify-center">
         <div className="w-full h-full flex items-center justify-center">
-          {/* Placeholder for profile image */}
           <div className="w-full h-full flex items-center justify-center">
             <img
-              src={hero}
-              alt="Provider"
+              src={provider.headshotUrl || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&h=400&fit=crop&crop=face"}
+              alt={`${provider.providerName} - Profile`}
               className="object-cover w-full h-full max-h-full"
               style={{ objectPosition: "center top" }}
+              onError={(e) => {
+                e.target.src = "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=400&fit=crop&crop=center";
+              }}
             />
           </div>
         </div>
@@ -27,20 +152,24 @@ function ProviderProfile() {
 
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row max-w-7xl mx-auto w-full gap-8 sm:px-4 sm:py-8 sm:-mt-32 -mt-4 z-10 relative">
+        
         {/* Left Card: Contact & Office */}
         <div className="bg-white !border-[#7E7E7E]/50 !border rounded-[20px] p-6 w-full max-w-md flex-shrink-0 max-h-[600px]">
           <div className="mb-4">
             <div className="text-base text-gray-400 mb-1 font-karla">
-              [Type of Medicine]
+              [{getPrimarySpecialty()}]
             </div>
             <div className="text-2xl font-[500] font-montserrat leading-[28px] text-[#061140] sm:mb-7 mb-4">
-              Charles A. Guglin MD FACS
+              {provider.providerName}
             </div>
             <div className="flex gap-2 mb-4">
               <button className="flex-1 font-karla py-3 px-2 bg-[#0C1F6D] text-white rounded-full font-medium text-base flex items-center justify-center gap-2">
                 <CiMobile2 size={18} /> Call
               </button>
-              <button className="flex-1 font-karla py-3 px-2 bg-[#0C1F6D] text-white rounded-full font-medium text-base flex items-center justify-center gap-2">
+              <button 
+                onClick={() => window.location.href = `mailto:${provider.email}`}
+                className="flex-1 font-karla py-3 px-2 bg-[#0C1F6D] text-white rounded-full font-medium text-base flex items-center justify-center gap-2"
+              >
                 <FiSend size={18} /> Email
               </button>
               <button className="flex-1 py-3 px-2 font-karla bg-[#0C1F6D] text-white rounded-full font-medium text-base flex items-center justify-center gap-2">
@@ -48,37 +177,66 @@ function ProviderProfile() {
               </button>
             </div>
           </div>
+          
           <div className="mb-4">
             <div className="font-semibold text-[#061140] mb-2 text-sm">
               Office
             </div>
-            {/* Map Placeholder */}
-            <div className="w-full h-40 bg-gray-200 rounded-xl flex items-center justify-center mb-5">
+            
+            {/* Free Map Implementation */}
+            <div className="w-full h-40 bg-gray-200 rounded-xl mb-5 overflow-hidden">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3023.983038638889!2d-73.04373448457033!3d41.17811517928743!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e7d672f7628351%3A0x6e838d26a2058412!2s88%20Noble%20Ave%2C%20Milford%2C%20CT%2006460!5e0!3m2!1sen!2sus!4v1717066666666!5m2!1sen!2sus"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(`${provider.city}, ${provider.state}`)}&layer=mapnik`}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
-                allowFullScreen=""
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
+                title={`Map showing ${provider.practiceName} location`}
+                onError={(e) => {
+                  // Fallback to a styled placeholder if map fails to load
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
               ></iframe>
+              
+              {/* Fallback when iframe fails */}
+              <div 
+                className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center"
+                style={{ display: 'none' }}
+              >
+                <div className="text-center text-gray-600">
+                  <div className="text-2xl mb-2">📍</div>
+                  <div className="text-sm font-medium">Map View</div>
+                  <div className="text-xs">{provider.city}, {provider.state}</div>
+                  <a
+                    href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(`${provider.address}, ${provider.city}, ${provider.state} ${provider.zip}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 underline mt-1 block"
+                  >
+                    View on OpenStreetMap
+                  </a>
+                </div>
+              </div>
             </div>
+            
             <div className="flex justify-between items-start">
               <div>
                 <div className="text-base text-[#333333] mb-1 font-karla">
-                  HyperFit MD
+                  {provider.practiceName}
                 </div>
                 <div className="text-sm text-[#333333] mb-1 font-karla">
-                  88 Noble Ave, Ste 105
+                  {getFormattedAddress()}
                 </div>
                 <div className="text-sm text-[#333333] mb-2 font-karla">
-                  Milford, CT 06460
+                  {getCityStateZip()}
                 </div>
               </div>
               <div>
                 <a
-                  href="#"
+                  href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(provider.fullAddress || `${provider.address}, ${provider.city}, ${provider.state} ${provider.zip}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-base text-[#0334CB] font-medium underline font-karla"
                 >
                   Get Directions
@@ -86,6 +244,7 @@ function ProviderProfile() {
               </div>
             </div>
           </div>
+          
           <button className="w-full sm:mt-4 py-3 bg-[#FFFFFF] text-[#061140] font-karla rounded-full font-semibold text-base border border-gray-200">
             See Full Information
           </button>
@@ -93,51 +252,51 @@ function ProviderProfile() {
 
         {/* Right Content: About, Reviews, Education */}
         <div className="flex-1 flex flex-col gap-8 sm:mt-[120px]">
+          
           {/* About Section */}
           <div className="!border-[#7E7E7E]/50 !border-b p-6">
             <div className="text-[20px] font-[500] text-[#061140] mb-2 leading-[26px] font-montserrat">
-              About Dr. Guglin
+              About Dr. {provider.providerName.split(' ').pop()}
             </div>
             <div className="text-[#484848]/80 mb-4 text-base font-karla">
-              Meet Dr. Charles Guglin, MD FACS. With his extensive training and
-              experience, you can rest assured that you are in good hands. Dr.
-              Guglin was born and raised in Rochester, NY. After receiving a BS
-              from SUNY at Albany, NY, he went to medical school at the
-              University of Pittsburgh School of Medicine.
+              Meet {provider.providerName}. {provider.boardCertifications && provider.boardCertifications.length > 0 
+                ? `Board certified in ${provider.boardCertifications.join(", ")}.` 
+                : ""} 
+              {provider.specialties && provider.specialties.length > 0 
+                ? ` Specializing in ${provider.specialties.join(", ")}.` 
+                : ""}
               <br />
               <br />
-              Dr. Guglin went through General Surgery Residency training,
-              initially at New Britain General Hospital in New Britain, CT then
-              completed a Trauma Fellowship and wrapped up his General Surgery
-              training at Hartford Hospital in Hartford, CT.
+              {provider.practiceName} is committed to providing exceptional healthcare services 
+              to patients in {provider.city}, {provider.state}.
             </div>
+            
             {/* Patients Say Section */}
             <div className="mb-4">
               <div className="font-[500] text-[#061140] mb-1 font-montserrat">
                 Patients Say…
               </div>
               <div className="text-[#484848]/80 text-base mb-2 font-karla">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore.
+                Professional, knowledgeable, and caring. Highly recommended for quality healthcare services.
               </div>
               <div className="flex w-full bg-[#DFE3F2] rounded-[8px] px-8 py-3 mb-2 gap-8 items-center justify-center">
                 <div className="flex items-center gap-2 text-[#061140] text-base font-karla">
                   <FaRegStar className="text-[#061140]" size={22} />
                   <span>
                     Reviews&nbsp;{" "}
-                    <span className="font-semibold">5.0 (00)</span>
+                    <span className="font-semibold">5.0 (0)</span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-[#061140] text-base font-karla">
                   <FaRegThumbsUp className="text-[#061140]" size={22} />
                   <span>
                     Efficacy&nbsp;{" "}
-                    <span className="font-semibold">5.0 (00)</span>
+                    <span className="font-semibold">5.0 (0)</span>
                   </span>
                 </div>
               </div>
               <button className="w-full py-3 mt-4 bg-[#FFFFFF] text-[#061140] border font-karla border-[#7E7E7E]/50 rounded-full font-semibold text-base">
-                Read Reviews (00)
+                Read Reviews (0)
               </button>
             </div>
           </div>
@@ -148,82 +307,91 @@ function ProviderProfile() {
               Education & Qualifications
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+              
+              {/* Specialties */}
               <div className="font-[700] text-[#333333] text-base font-karla">
                 Specialties
               </div>
               <div className="text-[#484848]/80 text-base">
-                Specialty 1, Specialty 2, Specialty 3
+                {formatSpecialties()}
               </div>
+              
+              {/* Practice */}
               <div className="font-[700] text-[#333333] text-base font-karla">
-                Owner
+                Practice
               </div>
-              <div>HyperFit MD Age Management Center</div>
+              <div className="text-[#484848]/80 text-base">
+                {provider.practiceName}
+              </div>
+              
+              {/* Board Certifications */}
+              {provider.boardCertifications && provider.boardCertifications.length > 0 && (
+                <>
+                  <div className="font-[700] text-[#333333] text-base font-karla">
+                    Board Certifications
+                  </div>
+                  <div className="text-[#484848]/80 text-base">
+                    {provider.boardCertifications.map((cert, index) => (
+                      <div key={index}>{cert}</div>
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              {/* Hospital Affiliations */}
+              {provider.hospitalAffiliations && provider.hospitalAffiliations.length > 0 && (
+                <>
+                  <div className="font-[700] text-[#333333] text-base font-karla">
+                    Hospital Affiliations
+                  </div>
+                  <div className="text-[#484848]/80 text-base">
+                    {provider.hospitalAffiliations.map((affiliation, index) => (
+                      <div key={index} className="mb-1">{affiliation}</div>
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              {/* Education & Training */}
+              {provider.educationAndTraining && provider.educationAndTraining.length > 0 && (
+                <>
+                  <div className="font-[700] text-[#333333] text-base font-karla">
+                    Education & Training
+                  </div>
+                  <div className="text-[#484848]/80 text-base">
+                    {provider.educationAndTraining.map((education, index) => (
+                      <div key={index} className="mb-2">{education}</div>
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              {/* NPI Number */}
               <div className="font-[700] text-[#333333] text-base font-karla">
-                Hospital Affiliations
+                NPI Number
               </div>
-              <div>
-                <div className="font-[500] text-[#484848]/80 text-base font-karla">
-                  Partner
-                </div>
-                Surgical Associates of Milford 1989-2017
-                <br />
-                <div className="font-[500] text-[#484848]/80 text-base font-karla mt-2">
-                  President of Medical Staff
-                </div>
-                Milford Hospital
-                <br />
-                2008-2012
-                <br />
-                <div className="font-[500] text-[#484848]/80 text-base font-karla mt-2">
-                  Chief of Surgery
-                </div>
-                Milford General Hospital
-                <br />
-                2001-2010
-                <br />
-                <div className="font-[500] text-[#484848]/80 text-base font-karla mt-2">
-                  General Surgery
-                </div>
-                University of CT Affiliated Residency Program at Hartford
-                Hospital & U. Conn. Health Center
-                <br />
-                1986-1989
-                <br />
-                <div className="font-[500] text-[#484848]/80 text-base font-karla mt-2">
-                  General Surgery
-                </div>
-                New Britain General Hospital
-                <br />
-                New Britain, CT
-                <br />
-                1982-1985
-                <br />
-                <div className="font-[500] text-[#484848]/80 text-base font-karla mt-2">
-                  Fellowship EMS/Trauma
-                </div>
-                Hartford Hospital, Hartford, CT 1982-1983
+              <div className="text-[#484848]/80 text-base">
+                {provider.npiNumber}
               </div>
-              <div className="font-[700] text-[#333333] text-base font-karla">
-                Education & Training
-              </div>
-              <div>
-                University of Pittsburgh
-                <br />
-                School of Medicine
-                <br />
-                MD Degree, 1978-1982
-                <br />
-                State University of New York
-                <br />
-                BS in Biology, 1974-1978
-              </div>
+              
             </div>
           </div>
 
           {/* Ad/Procedure Supported by Provider */}
           <div className="bg-white rounded-3xl shadow-lg p-6 flex items-center justify-center min-h-[140px]">
             <div className="w-full h-32 bg-gray-100 rounded-xl flex items-center justify-center">
-              <span className="text-gray-400 text-xs">
+              {provider.galleryUrl ? (
+                <img 
+                  src={provider.galleryUrl} 
+                  alt="Procedures by provider"
+                  className="w-full h-full object-cover rounded-xl"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <span className="text-gray-400 text-xs text-center" style={{display: provider.galleryUrl ? 'none' : 'flex'}}>
                 AD
                 <br />
                 [Procedure Supported by Provider]

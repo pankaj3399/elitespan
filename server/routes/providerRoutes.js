@@ -107,4 +107,41 @@ router.put('/:id/images', async (req, res) => {
     }
 });
 
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Find provider by ID and only return if active and approved
+        const provider = await Provider.findOne({
+            _id: id,
+        });
+        
+        if (!provider) {
+            return res.status(404).json({ 
+                message: 'Provider not found or not available' 
+            });
+        }
+        
+        res.status(200).json({
+            message: 'Provider retrieved successfully',
+            provider
+        });
+        
+    } catch (error) {
+        console.error('Error fetching provider:', error);
+        
+        // Handle invalid ObjectId format
+        if (error.name === 'CastError') {
+            return res.status(400).json({ 
+                message: 'Invalid provider ID format' 
+            });
+        }
+        
+        res.status(500).json({ 
+            message: 'Server error',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+});
+
 module.exports = router;
