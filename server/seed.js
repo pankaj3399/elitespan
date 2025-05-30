@@ -21,20 +21,21 @@ const seedAdmin = async () => {
     }
 
     // Hash password for admin
-    const hashedPassword = await bcrypt.hash('khushijoy', 12);
+    const hashedPassword = await bcrypt.hash('password', 12);
 
     // Create admin user
     const adminUser = new User({
       name: 'Admin User',
-      email: 'ana@gmail.com',
+      email: 'admin@gmail.com',
       password: hashedPassword,
       role: 'admin',
+      isAdmin: true, // Set isAdmin to true for admin user
     });
 
     await adminUser.save();
     console.log('Admin user created successfully!');
-    console.log('Email: admin@elitehealthspan.com');
-    console.log('Password: admin123');
+    console.log('Email: ana@gmail.com');
+    console.log('Password: khushijoy');
     console.log('Please change the password after first login.');
 
   } catch (error) {
