@@ -23,11 +23,7 @@ const providerSchema = new mongoose.Schema({
     headshotUrl: String,
     galleryUrl: String, 
     reviewsUrl: String,
-    
-    // Progress Tracking
-    step1Complete: { type: Boolean, default: false }, // Basic info
-    step2Complete: { type: Boolean, default: false }, // Qualifications  
-    step3Complete: { type: Boolean, default: false }, // Images/files
+
     isProfileComplete: { type: Boolean, default: false },
     
     // Status
@@ -54,10 +50,7 @@ providerSchema.methods.checkProfileCompletion = function() {
     const hasBasicInfo = this.practiceName && this.providerName && this.email && this.npiNumber;
     const hasQualifications = this.specialties.length > 0 || this.boardCertifications.length > 0;
     const hasImages = this.headshotUrl && this.galleryUrl;
-    
-    this.step1Complete = !!hasBasicInfo;
-    this.step2Complete = !!hasQualifications;
-    this.step3Complete = !!hasImages;
+
     this.isProfileComplete = hasBasicInfo && hasQualifications && hasImages;
     
     return this.isProfileComplete;
