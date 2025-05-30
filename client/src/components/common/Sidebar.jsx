@@ -13,7 +13,8 @@ import {
   BarChart3,
   HelpCircle,
   Menu,
-  X
+  X,
+  Users2
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -35,6 +36,8 @@ const Sidebar = () => {
 
   const navItems = [
     { name: 'Dashboard', icon: <Home className="w-5 h-5" />, path: '/admin/dashboard' },
+        { name: 'Providers', icon: <Users2 className="w-5 h-5" />, path: '/admin/providers' },
+
     { name: 'Promo Codes', icon: <Tag className="w-5 h-5" />, path: '/admin/promo-codes' },
     { name: 'Users', icon: <Users className="w-5 h-5" />, path: '/admin/users' },
     { name: 'Orders', icon: <ShoppingCart className="w-5 h-5" />, path: '/admin/orders' },

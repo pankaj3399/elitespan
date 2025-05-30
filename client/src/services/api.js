@@ -158,6 +158,31 @@ export const getAllDoctors = async (token) => {
   }
 };
 
+// Admin Provider Management Endpoints
+export const getAllProvidersAdmin = async (token, filters = {}) => {
+  try {
+    setAuthToken(token);
+    const query = new URLSearchParams(filters).toString();
+    const response = await api.get(`/admins/providers?${query}`);
+    return response.data;
+  } catch (error) {
+    console.error('Get all providers error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to fetch providers');
+  }
+};
+
+export const updateProviderApproval = async (token, providerId, isApproved) => {
+  try {
+    setAuthToken(token);
+    const status = isApproved ? 'approve' : 'block';
+    const response = await api.put(`/admins/providers/${providerId}/status`, { status });
+    return response.data;
+  } catch (error) {
+    console.error('Update provider approval error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to update provider approval');
+  }
+};
+
 // Payment Endpoints
 export const createPaymentIntent = async (token, paymentData) => {
   try {
@@ -214,7 +239,6 @@ export const saveProviderInfo = async (providerData) => {
   }
 };
 
-
 export const saveQualifications = async (providerId, qualificationsData) => {
   try {
     const response = await api.put(`/provider-info/${providerId}/qualifications`, qualificationsData);
@@ -265,6 +289,7 @@ export const saveImageUrls = async (providerId, imageData) => {
     throw new Error(error.response?.data?.message || 'Failed to save uploaded files');
   }
 };
+
 // Send Subscription Email
 export const sendSubscriptionEmail = async (token, userId) => {
   try {
@@ -342,17 +367,6 @@ export const getAllProviders = async (filters = {}) => {
   } catch (error) {
     console.error('Get providers error:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to fetch providers');
-  }
-};
-
-export const updateProviderApproval = async (token, providerId, isApproved) => {
-  try {
-    setAuthToken(token);
-    const response = await api.put(`/provider-info/${providerId}/approval`, { isApproved });
-    return response.data;
-  } catch (error) {
-    console.error('Update provider approval error:', error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to update provider approval');
   }
 };
 

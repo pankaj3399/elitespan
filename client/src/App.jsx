@@ -21,6 +21,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ProfileContent from "./pages/ProfileContent";
 import Completion from "./pages/Completion";
 import ProviderProfile from "./pages/ProviderProfile";
+import AdminProviders from "./pages/AdminProvidersDashboard";
 
 const App = () => {
   return (
@@ -84,6 +85,18 @@ const AppContent = () => {
                 }
               >
                 <AdminPromoCodes />
+              </ProtectedRoute>
+            }
+          />
+             <Route
+            path="/admin/providers"
+            element={
+              <ProtectedRoute
+                redirectAction={() =>
+                  toast.error("You are not authenticated to access this page.")
+                }
+              >
+                <AdminProviders />
               </ProtectedRoute>
             }
           />
