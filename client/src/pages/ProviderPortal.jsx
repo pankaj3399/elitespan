@@ -65,7 +65,7 @@ function ProviderPortal() {
     }
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {};
@@ -79,21 +79,27 @@ function ProviderPortal() {
       newErrors.npiNumber = "Invalid NPI Number. It must be 10 digits.";
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email address.";
     }
 
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      await saveProviderInfo(formData);
-      console.log("Form submitted and saved to DB");
+      const response = await saveProviderInfo(formData);
+      
+      // Store provider ID for next steps
+      localStorage.setItem('providerId', response.providerId);
+      
+      console.log("Provider info saved successfully");
       navigate("/qualifications");
     } catch (error) {
       console.error("Error submitting provider info:", error.message);
+      alert("Error saving provider information. Please try again.");
     } finally {
       setIsLoading(false);
     }

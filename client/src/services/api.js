@@ -204,7 +204,6 @@ export const getTransactions = async (token) => {
   }
 };
 
-// Provider Portal Endpoints
 export const saveProviderInfo = async (providerData) => {
   try {
     const response = await api.post('/provider-info', providerData);
@@ -215,9 +214,10 @@ export const saveProviderInfo = async (providerData) => {
   }
 };
 
-export const saveQualifications = async (formData) => {
+
+export const saveQualifications = async (providerId, qualificationsData) => {
   try {
-    const response = await api.post('/qualifications', formData);
+    const response = await api.put(`/provider-info/${providerId}/qualifications`, qualificationsData);
     return response.data;
   } catch (error) {
     console.error('Save qualifications error:', error.response?.data || error.message);
@@ -256,16 +256,15 @@ export const uploadToS3 = async (file, presignedUrl) => {
   }
 };
 
-export const saveImageUrls = async (imageData) => {
+export const saveImageUrls = async (providerId, imageData) => {
   try {
-    const response = await api.post('/save', imageData);
+    const response = await api.put(`/provider-info/${providerId}/images`, imageData);
     return response.data;
   } catch (error) {
     console.error('Error saving image URLs:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to save uploaded files');
   }
 };
-
 // Send Subscription Email
 export const sendSubscriptionEmail = async (token, userId) => {
   try {
@@ -322,6 +321,38 @@ export const validatePromoCode = async (token, code) => {
       status: error.response?.status,
     });
     throw new Error(error.response?.data?.message || 'Invalid or expired promo code');
+  }
+};
+
+export const getProvider = async (providerId) => {
+  try {
+    const response = await api.get(`/provider-info/${providerId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Get provider error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to fetch provider');
+  }
+};
+
+export const getAllProviders = async (filters = {}) => {
+  try {
+    const query = new URLSearchParams(filters).toString();
+    const response = await api.get(`/provider-info?${query}`);
+    return response.data;
+  } catch (error) {
+    console.error('Get providers error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to fetch providers');
+  }
+};
+
+export const updateProviderApproval = async (token, providerId, isApproved) => {
+  try {
+    setAuthToken(token);
+    const response = await api.put(`/provider-info/${providerId}/approval`, { isApproved });
+    return response.data;
+  } catch (error) {
+    console.error('Update provider approval error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to update provider approval');
   }
 };
 

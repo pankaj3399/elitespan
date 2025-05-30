@@ -37,10 +37,15 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  isAdmin:{
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+
 });
 
 module.exports = mongoose.model('User', userSchema);

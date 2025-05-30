@@ -18,9 +18,7 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 const PromoCode = require('./models/PromoCode');
-const Image = require('./models/Image');
 const providerRoutes = require('./routes/providerRoutes.js');
-const qualificationRoutes = require('./routes/qualifications.js');
 
 // Load environment variables
 dotenv.config();
@@ -108,7 +106,6 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin-panel', adminPanelRoutes);
 app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/provider-info', providerRoutes);
-app.use('/api/qualifications', qualificationRoutes);
 
 // Endpoint: Generate presigned URL for S3 upload
 app.post('/api/signature', async (req, res) => {
