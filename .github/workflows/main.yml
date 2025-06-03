@@ -39,6 +39,7 @@ jobs:
             VITE_API_URL=${{ steps.api-url.outputs.API_URL }}
             VITE_BASE_URL=https://${{ secrets.DOMAIN_NAME }}
             VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
       
       - name: Build and push Backend
         uses: docker/build-push-action@v4
@@ -126,6 +127,7 @@ jobs:
                 - NODE_ENV=production
                 - VITE_BASE_URL=https://${{ secrets.DOMAIN_NAME }}
                 - VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+                - VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
           EOL
           
           # Set the correct API URL based on domain availability
