@@ -4,14 +4,19 @@ import { getProvider } from '../services/api';
 import Navbar from '../components/common/Navbar';
 import { CiMobile2 } from 'react-icons/ci';
 import { FiSend } from 'react-icons/fi';
-import { IoBookmarkOutline } from 'react-icons/io5';
-import { FaRegStar, FaRegThumbsUp } from 'react-icons/fa';
+import { IoBookmarkOutline, IoClose } from 'react-icons/io5';
+import { FaRegStar, FaRegThumbsUp, FaStar } from 'react-icons/fa';
 
 function ProviderProfile() {
   const { providerId } = useParams();
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Reviews state
+  const [reviewsData, setReviewsData] = useState(null);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [allReviews, setAllReviews] = useState([]);
 
   // Get Google Maps API key from environment variables
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -20,10 +25,108 @@ function ProviderProfile() {
     fetchProviderData();
   }, [providerId]);
 
+  const fetchProviderData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getProvider(providerId);
+      const providerData = data.provider || data;
+      setProvider(providerData);
+
+      // Set initial reviews data from provider
+      if (providerData.reviewStats) {
+        setReviewsData({
+          stats: providerData.reviewStats,
+          reviews:
+            providerData.reviews
+              ?.filter((r) => r.isActive && r.isApproved)
+              .slice(0, 3) || [],
+        });
+      } else {
+        // Fallback if no reviewStats
+        setReviewsData({
+          stats: {
+            totalReviews: 0,
+            averageSatisfactionRating: 0,
+            averageEfficacyRating: 0,
+          },
+          reviews: [],
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching provider data:', err);
+      setError('Failed to load provider information. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getProviderReviews = async (providerId, page = 1, limit = 10) => {
+    const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+    const response = await fetch(
+      `${BASE_URL}/api/provider-info/${providerId}/reviews?page=${page}&limit=${limit}`
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch reviews');
+    }
+
+    return response.json();
+  };
+
+  const fetchAllReviews = async () => {
+    try {
+      const data = await getProviderReviews(providerId, 1, 50);
+      setAllReviews(data.reviews);
+      setShowReviewsModal(true);
+    } catch (err) {
+      console.error('Error fetching all reviews:', err);
+      alert('Failed to load reviews. Please try again.');
+    }
+  };
+
+  const renderStars = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<FaStar key={i} className='text-yellow-400' size={16} />);
+    }
+
+    if (hasHalfStar) {
+      stars.push(
+        <FaStar
+          key='half'
+          className='text-yellow-400'
+          size={16}
+          style={{ opacity: 0.5 }}
+        />
+      );
+    }
+
+    const remainingStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < remainingStars; i++) {
+      stars.push(
+        <FaRegStar key={`empty-${i}`} className='text-gray-300' size={16} />
+      );
+    }
+
+    return stars;
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  // Helper functions
   const getGoogleMapsEmbedUrl = () => {
     const address = `${provider.address}, ${provider.city}, ${provider.state} ${provider.zip}`;
     const encodedAddress = encodeURIComponent(address);
-
     return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodedAddress}&zoom=15&maptype=roadmap`;
   };
 
@@ -36,19 +139,29 @@ function ProviderProfile() {
     )}`;
   };
 
-  const fetchProviderData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const data = await getProvider(providerId);
-      setProvider(data.provider || data);
-    } catch (err) {
-      console.error('Error fetching provider data:', err);
-      setError('Failed to load provider information. Please try again later.');
-    } finally {
-      setLoading(false);
+  const formatSpecialties = () => {
+    if (!provider.specialties || provider.specialties.length === 0) {
+      return 'Specialty information not available';
     }
+    return provider.specialties.join(', ');
+  };
+
+  const getPrimarySpecialty = () => {
+    if (provider.specialties && provider.specialties.length > 0) {
+      return provider.specialties[0];
+    }
+    return 'Healthcare Provider';
+  };
+
+  const getFormattedAddress = () => {
+    const parts = [];
+    if (provider.address) parts.push(provider.address);
+    if (provider.suite) parts.push(provider.suite);
+    return parts.join(', ');
+  };
+
+  const getCityStateZip = () => {
+    return `${provider.city}, ${provider.state} ${provider.zip}`;
   };
 
   // Loading state
@@ -109,32 +222,10 @@ function ProviderProfile() {
     );
   }
 
-  // Helper function to format specialties
-  const formatSpecialties = () => {
-    if (!provider.specialties || provider.specialties.length === 0) {
-      return 'Specialty information not available';
-    }
-    return provider.specialties.join(', ');
-  };
-
-  // Helper function to get the first specialty or a default
-  const getPrimarySpecialty = () => {
-    if (provider.specialties && provider.specialties.length > 0) {
-      return provider.specialties[0];
-    }
-    return 'Healthcare Provider';
-  };
-
-  // Helper function to format address parts
-  const getFormattedAddress = () => {
-    const parts = [];
-    if (provider.address) parts.push(provider.address);
-    if (provider.suite) parts.push(provider.suite);
-    return parts.join(', ');
-  };
-
-  const getCityStateZip = () => {
-    return `${provider.city}, ${provider.state} ${provider.zip}`;
+  const stats = reviewsData?.stats || {
+    totalReviews: 0,
+    averageSatisfactionRating: 0,
+    averageEfficacyRating: 0,
   };
 
   return (
@@ -161,6 +252,76 @@ function ProviderProfile() {
           </div>
         </div>
       </div>
+
+      {/* Reviews Modal */}
+      {showReviewsModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+          <div className='bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden'>
+            <div className='flex justify-between items-center p-6 border-b'>
+              <h2 className='text-2xl font-semibold text-[#061140]'>
+                Patient Reviews ({stats.totalReviews})
+              </h2>
+              <button
+                onClick={() => setShowReviewsModal(false)}
+                className='text-gray-500 hover:text-gray-700'
+              >
+                <IoClose size={24} />
+              </button>
+            </div>
+
+            <div className='p-6 overflow-y-auto max-h-[60vh]'>
+              {allReviews.length === 0 ? (
+                <div className='text-center py-8 text-gray-500'>
+                  No reviews available yet.
+                </div>
+              ) : (
+                <div className='space-y-6'>
+                  {allReviews.map((review, index) => (
+                    <div
+                      key={review._id || index}
+                      className='border-b border-gray-200 pb-6 last:border-b-0'
+                    >
+                      <div className='flex justify-between items-start mb-3'>
+                        <div>
+                          <h4 className='font-semibold text-[#061140] text-lg'>
+                            {review.clientName}
+                          </h4>
+                          <div className='flex items-center gap-4 mt-1'>
+                            <div className='flex items-center gap-1'>
+                              <span className='text-sm text-gray-600'>
+                                Satisfaction:
+                              </span>
+                              {renderStars(review.satisfactionRating)}
+                              <span className='text-sm font-medium text-[#061140] ml-1'>
+                                {review.satisfactionRating}
+                              </span>
+                            </div>
+                            <div className='flex items-center gap-1'>
+                              <span className='text-sm text-gray-600'>
+                                Efficacy:
+                              </span>
+                              {renderStars(review.efficacyRating)}
+                              <span className='text-sm font-medium text-[#061140] ml-1'>
+                                {review.efficacyRating}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <span className='text-sm text-gray-500'>
+                          {formatDate(review.createdAt)}
+                        </span>
+                      </div>
+                      <p className='text-[#484848]/80 text-base leading-relaxed'>
+                        {review.reviewText}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className='flex flex-col lg:flex-row max-w-7xl mx-auto w-full gap-8 sm:px-4 sm:py-8 sm:-mt-32 -mt-4 z-10 relative'>
@@ -209,7 +370,6 @@ function ProviderProfile() {
                 title={`Map showing ${provider.practiceName} location`}
                 sandbox='allow-scripts allow-same-origin allow-popups allow-forms'
                 onError={(e) => {
-                  // Fallback to a styled placeholder if map fails to load
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
                 }}
@@ -293,33 +453,80 @@ function ProviderProfile() {
               {provider.state}.
             </div>
 
-            {/* Patients Say Section */}
+            {/* Patients Say Section with Real Reviews */}
             <div className='mb-4'>
               <div className='font-[500] text-[#061140] mb-1 font-montserrat'>
                 Patients Say…
               </div>
-              <div className='text-[#484848]/80 text-base mb-2 font-karla'>
-                Professional, knowledgeable, and caring. Highly recommended for
-                quality healthcare services.
-              </div>
-              <div className='flex w-full bg-[#DFE3F2] rounded-[8px] px-8 py-3 mb-2 gap-8 items-center justify-center'>
-                <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
-                  <FaRegStar className='text-[#061140]' size={22} />
-                  <span>
-                    Reviews&nbsp; <span className='font-semibold'>5.0 (0)</span>
-                  </span>
-                </div>
-                <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
-                  <FaRegThumbsUp className='text-[#061140]' size={22} />
-                  <span>
-                    Efficacy&nbsp;{' '}
-                    <span className='font-semibold'>5.0 (0)</span>
-                  </span>
-                </div>
-              </div>
-              <button className='w-full py-3 mt-4 bg-[#FFFFFF] text-[#061140] border font-karla border-[#7E7E7E]/50 rounded-full font-semibold text-base'>
-                Read Reviews (0)
-              </button>
+
+              {stats.totalReviews > 0 ? (
+                <>
+                  {/* Show sample review text from first review */}
+                  <div className='text-[#484848]/80 text-base mb-2 font-karla'>
+                    {reviewsData?.reviews?.[0]?.reviewText ||
+                      'Professional, knowledgeable, and caring. Highly recommended for quality healthcare services.'}
+                  </div>
+
+                  {/* Real Statistics */}
+                  <div className='flex w-full bg-[#DFE3F2] rounded-[8px] px-8 py-3 mb-2 gap-8 items-center justify-center'>
+                    <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
+                      <FaRegStar className='text-[#061140]' size={22} />
+                      <span>
+                        Reviews&nbsp;{' '}
+                        <span className='font-semibold'>
+                          {stats.averageSatisfactionRating.toFixed(1)} (
+                          {stats.totalReviews})
+                        </span>
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
+                      <FaRegThumbsUp className='text-[#061140]' size={22} />
+                      <span>
+                        Efficacy&nbsp;{' '}
+                        <span className='font-semibold'>
+                          {stats.averageEfficacyRating.toFixed(1)} (
+                          {stats.totalReviews})
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={fetchAllReviews}
+                    className='w-full py-3 mt-4 bg-[#FFFFFF] text-[#061140] border font-karla border-[#7E7E7E]/50 rounded-full font-semibold text-base hover:bg-gray-50'
+                  >
+                    Read Reviews ({stats.totalReviews})
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className='text-[#484848]/80 text-base mb-2 font-karla'>
+                    No reviews available yet. Be the first to leave a review!
+                  </div>
+                  <div className='flex w-full bg-[#DFE3F2] rounded-[8px] px-8 py-3 mb-2 gap-8 items-center justify-center'>
+                    <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
+                      <FaRegStar className='text-[#061140]' size={22} />
+                      <span>
+                        Reviews&nbsp;{' '}
+                        <span className='font-semibold'>- (0)</span>
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
+                      <FaRegThumbsUp className='text-[#061140]' size={22} />
+                      <span>
+                        Efficacy&nbsp;{' '}
+                        <span className='font-semibold'>- (0)</span>
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    disabled
+                    className='w-full py-3 mt-4 bg-gray-100 text-gray-400 border font-karla border-gray-200 rounded-full font-semibold text-base cursor-not-allowed'
+                  >
+                    No Reviews Yet
+                  </button>
+                </>
+              )}
             </div>
           </div>
 

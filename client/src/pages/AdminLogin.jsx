@@ -67,7 +67,7 @@ const AdminLogin = () => {
 
   return (
     <div
-      className='fixed top-0 left-0 w-screen h-screen z-50 flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50'
+      className='top-0 left-0 w-screen h-screen z-50 flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50'
       style={{
         margin: 0,
         padding: 0,
@@ -126,7 +126,7 @@ const AdminLogin = () => {
                   </svg>
                 </div>
               </div>
-              <h2 className='text-3xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'>
+              <h2 className='text-3xl font-bold b-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent'>
                 Admin Portal
               </h2>
               <p className='text-gray-600'>Secure administrative access</p>

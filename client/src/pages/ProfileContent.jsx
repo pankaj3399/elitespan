@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import StyledFileInput from '../components/common/StyledFileInput';
 import { MdOutlineFileUpload } from 'react-icons/md';
 import { IoMdArrowDown } from 'react-icons/io';
-import { getUploadSignature, uploadToS3, saveImageUrls } from '../services/api';
+import { getUploadSignature, uploadToS3, saveImageUrls, uploadReviewsExcel } from '../services/api';
 
 function ProfileContent() {
   const navigate = useNavigate();
@@ -78,53 +78,67 @@ function ProfileContent() {
     return key;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitted(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSubmitted(true);
 
-    if (!providerId) {
-      alert('Provider ID not found. Please start from the beginning.');
-      navigate('/provider-portal');
-      return;
-    }
+  if (!providerId) {
+    alert('Provider ID not found. Please start from the beginning.');
+    navigate('/provider-portal');
+    return;
+  }
 
-    const { headshot, gallery, reviews } = uploadedFiles;
+  const { headshot, gallery, reviews } = uploadedFiles;
 
-    if (!headshot || !gallery || !reviews) {
-      alert('Please upload all required files before continuing.');
-      return;
-    }
+  if (!headshot || !gallery || !reviews) {
+    alert('Please upload all required files before continuing.');
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
+  try {
+    // Upload images to S3 (headshot and gallery only)
+    const [headshotKey, galleryKey] = await Promise.all([
+      uploadFile(headshot),
+      uploadFile(gallery),
+    ]);
+
+    // Save the image URLs to the provider record (no reviewsUrl)
+    await saveImageUrls(providerId, {
+      headshotUrl: headshotKey,
+      galleryUrl: galleryKey,
+    });
+
+    // Process the Excel reviews file directly
     try {
-      // Upload all files to S3
-      const [headshotKey, galleryKey, reviewsKey] = await Promise.all([
-        uploadFile(headshot),
-        uploadFile(gallery),
-        uploadFile(reviews),
-      ]);
-
-      // Save the file URLs to the provider record
-      await saveImageUrls(providerId, {
-        headshotUrl: headshotKey,
-        galleryUrl: galleryKey,
-        reviewsUrl: reviewsKey,
-      });
-
-      console.log('Files uploaded and provider updated successfully');
-
-      // Clear the provider ID as the process is complete
-      localStorage.removeItem('providerId');
-
-      navigate('/completion');
-    } catch (err) {
-      console.error('Upload failed:', err);
-      alert('Upload failed, please try again.');
-    } finally {
-      setLoading(false);
+      const reviewsResult = await uploadReviewsExcel(providerId, reviews);
+      console.log('Reviews processed successfully:', reviewsResult);
+      
+      // Show success message with details
+      if (reviewsResult.warnings) {
+        alert(`Files uploaded successfully! ${reviewsResult.reviewsAdded} reviews were processed. ${reviewsResult.warnings.message}`);
+      } else {
+        alert(`Files uploaded successfully! ${reviewsResult.reviewsAdded} reviews were processed.`);
+      }
+    } catch (reviewError) {
+      console.error('Error processing reviews:', reviewError);
+      alert(`Images uploaded successfully, but there was an issue processing the reviews file: ${reviewError.message}. Please check the file format and try again.`);
     }
-  };
+
+    console.log('Files uploaded and provider updated successfully');
+
+    // Clear the provider ID as the process is complete
+    localStorage.removeItem('providerId');
+
+    navigate('/completion');
+  } catch (err) {
+    console.error('Upload failed:', err);
+    alert('Upload failed, please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) {
     return (

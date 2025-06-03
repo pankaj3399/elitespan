@@ -279,7 +279,33 @@ export const uploadToS3 = async (file, presignedUrl) => {
     throw new Error('Failed to upload file');
   }
 };
+export const uploadReviewsExcel = async (providerId, file) => {
+  const formData = new FormData();
+  formData.append('reviewsFile', file);
 
+  const response = await fetch(`${BASE_URL}/api/provider-info/${providerId}/upload-reviews`, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to upload reviews');
+  }
+  
+  return response.json();
+};
+
+// Get provider reviews
+export const getProviderReviews = async (providerId, page = 1, limit = 10) => {
+  const response = await api.get(`/provider-info/${providerId}/reviews?page=${page}&limit=${limit}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch reviews');
+  }
+  
+  return response.data;
+};
 export const saveImageUrls = async (providerId, imageData) => {
   try {
     const response = await api.put(`/provider-info/${providerId}/images`, imageData);
