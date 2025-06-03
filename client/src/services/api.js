@@ -2,8 +2,6 @@ import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
 
-console.log('API BASE_URL:', BASE_URL); // Debug log to confirm BASE_URL
-
 const api = axios.create({
   baseURL: `${BASE_URL}/api`,
   headers: {
@@ -279,7 +277,33 @@ export const uploadToS3 = async (file, presignedUrl) => {
     throw new Error('Failed to upload file');
   }
 };
+export const uploadReviewsExcel = async (providerId, file) => {
+  const formData = new FormData();
+  formData.append('reviewsFile', file);
 
+  const response = await fetch(`${BASE_URL}/api/provider-info/${providerId}/upload-reviews`, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to upload reviews');
+  }
+  
+  return response.json();
+};
+
+// Get provider reviews
+export const getProviderReviews = async (providerId, page = 1, limit = 10) => {
+  const response = await api.get(`/provider-info/${providerId}/reviews?page=${page}&limit=${limit}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch reviews');
+  }
+  
+  return response.data;
+};
 export const saveImageUrls = async (providerId, imageData) => {
   try {
     const response = await api.put(`/provider-info/${providerId}/images`, imageData);
@@ -367,6 +391,45 @@ export const getAllProviders = async (filters = {}) => {
   } catch (error) {
     console.error('Get providers error:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to fetch providers');
+  }
+};
+
+export const sendProviderSignupNotification = async (providerData) => {
+  console.log('🚀 Starting provider signup notification process');
+  console.log('📋 Provider data received:', JSON.stringify(providerData, null, 2));
+  
+  try {
+    console.log('📤 Preparing to send POST request to /api/email/provider-signup-notification');
+    console.log('🔗 Request URL:', `${BASE_URL}/api/email/provider-signup-notification`);
+    console.log('📦 Request payload:', JSON.stringify(providerData, null, 2));
+    
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+    };
+    console.log('📑 Request headers:', requestHeaders);
+
+    // Use the api instance instead of fetch to ensure proper base URL
+    const response = await api.post('/email/provider-signup-notification', providerData);
+    
+    console.log('📨 Response received from server');
+    console.log('✅ Response status:', response.status);
+    console.log('📨 Success response data:', JSON.stringify(response.data, null, 2));
+    console.log('🎉 Provider signup notification sent successfully!');
+    
+    return response.data;
+  } catch (error) {
+    console.error('🚨 Error in sendProviderSignupNotification:');
+    console.error('❌ Error type:', error.constructor.name);
+    console.error('❌ Error message:', error.message);
+    
+    if (error.response) {
+      console.error('📄 Error response data:', error.response.data);
+      console.error('📊 Error status:', error.response.status);
+    }
+    
+    console.error('📋 Provider data that failed:', JSON.stringify(providerData, null, 2));
+    console.error('⚠️ Re-throwing error for upstream handling');
+    throw new Error(error.response?.data?.message || error.message || 'Failed to send provider notification');
   }
 };
 

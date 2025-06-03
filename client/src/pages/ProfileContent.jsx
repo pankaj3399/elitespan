@@ -3,7 +3,14 @@ import { useState, useEffect } from 'react';
 import StyledFileInput from '../components/common/StyledFileInput';
 import { MdOutlineFileUpload } from 'react-icons/md';
 import { IoMdArrowDown } from 'react-icons/io';
-import { getUploadSignature, uploadToS3, saveImageUrls } from '../services/api';
+import {
+  getUploadSignature,
+  uploadToS3,
+  saveImageUrls,
+  uploadReviewsExcel,
+  sendProviderSignupNotification,
+  getProvider,
+} from '../services/api';
 
 function ProfileContent() {
   const navigate = useNavigate();
@@ -98,21 +105,121 @@ function ProfileContent() {
     setLoading(true);
 
     try {
-      // Upload all files to S3
-      const [headshotKey, galleryKey, reviewsKey] = await Promise.all([
+      // Upload images to S3 (headshot and gallery only)
+      const [headshotKey, galleryKey] = await Promise.all([
         uploadFile(headshot),
         uploadFile(gallery),
-        uploadFile(reviews),
       ]);
 
-      // Save the file URLs to the provider record
-      await saveImageUrls(providerId, {
+      // Save the image URLs to the provider record (no reviewsUrl)
+      const updatedProvider = await saveImageUrls(providerId, {
         headshotUrl: headshotKey,
         galleryUrl: galleryKey,
-        reviewsUrl: reviewsKey,
       });
 
-      console.log('Files uploaded and provider updated successfully');
+      // Process the Excel reviews file directly
+      try {
+        const reviewsResult = await uploadReviewsExcel(providerId, reviews);
+
+        // Show success message with details
+        if (reviewsResult.warnings) {
+          alert(
+            `Files uploaded successfully! ${reviewsResult.reviewsAdded} reviews were processed. ${reviewsResult.warnings.message}`
+          );
+        } else {
+          alert(
+            `Files uploaded successfully! ${reviewsResult.reviewsAdded} reviews were processed.`
+          );
+        }
+      } catch (reviewError) {
+        console.error('Error processing reviews:', reviewError);
+        alert(
+          `Images uploaded successfully, but there was an issue processing the reviews file: ${reviewError.message}. Please check the file format and try again.`
+        );
+      }
+
+      // Send provider signup notification email
+      try {
+        console.log('📧 Starting provider signup notification process...');
+        console.log(
+          '🔍 Fetching provider data from database for ID:',
+          providerId
+        );
+        const providerResponse = await getProvider(providerId);
+        console.log('📋 Provider data fetched from DB:', providerResponse);
+
+        const providerData = {
+          id: providerId,
+          name:
+            providerResponse.provider?.providerName ||
+            providerResponse.providerName ||
+            providerResponse.provider?.name ||
+            providerResponse.name ||
+            'Name not available',
+          email:
+            providerResponse.provider?.email ||
+            providerResponse.email ||
+            'Email not available',
+          practiceName:
+            providerResponse.provider?.practiceName ||
+            providerResponse.practiceName ||
+            'Practice name not available',
+          phone:
+            providerResponse.provider?.phone ||
+            providerResponse.phone ||
+            'Phone not provided',
+          specialties:
+            providerResponse.provider?.specialties ||
+            providerResponse.specialties ||
+            [],
+          address:
+            providerResponse.provider?.address ||
+            providerResponse.address ||
+            'Address not provided',
+          certifications:
+            providerResponse.provider?.boardCertifications ||
+            providerResponse.boardCertifications ||
+            [],
+          npiNumber:
+            providerResponse.provider?.npiNumber ||
+            providerResponse.npiNumber ||
+            'NPI not provided',
+          hospitalAffiliations:
+            providerResponse.provider?.hospitalAffiliations ||
+            providerResponse.hospitalAffiliations ||
+            [],
+          educationAndTraining:
+            providerResponse.provider?.educationAndTraining ||
+            providerResponse.educationAndTraining ||
+            [],
+        };
+
+        console.log('👤 Collected provider data from localStorage:', {
+          id: providerData.id,
+          name: providerData.name,
+          email: providerData.email,
+          practiceName: providerData.practiceName,
+          phone: providerData.phone,
+          specialties: providerData.specialties,
+        });
+
+        console.log('📤 Calling sendProviderSignupNotification...');
+        const notificationResult = await sendProviderSignupNotification(
+          providerData
+        );
+
+        console.log('✅ Provider signup notification sent successfully!');
+        console.log('📨 Notification result:', notificationResult);
+      } catch (emailError) {
+        console.error('❌ Failed to send provider signup notification:');
+        console.error('🚨 Email error type:', emailError.constructor.name);
+        console.error('🚨 Email error message:', emailError.message);
+        console.error('🚨 Email error stack:', emailError.stack);
+        console.warn(
+          '⚠️ Continuing with registration process despite email failure'
+        );
+        // Don't fail the process if email fails
+      }
 
       // Clear the provider ID as the process is complete
       localStorage.removeItem('providerId');
@@ -125,7 +232,6 @@ function ProfileContent() {
       setLoading(false);
     }
   };
-
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-white'>
