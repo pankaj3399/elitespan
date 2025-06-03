@@ -1,9 +1,8 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const crypto = require('crypto');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const mongoose = require("mongoose");
 
 // Route imports
 const waitlistRoutes = require('./routes/waitlistRoutes');
@@ -31,25 +30,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Explicitly handle CORS preflight requests
-app.options('*', cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false,
-}), (req, res) => {
-  console.log(`Handled CORS preflight for ${req.method} ${req.url}`);
-  res.status(200).end();
-});
-
 app.use(express.json());
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false,
-}));
+app.use(cors());
 
 // Routes
 app.use('/api/waitlist', waitlistRoutes);
@@ -67,6 +50,19 @@ app.use('/api/email', emailRoutes);
 app.get('/', (req, res) => {
   res.send('Backend API is running on Vercel');
 });
+
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log('MongoDB connected');
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
