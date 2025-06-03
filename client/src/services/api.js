@@ -2,8 +2,6 @@ import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
 
-console.log('API BASE_URL:', BASE_URL); // Debug log to confirm BASE_URL
-
 const api = axios.create({
   baseURL: `${BASE_URL}/api`,
   headers: {
@@ -393,6 +391,45 @@ export const getAllProviders = async (filters = {}) => {
   } catch (error) {
     console.error('Get providers error:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to fetch providers');
+  }
+};
+
+export const sendProviderSignupNotification = async (providerData) => {
+  console.log('🚀 Starting provider signup notification process');
+  console.log('📋 Provider data received:', JSON.stringify(providerData, null, 2));
+  
+  try {
+    console.log('📤 Preparing to send POST request to /api/email/provider-signup-notification');
+    console.log('🔗 Request URL:', `${BASE_URL}/api/email/provider-signup-notification`);
+    console.log('📦 Request payload:', JSON.stringify(providerData, null, 2));
+    
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+    };
+    console.log('📑 Request headers:', requestHeaders);
+
+    // Use the api instance instead of fetch to ensure proper base URL
+    const response = await api.post('/email/provider-signup-notification', providerData);
+    
+    console.log('📨 Response received from server');
+    console.log('✅ Response status:', response.status);
+    console.log('📨 Success response data:', JSON.stringify(response.data, null, 2));
+    console.log('🎉 Provider signup notification sent successfully!');
+    
+    return response.data;
+  } catch (error) {
+    console.error('🚨 Error in sendProviderSignupNotification:');
+    console.error('❌ Error type:', error.constructor.name);
+    console.error('❌ Error message:', error.message);
+    
+    if (error.response) {
+      console.error('📄 Error response data:', error.response.data);
+      console.error('📊 Error status:', error.response.status);
+    }
+    
+    console.error('📋 Provider data that failed:', JSON.stringify(providerData, null, 2));
+    console.error('⚠️ Re-throwing error for upstream handling');
+    throw new Error(error.response?.data?.message || error.message || 'Failed to send provider notification');
   }
 };
 
