@@ -1,14 +1,16 @@
 // server/routes/providerRoutes.js
 const express = require('express');
 const Provider = require('../models/Provider.js');
+const User = require('../models/User.js'); // Import User model
 const multer = require('multer');
 const XLSX = require('xlsx');
+const bcrypt = require('bcrypt'); // For password hashing
 const router = express.Router();
 
 // --- Helper Function to Construct Full S3 URL ---
 const getFullS3Url = (key) => {
   if (!key) {
-    return null; // Or a default placeholder, or an empty string
+    return null;
   }
   const bucketName = process.env.AWS_S3_BUCKET_NAME;
   const region = process.env.AWS_REGION;
@@ -17,25 +19,20 @@ const getFullS3Url = (key) => {
     console.warn(
       `Backend Misconfiguration: AWS_S3_BUCKET_NAME ('${bucketName}') or AWS_REGION ('${region}') is not set. Cannot form full S3 URL for key: ${key}`
     );
-    // Fallback: Return the key itself. Frontend will likely show a broken image,
-    // indicating a backend configuration issue.
     return key;
   }
-  // Standard S3 URL format: https://<bucket-name>.s3.<region>.amazonaws.com/<key>
   return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
 };
 
 // --- Helper to prepare provider data for response (with full URLs) ---
 const prepareProviderForResponse = (providerDocument) => {
   if (!providerDocument) return null;
-  // Ensure we work with a plain object for modification
   const providerObject = providerDocument.toObject
     ? providerDocument.toObject()
     : { ...providerDocument };
 
   providerObject.headshotUrl = getFullS3Url(providerObject.headshotUrl);
   providerObject.galleryUrl = getFullS3Url(providerObject.galleryUrl);
-  // If you add other S3 image keys to your Provider model in the future, transform them here too.
 
   return providerObject;
 };
@@ -58,20 +55,60 @@ const upload = multer({
   },
 });
 
-// Create new provider (Step 1: Basic Info)
+// Create new provider (Step 1: Basic Info) - UPDATED TO CREATE USER TOO
 router.post('/', async (req, res) => {
   try {
-    // req.body.headshotUrl and req.body.galleryUrl, if present, are S3 keys
-    const providerData = new Provider(req.body); // S3 keys are stored as is
-    const savedProvider = await providerData.save();
+    const { password, confirmPassword, ...providerData } = req.body;
+
+    // Validate password
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        message: 'Password is required and must be at least 6 characters long',
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        message: 'Passwords do not match',
+      });
+    }
+
+    // Check if user with this email already exists
+    const existingUser = await User.findOne({ email: providerData.email });
+    if (existingUser) {
+      return res.status(400).json({
+        message: 'User with this email already exists',
+      });
+    }
+
+    // Hash the password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create the Provider document first
+    const newProvider = new Provider(providerData);
+    const savedProvider = await newProvider.save();
+
+    // Create the User document with provider role
+    const newUser = new User({
+      name: providerData.providerName,
+      email: providerData.email,
+      password: hashedPassword,
+      role: 'provider',
+      providerId: savedProvider._id,
+    });
+
+    const savedUser = await newUser.save();
 
     res.status(201).json({
-      message: 'Provider info saved successfully',
+      message: 'Provider account created successfully',
       providerId: savedProvider._id,
-      provider: prepareProviderForResponse(savedProvider), // Transform S3 keys to full URLs for the response
+      userId: savedUser._id,
+      provider: prepareProviderForResponse(savedProvider),
     });
   } catch (err) {
-    console.error('Error saving provider info:', err);
+    console.error('Error creating provider account:', err);
+
     if (err.name === 'ValidationError') {
       const errors = {};
       Object.keys(err.errors).forEach((key) => {
@@ -79,11 +116,20 @@ router.post('/', async (req, res) => {
       });
       return res.status(400).json({ message: 'Validation failed', errors });
     }
+
     if (err.code === 11000) {
+      // Handle duplicate key error
+      if (err.keyPattern?.email) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+      if (err.keyPattern?.npiNumber) {
+        return res.status(400).json({ message: 'NPI Number already exists' });
+      }
       return res
         .status(400)
         .json({ message: 'Provider with this information already exists' });
     }
+
     res.status(500).json({
       message: 'Server error',
       error:
@@ -103,50 +149,53 @@ router.put('/:id/qualifications', async (req, res) => {
       boardCertifications,
       hospitalAffiliations,
       educationAndTraining,
-      stateLicenses, // NEW FIELD
+      stateLicenses,
     } = req.body;
 
     // Validate stateLicenses if provided
     if (stateLicenses && Array.isArray(stateLicenses)) {
       for (const license of stateLicenses) {
-        // Check if all required fields are present
         if (!license.state || !license.deaNumber || !license.licenseNumber) {
-          return res.status(400).json({ 
-            message: 'Each state license must include state, DEA number, and license number' 
-          });
-        }
-        
-        // Trim whitespace
-        license.state = license.state.trim();
-        license.deaNumber = license.deaNumber.trim();
-        license.licenseNumber = license.licenseNumber.trim();
-        
-        // Basic validation - ensure fields are not empty after trimming
-        if (license.state.length === 0 || license.deaNumber.length === 0 || license.licenseNumber.length === 0) {
-          return res.status(400).json({ 
-            message: 'State, DEA number, and license number cannot be empty' 
+          return res.status(400).json({
+            message:
+              'Each state license must include state, DEA number, and license number',
           });
         }
 
-        // Validate state format (should be 2-letter state code)
+        license.state = license.state.trim();
+        license.deaNumber = license.deaNumber.trim();
+        license.licenseNumber = license.licenseNumber.trim();
+
+        if (
+          license.state.length === 0 ||
+          license.deaNumber.length === 0 ||
+          license.licenseNumber.length === 0
+        ) {
+          return res.status(400).json({
+            message: 'State, DEA number, and license number cannot be empty',
+          });
+        }
+
         if (license.state.length !== 2) {
-          return res.status(400).json({ 
-            message: 'State must be a valid 2-letter state code' 
+          return res.status(400).json({
+            message: 'State must be a valid 2-letter state code',
           });
         }
       }
-      
+
       // Check for duplicate states
-      const states = stateLicenses.map(license => license.state.toUpperCase());
+      const states = stateLicenses.map((license) =>
+        license.state.toUpperCase()
+      );
       const uniqueStates = new Set(states);
       if (states.length !== uniqueStates.size) {
-        return res.status(400).json({ 
-          message: 'Cannot have multiple licenses for the same state' 
+        return res.status(400).json({
+          message: 'Cannot have multiple licenses for the same state',
         });
       }
 
       // Normalize state codes to uppercase
-      stateLicenses.forEach(license => {
+      stateLicenses.forEach((license) => {
         license.state = license.state.toUpperCase();
       });
     }
@@ -156,14 +205,13 @@ router.put('/:id/qualifications', async (req, res) => {
       boardCertifications: boardCertifications || [],
       hospitalAffiliations: hospitalAffiliations || [],
       educationAndTraining: educationAndTraining || [],
-      stateLicenses: stateLicenses || [], // Include state licenses
+      stateLicenses: stateLicenses || [],
     };
 
-    const updatedProvider = await Provider.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const updatedProvider = await Provider.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedProvider) {
       return res.status(404).json({ message: 'Provider not found' });
@@ -171,11 +219,11 @@ router.put('/:id/qualifications', async (req, res) => {
 
     res.status(200).json({
       message: 'Qualifications saved successfully',
-      provider: prepareProviderForResponse(updatedProvider), // Transform S3 keys to full URLs
+      provider: prepareProviderForResponse(updatedProvider),
     });
   } catch (error) {
     console.error('Error saving qualifications:', error);
-    
+
     if (error.name === 'ValidationError') {
       const errors = {};
       Object.keys(error.errors).forEach((key) => {
@@ -183,33 +231,31 @@ router.put('/:id/qualifications', async (req, res) => {
       });
       return res.status(400).json({ message: 'Validation failed', errors });
     }
-    
+
     if (error.name === 'CastError') {
       return res.status(400).json({ message: 'Invalid provider ID format' });
     }
-    
+
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
+// Rest of the routes remain the same...
 // Update provider images (Step 2)
 router.put('/:id/images', async (req, res) => {
   try {
     const { id } = req.params;
-    // IMPORTANT: headshotUrl and galleryUrl from req.body are S3 KEYS
     const { headshotUrl, galleryUrl } = req.body;
 
     const updateData = {};
     if (headshotUrl !== undefined) {
-      // Check for undefined to allow empty string for removal
-      updateData.headshotUrl = headshotUrl; // Store the S3 KEY
+      updateData.headshotUrl = headshotUrl;
     }
     if (galleryUrl !== undefined) {
-      updateData.galleryUrl = galleryUrl; // Store the S3 KEY
+      updateData.galleryUrl = galleryUrl;
     }
 
     if (Object.keys(updateData).length === 0) {
-      // If no image data is sent, fetch and return the current provider data (with transformed URLs)
       const currentProvider = await Provider.findById(id);
       if (!currentProvider) {
         return res.status(404).json({ message: 'Provider not found' });
@@ -222,7 +268,7 @@ router.put('/:id/images', async (req, res) => {
 
     const updatedProvider = await Provider.findByIdAndUpdate(
       id,
-      { $set: updateData }, // Use $set to only update provided fields
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 
@@ -232,7 +278,7 @@ router.put('/:id/images', async (req, res) => {
 
     res.status(200).json({
       message: 'Images saved successfully',
-      provider: prepareProviderForResponse(updatedProvider), // Transform S3 keys to full URLs
+      provider: prepareProviderForResponse(updatedProvider),
     });
   } catch (error) {
     console.error('Error saving images:', error);
@@ -254,7 +300,7 @@ router.get('/:id', async (req, res) => {
 
     res.status(200).json({
       message: 'Provider retrieved successfully',
-      provider: prepareProviderForResponse(providerFromDB), // Transform S3 keys to full URLs
+      provider: prepareProviderForResponse(providerFromDB),
     });
   } catch (error) {
     console.error('Error fetching provider:', error);
@@ -271,7 +317,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Upload Reviews Route
 router.post(
   '/:providerId/upload-reviews',
   upload.single('reviewsFile'),
@@ -281,7 +326,7 @@ router.post(
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
-      const provider = await Provider.findById(providerId); // This is the provider whose reviews are being updated
+      const provider = await Provider.findById(providerId);
       if (!provider) {
         return res.status(404).json({ error: 'Provider not found' });
       }
@@ -364,12 +409,10 @@ router.post(
       });
 
       if (errors.length > 0 && reviewsData.length === 0) {
-        return res
-          .status(400)
-          .json({
-            error: 'No valid reviews found in Excel file',
-            details: errors.slice(0, 5),
-          });
+        return res.status(400).json({
+          error: 'No valid reviews found in Excel file',
+          details: errors.slice(0, 5),
+        });
       }
 
       const reviewsAddedCount = provider.addReviewsFromExcel(reviewsData);
@@ -379,7 +422,7 @@ router.post(
         message: 'Reviews processed successfully',
         reviewsAdded: reviewsAddedCount,
         totalRows: data.length,
-        stats: provider.reviewStats, // Assuming reviewStats doesn't contain S3 keys needing transformation
+        stats: provider.reviewStats,
       };
 
       if (errors.length > 0) {
@@ -392,18 +435,14 @@ router.post(
     } catch (error) {
       console.error('Error processing reviews:', error);
       if (error.message.includes('Only .xlsx and .xls files are allowed')) {
-        return res
-          .status(400)
-          .json({
-            error: 'Invalid file type. Only .xlsx and .xls files are allowed.',
-          });
-      }
-      res
-        .status(500)
-        .json({
-          error: 'Failed to process reviews file',
-          details: error.message,
+        return res.status(400).json({
+          error: 'Invalid file type. Only .xlsx and .xls files are allowed.',
         });
+      }
+      res.status(500).json({
+        error: 'Failed to process reviews file',
+        details: error.message,
+      });
     }
   }
 );
@@ -428,11 +467,11 @@ router.get('/:providerId/reviews', async (req, res) => {
     const paginatedReviews = activeReviews.slice(startIndex, endIndex);
 
     res.json({
-      reviews: paginatedReviews, // Assuming reviews themselves don't contain S3 keys needing transformation
+      reviews: paginatedReviews,
       totalReviews: activeReviews.length,
       currentPage: parseInt(page),
       totalPages: Math.ceil(activeReviews.length / parseInt(limit)),
-      stats: provider.reviewStats, // Assuming reviewStats doesn't contain S3 keys
+      stats: provider.reviewStats,
     });
   } catch (error) {
     console.error('Error fetching reviews:', error);
