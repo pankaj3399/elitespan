@@ -36,7 +36,8 @@ function ProviderProfile() {
       setProvider(providerData);
 
       // Set initial reviews data from provider
-      if (providerData && providerData.reviewStats) { // Added check for providerData
+      if (providerData && providerData.reviewStats) {
+        // Added check for providerData
         setReviewsData({
           stats: providerData.reviewStats,
           reviews:
@@ -78,7 +79,7 @@ function ProviderProfile() {
       const data = await getProviderReviews(providerId, 1, 50);
       setAllReviews(data.reviews || []); // Ensure allReviews is an array
       setShowReviewsModal(true);
-    } catch (err)      {
+    } catch (err) {
       console.error('Error fetching all reviews:', err);
       alert('Failed to load reviews. Please try again.');
     }
@@ -121,7 +122,14 @@ function ProviderProfile() {
 
   // Helper functions
   const getGoogleMapsEmbedUrl = () => {
-    if (!provider || !provider.address || !provider.city || !provider.state || !provider.zip) return ''; // Defensive check
+    if (
+      !provider ||
+      !provider.address ||
+      !provider.city ||
+      !provider.state ||
+      !provider.zip
+    )
+      return ''; // Defensive check
     const address = `${provider.address}, ${provider.city}, ${provider.state} ${provider.zip}`;
     const encodedAddress = encodeURIComponent(address);
     return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodedAddress}&zoom=15&maptype=roadmap`;
@@ -131,7 +139,9 @@ function ProviderProfile() {
     if (!provider) return '';
     const address =
       provider.fullAddress ||
-      `${provider.address || ''}, ${provider.city || ''}, ${provider.state || ''} ${provider.zip || ''}`.replace(/,\s*$/, ''); // Ensure no trailing commas if parts are missing
+      `${provider.address || ''}, ${provider.city || ''}, ${
+        provider.state || ''
+      } ${provider.zip || ''}`.replace(/,\s*$/, ''); // Ensure no trailing commas if parts are missing
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
       address
     )}`;
@@ -149,7 +159,8 @@ function ProviderProfile() {
   };
 
   const getPrimarySpecialty = () => {
-    if (provider && provider.specialties && provider.specialties.length > 0) { // Check if specialties array exists
+    if (provider && provider.specialties && provider.specialties.length > 0) {
+      // Check if specialties array exists
       return provider.specialties[0];
     }
     return 'Healthcare Provider';
@@ -165,7 +176,9 @@ function ProviderProfile() {
 
   const getCityStateZip = () => {
     if (!provider) return '';
-    return `${provider.city || ''}, ${provider.state || ''} ${provider.zip || ''}`.replace(/,\s*$/, ''); // Ensure no trailing commas
+    return `${provider.city || ''}, ${provider.state || ''} ${
+      provider.zip || ''
+    }`.replace(/,\s*$/, ''); // Ensure no trailing commas
   };
 
   // Loading state
@@ -272,55 +285,52 @@ function ProviderProfile() {
               </button>
             </div>
             <div className='p-6 overflow-y-auto max-h-[calc(80vh-120px)]'>
-
               {allReviews.length === 0 ? (
                 <div className='text-center py-8 text-gray-500'>
                   No reviews available yet.
                 </div>
               ) : (
                 <div className='space-y-6'>
-                  {allReviews.map(
-                    (review) => (
-                      <div
-                        key={review._id}
-                        className='border-b border-gray-200 pb-6 last:border-b-0'
-                      >
-                        <div className='flex justify-between items-start mb-3'>
-                          <div>
-                            <h4 className='font-semibold text-[#061140] text-lg'>
-                              {review.clientName}
-                            </h4>
-                            <div className='flex items-center gap-4 mt-1'>
-                              <div className='flex items-center gap-1'>
-                                <span className='text-sm text-gray-600'>
-                                  Satisfaction:
-                                </span>
-                                {renderStars(review.satisfactionRating)}
-                                <span className='text-sm font-medium text-[#061140] ml-1'>
-                                  {review.satisfactionRating?.toFixed(1)}
-                                </span>
-                              </div>
-                              <div className='flex items-center gap-1'>
-                                <span className='text-sm text-gray-600'>
-                                  Efficacy:
-                                </span>
-                                {renderStars(review.efficacyRating)}
-                                <span className='text-sm font-medium text-[#061140] ml-1'>
-                                  {review.efficacyRating?.toFixed(1)}
-                                </span>
-                              </div>
+                  {allReviews.map((review) => (
+                    <div
+                      key={review._id}
+                      className='border-b border-gray-200 pb-6 last:border-b-0'
+                    >
+                      <div className='flex justify-between items-start mb-3'>
+                        <div>
+                          <h4 className='font-semibold text-[#061140] text-lg'>
+                            {review.clientName}
+                          </h4>
+                          <div className='flex items-center gap-4 mt-1'>
+                            <div className='flex items-center gap-1'>
+                              <span className='text-sm text-gray-600'>
+                                Satisfaction:
+                              </span>
+                              {renderStars(review.satisfactionRating)}
+                              <span className='text-sm font-medium text-[#061140] ml-1'>
+                                {review.satisfactionRating?.toFixed(1)}
+                              </span>
+                            </div>
+                            <div className='flex items-center gap-1'>
+                              <span className='text-sm text-gray-600'>
+                                Efficacy:
+                              </span>
+                              {renderStars(review.efficacyRating)}
+                              <span className='text-sm font-medium text-[#061140] ml-1'>
+                                {review.efficacyRating?.toFixed(1)}
+                              </span>
                             </div>
                           </div>
-                          <span className='text-sm text-gray-500'>
-                            {formatDate(review.createdAt)}
-                          </span>
                         </div>
-                        <p className='text-[#484848]/80 text-base leading-relaxed'>
-                          {review.reviewText}
-                        </p>
+                        <span className='text-sm text-gray-500'>
+                          {formatDate(review.createdAt)}
+                        </span>
                       </div>
-                    )
-                  )}
+                      <p className='text-[#484848]/80 text-base leading-relaxed'>
+                        {review.reviewText}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -369,11 +379,14 @@ function ProviderProfile() {
                 allowFullScreen={true}
                 loading='lazy'
                 referrerPolicy='no-referrer-when-downgrade'
-                title={`Map showing ${provider.practiceName || 'Practice'} location`}
+                title={`Map showing ${
+                  provider.practiceName || 'Practice'
+                } location`}
                 sandbox='allow-scripts allow-same-origin allow-popups allow-forms'
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                  if (e.target.nextSibling)
+                    e.target.nextSibling.style.display = 'flex';
                 }}
               ></iframe>
               <div
@@ -421,6 +434,7 @@ function ProviderProfile() {
               </div>
             </div>
           </div>
+        
           <button className='w-full sm:mt-4 py-3 bg-[#FFFFFF] text-[#061140] font-karla rounded-full font-semibold text-base border border-gray-200 hover:bg-gray-50'>
             See Full Information
           </button>
@@ -430,22 +444,27 @@ function ProviderProfile() {
         <div className='flex-1 flex flex-col gap-8 lg:mt-[120px]'>
           <div className='bg-white !border-[#7E7E7E]/50 !border rounded-[20px] p-6'>
             <div className='text-[20px] font-[500] text-[#061140] mb-2 leading-[26px] font-montserrat'>
-              About Dr. {provider.providerName ? provider.providerName.split(' ').pop() : 'Provider'}
+              About Dr.{' '}
+              {provider.providerName
+                ? provider.providerName.split(' ').pop()
+                : 'Provider'}
             </div>
             <div className='text-[#484848]/80 mb-4 text-base font-karla'>
               Meet {provider.providerName || 'this provider'}.{' '}
-              {provider.boardCertifications && provider.boardCertifications.length > 0
-                ? `Board certified in ${provider.boardCertifications.join(', ')}.`
-                : ''}
-              {' '}
+              {provider.boardCertifications &&
+              provider.boardCertifications.length > 0
+                ? `Board certified in ${provider.boardCertifications.join(
+                    ', '
+                  )}.`
+                : ''}{' '}
               {provider.specialties && provider.specialties.length > 0
                 ? `Specializing in ${provider.specialties.join(', ')}.`
                 : ''}
               <br />
               <br />
-              {provider.practiceName || 'Their practice'} is committed to providing exceptional
-              healthcare services to patients in {provider.city || 'this city'},{' '}
-              {provider.state || 'N/A'}.
+              {provider.practiceName || 'Their practice'} is committed to
+              providing exceptional healthcare services to patients in{' '}
+              {provider.city || 'this city'}, {provider.state || 'N/A'}.
             </div>
             <div className='mb-4'>
               <div className='font-[500] text-[#061140] mb-1 font-montserrat'>
@@ -524,42 +543,83 @@ function ProviderProfile() {
               <div>
                 <strong className='text-[#333333]'>Specialties</strong>
               </div>
-              <div className='text-[#484848]/80'>{formatSpecialties()}</div> {/* formatSpecialties already has checks */}
+              <div className='text-[#484848]/80'>{formatSpecialties()}</div>{' '}
+              {/* formatSpecialties already has checks */}
               <div>
                 <strong className='text-[#333333]'>Practice</strong>
               </div>
-              <div className='text-[#484848]/80'>{provider.practiceName || 'N/A'}</div>
-
-              {provider.boardCertifications && provider.boardCertifications.length > 0 && (
+              <div className='text-[#484848]/80'>
+                {provider.practiceName || 'N/A'}
+              </div>
+              {provider.boardCertifications &&
+                provider.boardCertifications.length > 0 && (
                   <>
-                    <div><strong className='text-[#333333]'>Board Certifications</strong></div>
+                    <div>
+                      <strong className='text-[#333333]'>
+                        Board Certifications
+                      </strong>
+                    </div>
                     <div className='text-[#484848]/80'>
-                      {provider.boardCertifications.map((cert, index) => (<div key={index}>{cert}</div>))}
+                      {provider.boardCertifications.map((cert, index) => (
+                        <div key={index}>{cert}</div>
+                      ))}
                     </div>
                   </>
-              )}
-
-              {provider.hospitalAffiliations && provider.hospitalAffiliations.length > 0 && (
+                )}
+              {provider.hospitalAffiliations &&
+                provider.hospitalAffiliations.length > 0 && (
                   <>
-                    <div><strong className='text-[#333333]'>Hospital Affiliations</strong></div>
+                    <div>
+                      <strong className='text-[#333333]'>
+                        Hospital Affiliations
+                      </strong>
+                    </div>
                     <div className='text-[#484848]/80'>
-                      {provider.hospitalAffiliations.map((aff, index) => (<div key={index} className='mb-1'>{aff}</div>))}
+                      {provider.hospitalAffiliations.map((aff, index) => (
+                        <div key={index} className='mb-1'>
+                          {aff}
+                        </div>
+                      ))}
                     </div>
                   </>
-              )}
-              
-              {provider.educationAndTraining && provider.educationAndTraining.length > 0 && (
+                )}
+              {provider.educationAndTraining &&
+                provider.educationAndTraining.length > 0 && (
                   <>
-                    <div><strong className='text-[#333333]'>Education & Training</strong></div>
+                    <div>
+                      <strong className='text-[#333333]'>
+                        Education & Training
+                      </strong>
+                    </div>
                     <div className='text-[#484848]/80'>
-                      {provider.educationAndTraining.map((edu, index) => (<div key={index} className='mb-2'>{edu}</div>))}
+                      {provider.educationAndTraining.map((edu, index) => (
+                        <div key={index} className='mb-2'>
+                          {edu}
+                        </div>
+                      ))}
                     </div>
                   </>
-              )}
+                )}
               <div>
                 <strong className='text-[#333333]'>NPI Number</strong>
               </div>
-              <div className='text-[#484848]/80'>{provider.npiNumber || 'N/A'}</div>
+              <div className='text-[#484848]/80'>
+                {provider.npiNumber || 'N/A'}
+              </div>
+                {provider.stateLicenses && provider.stateLicenses.length > 0 && (
+                  <>
+                    <div><strong className='text-[#333333]'>State Licenses</strong></div>
+                    <div className='text-[#484848]/80'>
+                      {provider.stateLicenses.map((license, index) => (
+                        <div key={index} className='mb-2'>
+                          <div className='font-medium'>{license.state}</div>
+                          <div className='text-sm'>DEA: {license.deaNumber}</div>
+                          <div className='text-sm'>License: {license.licenseNumber}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+              )}
             </div>
           </div>
 
@@ -571,7 +631,9 @@ function ProviderProfile() {
                   alt='Procedures by provider'
                   className='w-full h-full object-cover rounded-xl'
                   onError={() => {
-                    console.warn(`Failed to load gallery image: ${galleryDisplayUrl}`);
+                    console.warn(
+                      `Failed to load gallery image: ${galleryDisplayUrl}`
+                    );
                     setGalleryImageError(true);
                   }}
                 />

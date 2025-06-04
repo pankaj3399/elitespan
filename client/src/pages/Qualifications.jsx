@@ -1,9 +1,9 @@
-// client/src/pages/Qualifications.jsx
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import QualificationInput from '../components/common/QualificationInput';
 import { saveQualifications } from '../services/api';
 import { FaChevronUp, FaChevronDown } from 'react-icons/fa6';
+import StateQualificationInput from '../components/StateQualificationInput';
 
 const specialtiesOptions = [
   'Autoimmune',
@@ -19,6 +19,14 @@ const specialtiesOptions = [
   "Women's Health",
 ];
 
+// Use the same state abbreviations as ProviderPortal.jsx
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS',
+  'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY',
+  'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV',
+  'WI', 'WY'
+];
+
 function Qualifications() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +37,7 @@ function Qualifications() {
     boardCertifications: [''],
     hospitalAffiliations: [''],
     educationAndTraining: [''],
+    stateLicenses: [{ state: '', deaNumber: '', licenseNumber: '' }], // NEW FIELD
   });
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -62,6 +71,15 @@ function Qualifications() {
     });
   };
 
+  // NEW: Handle state license changes
+  const handleStateLicenseChange = (index, field, value) => {
+    setFormData((prev) => {
+      const updated = [...prev.stateLicenses];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, stateLicenses: updated };
+    });
+  };
+
   const addInputField = (field) => {
     setFormData((prev) => ({
       ...prev,
@@ -69,10 +87,26 @@ function Qualifications() {
     }));
   };
 
+  // NEW: Add state license entry
+  const addStateLicense = () => {
+    setFormData((prev) => ({
+      ...prev,
+      stateLicenses: [...prev.stateLicenses, { state: '', deaNumber: '', licenseNumber: '' }],
+    }));
+  };
+
   const removeInputField = (field, index) => {
     setFormData((prev) => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
+    }));
+  };
+
+  // NEW: Remove state license entry
+  const removeStateLicense = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      stateLicenses: prev.stateLicenses.filter((_, i) => i !== index),
     }));
   };
 
@@ -85,9 +119,35 @@ function Qualifications() {
       return;
     }
 
+    // Validate state licenses
+    const validStateLicenses = formData.stateLicenses.filter(license => 
+      license.state.trim() !== '' || license.deaNumber.trim() !== '' || license.licenseNumber.trim() !== ''
+    );
+
+    for (const license of validStateLicenses) {
+      if (!license.state.trim() || !license.deaNumber.trim() || !license.licenseNumber.trim()) {
+        alert('Each state license must include state, DEA number, and license number.');
+        return;
+      }
+    }
+
+    // Check for duplicate states
+    const states = validStateLicenses.map(license => license.state);
+    const uniqueStates = new Set(states);
+    if (states.length !== uniqueStates.size) {
+      alert('Cannot have multiple licenses for the same state.');
+      return;
+    }
+
+    // Update formData to only include valid state licenses
+    const dataToSubmit = {
+      ...formData,
+      stateLicenses: validStateLicenses
+    };
+
     setIsLoading(true);
     try {
-      await saveQualifications(providerId, formData);
+      await saveQualifications(providerId, dataToSubmit);
       navigate('/profile-content');
     } catch (error) {
       console.error('Error saving qualifications:', error);
@@ -233,6 +293,20 @@ function Qualifications() {
                   onRemoveField={(i) =>
                     removeInputField('educationAndTraining', i)
                   }
+                />
+              ))}
+
+              {formData.stateLicenses.map((license, index) => (
+                <StateQualificationInput
+                  key={`state-license-${index}`}
+                  label={index === 0 ? 'State Licenses' : undefined}
+                  name='stateLicenses'
+                  index={index}
+                  license={license}
+                  states={US_STATES}
+                  onLicenseChange={handleStateLicenseChange}
+                  onAddField={addStateLicense}
+                  onRemoveField={removeStateLicense}
                 />
               ))}
 

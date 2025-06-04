@@ -103,16 +103,65 @@ router.put('/:id/qualifications', async (req, res) => {
       boardCertifications,
       hospitalAffiliations,
       educationAndTraining,
+      stateLicenses, // NEW FIELD
     } = req.body;
+
+    // Validate stateLicenses if provided
+    if (stateLicenses && Array.isArray(stateLicenses)) {
+      for (const license of stateLicenses) {
+        // Check if all required fields are present
+        if (!license.state || !license.deaNumber || !license.licenseNumber) {
+          return res.status(400).json({ 
+            message: 'Each state license must include state, DEA number, and license number' 
+          });
+        }
+        
+        // Trim whitespace
+        license.state = license.state.trim();
+        license.deaNumber = license.deaNumber.trim();
+        license.licenseNumber = license.licenseNumber.trim();
+        
+        // Basic validation - ensure fields are not empty after trimming
+        if (license.state.length === 0 || license.deaNumber.length === 0 || license.licenseNumber.length === 0) {
+          return res.status(400).json({ 
+            message: 'State, DEA number, and license number cannot be empty' 
+          });
+        }
+
+        // Validate state format (should be 2-letter state code)
+        if (license.state.length !== 2) {
+          return res.status(400).json({ 
+            message: 'State must be a valid 2-letter state code' 
+          });
+        }
+      }
+      
+      // Check for duplicate states
+      const states = stateLicenses.map(license => license.state.toUpperCase());
+      const uniqueStates = new Set(states);
+      if (states.length !== uniqueStates.size) {
+        return res.status(400).json({ 
+          message: 'Cannot have multiple licenses for the same state' 
+        });
+      }
+
+      // Normalize state codes to uppercase
+      stateLicenses.forEach(license => {
+        license.state = license.state.toUpperCase();
+      });
+    }
+
+    const updateData = {
+      specialties: specialties || [],
+      boardCertifications: boardCertifications || [],
+      hospitalAffiliations: hospitalAffiliations || [],
+      educationAndTraining: educationAndTraining || [],
+      stateLicenses: stateLicenses || [], // Include state licenses
+    };
 
     const updatedProvider = await Provider.findByIdAndUpdate(
       id,
-      {
-        specialties,
-        boardCertifications,
-        hospitalAffiliations,
-        educationAndTraining,
-      },
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -126,7 +175,20 @@ router.put('/:id/qualifications', async (req, res) => {
     });
   } catch (error) {
     console.error('Error saving qualifications:', error);
-    res.status(500).json({ message: 'Server error' });
+    
+    if (error.name === 'ValidationError') {
+      const errors = {};
+      Object.keys(error.errors).forEach((key) => {
+        errors[key] = error.errors[key].message;
+      });
+      return res.status(400).json({ message: 'Validation failed', errors });
+    }
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid provider ID format' });
+    }
+    
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
