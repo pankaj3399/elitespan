@@ -23,6 +23,8 @@ import Completion from './pages/Completion';
 import ProviderProfile from './pages/ProviderProfile';
 import AdminProviders from './pages/AdminProvidersDashboard';
 import AdminLogin from './pages/AdminLogin';
+import ProviderDashboard from './pages/ProviderDashboard';
+import ProviderProtectedRoute from './components/ProviderProtectedRoute';
 
 const App = () => {
   return (
@@ -79,6 +81,20 @@ const AppContent = () => {
           <Route
             path='/provider-profile/:providerId'
             element={<ProviderProfile />}
+          />
+          <Route
+            path='/provider/profile'
+            element={
+              <ProviderProtectedRoute
+                redirectAction={() =>
+                  toast.error(
+                    'You must be logged in as a provider to access this page.'
+                  )
+                }
+              >
+                <ProviderDashboard />
+              </ProviderProtectedRoute>
+            }
           />
           <Route path='/admin/login' element={<AdminLogin />} />
           <Route

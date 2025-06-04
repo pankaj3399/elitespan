@@ -24,6 +24,17 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    enum: ['customer', 'provider'],
+    default: 'customer',
+    required: false,
+  },
+  providerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Provider',
+    required: false,
+  },
   contactInfo: {
     type: contactInfoSchema,
     required: false,
@@ -45,7 +56,6 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-
 });
 
 module.exports = mongoose.model('User', userSchema);

@@ -40,20 +40,25 @@ export const AuthProvider = ({ children }) => {
   const loginUser = (newToken, userData) => {
     console.log('Logging in user:', { newToken, userData });
     setToken(newToken);
-    setUser({ ...userData, role: userData.role || 'user' }); // Ensure role is set
+    setUser({ ...userData, role: userData.role || 'customer' });
     localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify({ ...userData, role: userData.role || 'user' }));
+    localStorage.setItem('user', JSON.stringify({ ...userData, role: userData.role || 'customer' }));
     setAuthToken(newToken);
 
-    // Check if user is admin and redirect accordingly
+    // Role-based routing
+    const userRole = userData.role;
     const isAdmin = userData.role === 'admin' || userData.isAdmin === true;
+    
     if (isAdmin) {
       console.log('Admin user detected, redirecting to admin/providers');
       navigate('/admin/providers');
+    } else if (userRole === 'provider') {
+      console.log('Provider user detected, redirecting to provider/profile');
+      navigate('/provider/profile');
     } else {
-      console.log('Regular user logged in');
-      // Optionally redirect regular users to a default route
-      // navigate('/dashboard'); // Uncomment if you want to redirect regular users
+      console.log('Customer user logged in');
+      // Optionally redirect regular customers to a default route
+      // navigate('/dashboard'); // Uncomment if you want to redirect customers
     }
   };
 
@@ -64,7 +69,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setAuthToken(null);
-    // Redirect to login page after logout
     navigate('/login');
   };
 
@@ -81,7 +85,7 @@ export const AuthProvider = ({ children }) => {
         loading,
       }}
     >
-      {loading ? null : children} {/* Render children only after loading */}
+      {loading ? null : children}
     </AuthContext.Provider>
   );
 };

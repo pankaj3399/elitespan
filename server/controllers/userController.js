@@ -50,7 +50,17 @@ exports.signup = async (req, res) => {
     const existingUser = await User.findOne({ email: email.trim() });
     if (existingUser) {
       // User exists, return their data to proceed to payment (premium status updated after payment)
-      const userRole = existingUser.isAdmin ? 'admin' : 'user';
+
+      // FIXED: Use actual role from database, with proper fallback
+      let userRole;
+      if (existingUser.isAdmin) {
+        userRole = 'admin';
+      } else if (existingUser.role) {
+        userRole = existingUser.role; // Use the actual role field
+      } else {
+        userRole = 'customer'; // Default fallback
+      }
+
       const token = jwt.sign(
         { id: existingUser._id, role: userRole },
         process.env.JWT_SECRET,
@@ -62,7 +72,8 @@ exports.signup = async (req, res) => {
           id: existingUser._id,
           name: existingUser.name,
           email: existingUser.email,
-          role: userRole,
+          role: userRole, // Return the correct role
+          providerId: existingUser.providerId, // Include providerId if exists
           isAdmin: existingUser.isAdmin,
         },
         token,
@@ -83,8 +94,15 @@ exports.signup = async (req, res) => {
 
     await user.save();
 
-    // Determine role based on isAdmin field
-    const userRole = user.isAdmin ? 'admin' : 'user';
+    // FIXED: Use actual role from database, with proper fallback
+    let userRole;
+    if (user.isAdmin) {
+      userRole = 'admin';
+    } else if (user.role) {
+      userRole = user.role; // Use the actual role field
+    } else {
+      userRole = 'customer'; // Default fallback
+    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -99,7 +117,8 @@ exports.signup = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: userRole,
+        role: userRole, // Return the correct role
+        providerId: user.providerId, // Include providerId if exists
         isAdmin: user.isAdmin,
       },
       token,
@@ -126,26 +145,49 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Determine role based on isAdmin field
-    const userRole = user.isAdmin ? 'admin' : 'user';
+    // Debug: Log what we found in the database
+    console.log('User found in database:', {
+      id: user._id,
+      email: user.email,
+      role: user.role, // This should show 'provider' for your test user
+      isAdmin: user.isAdmin,
+      providerId: user.providerId,
+    });
+
+    // FIXED: Use actual role from database, with proper fallback logic
+    let userRole;
+    if (user.isAdmin) {
+      userRole = 'admin';
+    } else if (user.role) {
+      userRole = user.role; // Use the actual role field from database
+    } else {
+      userRole = 'customer'; // Default fallback
+    }
+
+    console.log('Determined user role:', userRole); // Debug log
 
     const token = jwt.sign(
-      { id: user._id, role: userRole },
+      { id: user._id, role: userRole }, // This will now include the correct role
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    res.json({
+    const responseData = {
       message: 'Logged in successfully',
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: userRole,
+        role: userRole, // This will now be 'provider' for your test user
+        providerId: user.providerId, // Include providerId for providers
         isAdmin: user.isAdmin,
       },
-    });
+    };
+
+    console.log('Sending response:', responseData); // Debug log
+
+    res.json(responseData);
   } catch (error) {
     console.error('Login error:', error);
     res
@@ -173,11 +215,9 @@ exports.editProfile = async (req, res) => {
     res.json({ message: 'Profile updated successfully', user });
   } catch (error) {
     console.error('Edit profile error:', error);
-    res
-      .status(500)
-      .json({
-        message: 'Server error during profile update',
-        error: error.message,
-      });
+    res.status(500).json({
+      message: 'Server error during profile update',
+      error: error.message,
+    });
   }
 };
