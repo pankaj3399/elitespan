@@ -4,7 +4,7 @@ const Provider = require('../models/Provider.js');
 const User = require('../models/User.js'); // Import User model
 const multer = require('multer');
 const XLSX = require('xlsx');
-const bcrypt = require('bcrypt'); // For password hashing
+const bcrypt = require('bcryptjs'); // For password hashing
 const router = express.Router();
 
 // --- Helper Function to Construct Full S3 URL ---
