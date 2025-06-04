@@ -32,11 +32,9 @@ function Completion() {
                     <div className="lg:col-span-3 lg:ml-25">
                         <div className="bg-[#DFE3F2] rounded-lg p-6">
                             <h2 className="text-[#061140] font-bold text-sm mb-2">
-                                You’ve completed the Provider Portal form!
+                                You’ve completed the Provider Details form!
                             </h2>
-                            <p className="text-[#061140] text-sm">
-                                You will receive an email in 1–3 days to review your profile and make adjustments where you see fit.
-                            </p>
+
                         </div>
                     </div>
                 </div>
