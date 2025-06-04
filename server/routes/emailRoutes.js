@@ -130,10 +130,29 @@ router.post('/send-subscription-email', verifyToken, async (req, res) => {
 
 router.post('/provider-signup-notification', async (req, res) => {
   try {
-    const providerData = req.body;
+    // Handle both cases: providerId directly or nested provider object
+    let providerId;
+    
+    // Debug: Log what we received
+    console.log('📊 Received request body:', JSON.stringify(req.body, null, 2));
+    
+    if (typeof req.body.providerId === 'string') {
+      // Case 1: Frontend sent { providerId: "string_id" }
+      providerId = req.body.providerId;
+    } else if (req.body.providerId && typeof req.body.providerId === 'object') {
+      // Case 2: Frontend sent { providerId: { id: "...", ... } } (nested object)
+      providerId = req.body.providerId.id || req.body.providerId._id;
+    } else if (req.body.id || req.body._id) {
+      // Case 3: Frontend sent { id: "...", ... } (flat object)
+      providerId = req.body.id || req.body._id;
+    } else {
+      return res.status(400).json({ message: 'Provider ID is required' });
+    }
+    
+    console.log('🔍 Extracted provider ID:', providerId);
 
-    if (!providerData) {
-      return res.status(400).json({ message: 'Provider data is required' });
+    if (!providerId) {
+      return res.status(400).json({ message: 'Valid provider ID is required' });
     }
 
     const supportEmail = process.env.SUPPORT_EMAIL;
@@ -143,44 +162,19 @@ router.post('/provider-signup-notification', async (req, res) => {
       return res.status(400).json({ message: 'Support email not configured' });
     }
 
-    // Helper function to format state licenses
-    const formatStateLicenses = (stateLicenses) => {
-      if (
-        !stateLicenses ||
-        !Array.isArray(stateLicenses) ||
-        stateLicenses.length === 0
-      ) {
-        return 'Not provided';
-      }
-      return stateLicenses
-        .map(
-          (license) =>
-            `${license.state}: DEA ${license.deaNumber}, License ${license.licenseNumber}`
-        )
-        .join(', ');
-    };
+    // Always fetch complete provider data from database to ensure we have all fields
+    const Provider = require('../models/Provider'); // Adjust path as needed
+    const provider = await Provider.findById(providerId);
+    
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+    
+    // Convert to plain object for easier access
+    const completeProviderData = provider.toObject();
 
-    const formatStateLicensesHtml = (stateLicenses) => {
-      if (
-        !stateLicenses ||
-        !Array.isArray(stateLicenses) ||
-        stateLicenses.length === 0
-      ) {
-        return '<p><strong>State Licenses:</strong> Not provided</p>';
-      }
-      return `
-        <p><strong>State Licenses:</strong></p>
-        <ul style="margin: 0; padding-left: 20px;">
-          ${stateLicenses
-            .map(
-              (license) => `
-            <li>${license.state}: DEA ${license.deaNumber}, License ${license.licenseNumber}</li>
-          `
-            )
-            .join('')}
-        </ul>
-      `;
-    };
+    // Debug: Log the provider data to see what we're working with
+    console.log('📊 Complete provider data from database:', JSON.stringify(completeProviderData, null, 2));
 
     const subject = 'New Provider Registration - Elite Healthspan';
     const htmlContent = `
@@ -191,60 +185,26 @@ router.post('/provider-signup-notification', async (req, res) => {
         </p>
         <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #0B0757; margin-top: 0;">Provider Details:</h3>
-          <p><strong>Name:</strong> ${
-            providerData.providerName || providerData.name || 'Not provided'
-          }</p>
-          <p><strong>Email:</strong> ${providerData.email || 'Not provided'}</p>
-          <p><strong>Practice Name:</strong> ${
-            providerData.practiceName || 'Not provided'
-          }</p>
-          <p><strong>NPI Number:</strong> ${
-            providerData.npiNumber || 'Not provided'
-          }</p>
-          <p><strong>Address:</strong> ${
-            providerData.address || 'Not provided'
-          }</p>
-          <p><strong>City, State, ZIP:</strong> ${providerData.city || ''}, ${
-      providerData.state || ''
-    } ${providerData.zip || ''}</p>
-          <p><strong>Phone:</strong> ${providerData.phone || 'Not provided'}</p>
+          <p><strong>Name:</strong> ${completeProviderData.providerName || 'Not provided'}</p>
+          <p><strong>Email:</strong> ${completeProviderData.email || 'Not provided'}</p>
+          <p><strong>Practice Name:</strong> ${completeProviderData.practiceName || 'Not provided'}</p>
+          <p><strong>Address:</strong> ${completeProviderData.address || 'Not provided'}</p>
+          <p><strong>City, State:</strong> ${completeProviderData.city || 'Not provided'}, ${completeProviderData.state || 'Not provided'}</p>
           <p><strong>Specialties:</strong> ${
-            providerData.specialties
-              ? Array.isArray(providerData.specialties)
-                ? providerData.specialties.join(', ')
-                : providerData.specialties
-              : 'Not provided'
-          }</p>
-          <p><strong>Board Certifications:</strong> ${
-            providerData.boardCertifications
-              ? Array.isArray(providerData.boardCertifications)
-                ? providerData.boardCertifications.join(', ')
-                : providerData.boardCertifications
+            completeProviderData.specialties && completeProviderData.specialties.length > 0
+              ? completeProviderData.specialties.join(', ')
               : 'Not provided'
           }</p>
           <p><strong>Hospital Affiliations:</strong> ${
-            providerData.hospitalAffiliations
-              ? Array.isArray(providerData.hospitalAffiliations)
-                ? providerData.hospitalAffiliations.join(', ')
-                : providerData.hospitalAffiliations
+            completeProviderData.hospitalAffiliations && completeProviderData.hospitalAffiliations.length > 0
+              ? completeProviderData.hospitalAffiliations.join(', ')
               : 'Not provided'
           }</p>
           <p><strong>Education & Training:</strong> ${
-            providerData.educationAndTraining
-              ? Array.isArray(providerData.educationAndTraining)
-                ? providerData.educationAndTraining.join(', ')
-                : providerData.educationAndTraining
+            completeProviderData.educationAndTraining && completeProviderData.educationAndTraining.length > 0
+              ? completeProviderData.educationAndTraining.join(', ')
               : 'Not provided'
           }</p>
-          ${formatStateLicensesHtml(providerData.stateLicenses)}
-          <p><strong>Registration Date:</strong> ${new Date().toLocaleDateString()}</p>
-          ${
-            providerData.id || providerData._id
-              ? `<p><strong>Provider ID:</strong> ${
-                  providerData.id || providerData._id
-                }</p>`
-              : ''
-          }
         </div>
         <p style="color: #333; font-size: 16px;">
           Please review the provider's information and follow up as needed.
@@ -262,51 +222,25 @@ router.post('/provider-signup-notification', async (req, res) => {
       A new healthcare provider has registered on Elite Healthspan.
 
       Provider Details:
-      - Name: ${
-        providerData.providerName || providerData.name || 'Not provided'
-      }
-      - Email: ${providerData.email || 'Not provided'}
-      - Practice Name: ${providerData.practiceName || 'Not provided'}
-      - NPI Number: ${providerData.npiNumber || 'Not provided'}
-      - Address: ${providerData.address || 'Not provided'}
-      - City, State, ZIP: ${providerData.city || ''}, ${
-      providerData.state || ''
-    } ${providerData.zip || ''}
-      - Phone: ${providerData.phone || 'Not provided'}
+      - Name: ${completeProviderData.providerName || 'Not provided'}
+      - Email: ${completeProviderData.email || 'Not provided'}
+      - Practice Name: ${completeProviderData.practiceName || 'Not provided'}
+      - Address: ${completeProviderData.address || 'Not provided'}
+      - City, State: ${completeProviderData.city || 'Not provided'}, ${completeProviderData.state || 'Not provided'}
       - Specialties: ${
-        providerData.specialties
-          ? Array.isArray(providerData.specialties)
-            ? providerData.specialties.join(', ')
-            : providerData.specialties
-          : 'Not provided'
-      }
-      - Board Certifications: ${
-        providerData.boardCertifications
-          ? Array.isArray(providerData.boardCertifications)
-            ? providerData.boardCertifications.join(', ')
-            : providerData.boardCertifications
+        completeProviderData.specialties && completeProviderData.specialties.length > 0
+          ? completeProviderData.specialties.join(', ')
           : 'Not provided'
       }
       - Hospital Affiliations: ${
-        providerData.hospitalAffiliations
-          ? Array.isArray(providerData.hospitalAffiliations)
-            ? providerData.hospitalAffiliations.join(', ')
-            : providerData.hospitalAffiliations
+        completeProviderData.hospitalAffiliations && completeProviderData.hospitalAffiliations.length > 0
+          ? completeProviderData.hospitalAffiliations.join(', ')
           : 'Not provided'
       }
       - Education & Training: ${
-        providerData.educationAndTraining
-          ? Array.isArray(providerData.educationAndTraining)
-            ? providerData.educationAndTraining.join(', ')
-            : providerData.educationAndTraining
+        completeProviderData.educationAndTraining && completeProviderData.educationAndTraining.length > 0
+          ? completeProviderData.educationAndTraining.join(', ')
           : 'Not provided'
-      }
-      - State Licenses: ${formatStateLicenses(providerData.stateLicenses)}
-      - Registration Date: ${new Date().toLocaleDateString()}
-      ${
-        providerData.id || providerData._id
-          ? `- Provider ID: ${providerData.id || providerData._id}`
-          : ''
       }
 
       Please review the provider's information and follow up as needed.
