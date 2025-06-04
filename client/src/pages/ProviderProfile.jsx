@@ -17,6 +17,7 @@ function ProviderProfile() {
   const [reviewsData, setReviewsData] = useState(null);
   const [showReviewsModal, setShowReviewsModal] = useState(false);
   const [allReviews, setAllReviews] = useState([]);
+  const [galleryImageError, setGalleryImageError] = useState(false);
 
   // Get Google Maps API key from environment variables
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -29,12 +30,14 @@ function ProviderProfile() {
     try {
       setLoading(true);
       setError(null);
+      setGalleryImageError(false);
       const data = await getProvider(providerId);
       const providerData = data.provider || data;
       setProvider(providerData);
 
       // Set initial reviews data from provider
-      if (providerData.reviewStats) {
+      if (providerData && providerData.reviewStats) {
+        // Added check for providerData
         setReviewsData({
           stats: providerData.reviewStats,
           reviews:
@@ -43,7 +46,6 @@ function ProviderProfile() {
               .slice(0, 3) || [],
         });
       } else {
-        // Fallback if no reviewStats
         setReviewsData({
           stats: {
             totalReviews: 0,
@@ -66,18 +68,16 @@ function ProviderProfile() {
     const response = await fetch(
       `${BASE_URL}/api/provider-info/${providerId}/reviews?page=${page}&limit=${limit}`
     );
-
     if (!response.ok) {
       throw new Error('Failed to fetch reviews');
     }
-
     return response.json();
   };
 
   const fetchAllReviews = async () => {
     try {
       const data = await getProviderReviews(providerId, 1, 50);
-      setAllReviews(data.reviews);
+      setAllReviews(data.reviews || []); // Ensure allReviews is an array
       setShowReviewsModal(true);
     } catch (err) {
       console.error('Error fetching all reviews:', err);
@@ -89,11 +89,9 @@ function ProviderProfile() {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
-
     for (let i = 0; i < fullStars; i++) {
       stars.push(<FaStar key={i} className='text-yellow-400' size={16} />);
     }
-
     if (hasHalfStar) {
       stars.push(
         <FaStar
@@ -104,18 +102,17 @@ function ProviderProfile() {
         />
       );
     }
-
     const remainingStars = 5 - Math.ceil(rating);
     for (let i = 0; i < remainingStars; i++) {
       stars.push(
         <FaRegStar key={`empty-${i}`} className='text-gray-300' size={16} />
       );
     }
-
     return stars;
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -125,35 +122,52 @@ function ProviderProfile() {
 
   // Helper functions
   const getGoogleMapsEmbedUrl = () => {
+    if (
+      !provider ||
+      !provider.address ||
+      !provider.city ||
+      !provider.state ||
+      !provider.zip
+    )
+      return ''; // Defensive check
     const address = `${provider.address}, ${provider.city}, ${provider.state} ${provider.zip}`;
     const encodedAddress = encodeURIComponent(address);
     return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodedAddress}&zoom=15&maptype=roadmap`;
   };
 
   const getGoogleMapsDirectionsUrl = () => {
+    if (!provider) return '';
     const address =
       provider.fullAddress ||
-      `${provider.address}, ${provider.city}, ${provider.state} ${provider.zip}`;
+      `${provider.address || ''}, ${provider.city || ''}, ${
+        provider.state || ''
+      } ${provider.zip || ''}`.replace(/,\s*$/, ''); // Ensure no trailing commas if parts are missing
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
       address
     )}`;
   };
 
   const formatSpecialties = () => {
-    if (!provider.specialties || provider.specialties.length === 0) {
+    if (
+      !provider ||
+      !provider.specialties || // Check if specialties array exists
+      provider.specialties.length === 0
+    ) {
       return 'Specialty information not available';
     }
     return provider.specialties.join(', ');
   };
 
   const getPrimarySpecialty = () => {
-    if (provider.specialties && provider.specialties.length > 0) {
+    if (provider && provider.specialties && provider.specialties.length > 0) {
+      // Check if specialties array exists
       return provider.specialties[0];
     }
     return 'Healthcare Provider';
   };
 
   const getFormattedAddress = () => {
+    if (!provider) return '';
     const parts = [];
     if (provider.address) parts.push(provider.address);
     if (provider.suite) parts.push(provider.suite);
@@ -161,7 +175,10 @@ function ProviderProfile() {
   };
 
   const getCityStateZip = () => {
-    return `${provider.city}, ${provider.state} ${provider.zip}`;
+    if (!provider) return '';
+    return `${provider.city || ''}, ${provider.state || ''} ${
+      provider.zip || ''
+    }`.replace(/,\s*$/, ''); // Ensure no trailing commas
   };
 
   // Loading state
@@ -228,29 +245,28 @@ function ProviderProfile() {
     averageEfficacyRating: 0,
   };
 
+  const headshotDisplayUrl =
+    provider.headshotUrl ||
+    'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&h=400&fit=crop&crop=face';
+  const galleryDisplayUrl = provider.galleryUrl;
+
   return (
     <div className='min-h-screen flex flex-col bg-[#FCF8F4]'>
       <Navbar />
 
       {/* Header Section with Image */}
       <div className='relative w-full h-full bg-[#F5F5F5] flex items-center justify-center'>
-        <div className='w-full h-full flex items-center justify-center'>
-          <div className='w-full h-full flex items-center justify-center'>
-            <img
-              src={
-                provider.headshotUrl ||
-                'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&h=400&fit=crop&crop=face'
-              }
-              alt={`${provider.providerName} - Profile`}
-              className='object-cover w-full h-full max-h-full'
-              style={{ objectPosition: 'center top' }}
-              onError={(e) => {
-                e.target.src =
-                  'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=400&fit=crop&crop=center';
-              }}
-            />
-          </div>
-        </div>
+        <img
+          src={headshotDisplayUrl}
+          alt={`${provider.providerName || 'Provider'} - Profile`}
+          className='object-cover w-full h-full max-h-full'
+          style={{ objectPosition: 'center top' }}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src =
+              'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=400&fit=crop&crop=center';
+          }}
+        />
       </div>
 
       {/* Reviews Modal */}
@@ -268,17 +284,16 @@ function ProviderProfile() {
                 <IoClose size={24} />
               </button>
             </div>
-
-            <div className='p-6 overflow-y-auto max-h-[60vh]'>
+            <div className='p-6 overflow-y-auto max-h-[calc(80vh-120px)]'>
               {allReviews.length === 0 ? (
                 <div className='text-center py-8 text-gray-500'>
                   No reviews available yet.
                 </div>
               ) : (
                 <div className='space-y-6'>
-                  {allReviews.map((review, index) => (
+                  {allReviews.map((review) => (
                     <div
-                      key={review._id || index}
+                      key={review._id}
                       className='border-b border-gray-200 pb-6 last:border-b-0'
                     >
                       <div className='flex justify-between items-start mb-3'>
@@ -293,7 +308,7 @@ function ProviderProfile() {
                               </span>
                               {renderStars(review.satisfactionRating)}
                               <span className='text-sm font-medium text-[#061140] ml-1'>
-                                {review.satisfactionRating}
+                                {review.satisfactionRating?.toFixed(1)}
                               </span>
                             </div>
                             <div className='flex items-center gap-1'>
@@ -302,7 +317,7 @@ function ProviderProfile() {
                               </span>
                               {renderStars(review.efficacyRating)}
                               <span className='text-sm font-medium text-[#061140] ml-1'>
-                                {review.efficacyRating}
+                                {review.efficacyRating?.toFixed(1)}
                               </span>
                             </div>
                           </div>
@@ -326,13 +341,13 @@ function ProviderProfile() {
       {/* Main Content */}
       <div className='flex flex-col lg:flex-row max-w-7xl mx-auto w-full gap-8 sm:px-4 sm:py-8 sm:-mt-32 -mt-4 z-10 relative'>
         {/* Left Card: Contact & Office */}
-        <div className='bg-white !border-[#7E7E7E]/50 !border rounded-[20px] p-6 w-full max-w-md flex-shrink-0 max-h-[600px]'>
+        <div className='bg-white !border-[#7E7E7E]/50 !border rounded-[20px] p-6 w-full lg:max-w-md flex-shrink-0 lg:max-h-[600px]'>
           <div className='mb-4'>
             <div className='text-base text-gray-400 mb-1 font-karla'>
               [{getPrimarySpecialty()}]
             </div>
             <div className='text-2xl font-[500] font-montserrat leading-[28px] text-[#061140] sm:mb-7 mb-4'>
-              {provider.providerName}
+              {provider.providerName || 'Provider Name'}
             </div>
             <div className='flex gap-2 mb-4'>
               <button className='flex-1 font-karla py-3 px-2 bg-[#0C1F6D] text-white rounded-full font-medium text-base flex items-center justify-center gap-2'>
@@ -340,7 +355,7 @@ function ProviderProfile() {
               </button>
               <button
                 onClick={() =>
-                  (window.location.href = `mailto:${provider.email}`)
+                  (window.location.href = `mailto:${provider.email || ''}`)
                 }
                 className='flex-1 font-karla py-3 px-2 bg-[#0C1F6D] text-white rounded-full font-medium text-base flex items-center justify-center gap-2'
               >
@@ -351,13 +366,10 @@ function ProviderProfile() {
               </button>
             </div>
           </div>
-
           <div className='mb-4'>
             <div className='font-semibold text-[#061140] mb-2 text-sm'>
               Office
             </div>
-
-            {/* Google Maps Implementation */}
             <div className='w-full h-40 bg-gray-200 rounded-xl mb-5 overflow-hidden'>
               <iframe
                 src={getGoogleMapsEmbedUrl()}
@@ -367,15 +379,16 @@ function ProviderProfile() {
                 allowFullScreen={true}
                 loading='lazy'
                 referrerPolicy='no-referrer-when-downgrade'
-                title={`Map showing ${provider.practiceName} location`}
+                title={`Map showing ${
+                  provider.practiceName || 'Practice'
+                } location`}
                 sandbox='allow-scripts allow-same-origin allow-popups allow-forms'
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
+                  if (e.target.nextSibling)
+                    e.target.nextSibling.style.display = 'flex';
                 }}
               ></iframe>
-
-              {/* Fallback when iframe fails */}
               <div
                 className='w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center'
                 style={{ display: 'none' }}
@@ -384,7 +397,7 @@ function ProviderProfile() {
                   <div className='text-2xl mb-2'>📍</div>
                   <div className='text-sm font-medium'>Map View</div>
                   <div className='text-xs'>
-                    {provider.city}, {provider.state}
+                    {provider.city || 'City'}, {provider.state || 'State'}
                   </div>
                   <a
                     href={getGoogleMapsDirectionsUrl()}
@@ -397,11 +410,10 @@ function ProviderProfile() {
                 </div>
               </div>
             </div>
-
             <div className='flex justify-between items-start'>
               <div>
                 <div className='text-base text-[#333333] mb-1 font-karla'>
-                  {provider.practiceName}
+                  {provider.practiceName || 'Practice Name'}
                 </div>
                 <div className='text-sm text-[#333333] mb-1 font-karla'>
                   {getFormattedAddress()}
@@ -422,57 +434,53 @@ function ProviderProfile() {
               </div>
             </div>
           </div>
-
-          <button className='w-full sm:mt-4 py-3 bg-[#FFFFFF] text-[#061140] font-karla rounded-full font-semibold text-base border border-gray-200'>
+        
+          <button className='w-full sm:mt-4 py-3 bg-[#FFFFFF] text-[#061140] font-karla rounded-full font-semibold text-base border border-gray-200 hover:bg-gray-50'>
             See Full Information
           </button>
         </div>
 
         {/* Right Content: About, Reviews, Education */}
-        <div className='flex-1 flex flex-col gap-8 sm:mt-[120px]'>
-          {/* About Section */}
-          <div className='!border-[#7E7E7E]/50 !border-b p-6'>
+        <div className='flex-1 flex flex-col gap-8 lg:mt-[120px]'>
+          <div className='bg-white !border-[#7E7E7E]/50 !border rounded-[20px] p-6'>
             <div className='text-[20px] font-[500] text-[#061140] mb-2 leading-[26px] font-montserrat'>
-              About Dr. {provider.providerName.split(' ').pop()}
+              About Dr.{' '}
+              {provider.providerName
+                ? provider.providerName.split(' ').pop()
+                : 'Provider'}
             </div>
             <div className='text-[#484848]/80 mb-4 text-base font-karla'>
-              Meet {provider.providerName}.{' '}
+              Meet {provider.providerName || 'this provider'}.{' '}
               {provider.boardCertifications &&
               provider.boardCertifications.length > 0
                 ? `Board certified in ${provider.boardCertifications.join(
                     ', '
                   )}.`
-                : ''}
+                : ''}{' '}
               {provider.specialties && provider.specialties.length > 0
-                ? ` Specializing in ${provider.specialties.join(', ')}.`
+                ? `Specializing in ${provider.specialties.join(', ')}.`
                 : ''}
               <br />
               <br />
-              {provider.practiceName} is committed to providing exceptional
-              healthcare services to patients in {provider.city},{' '}
-              {provider.state}.
+              {provider.practiceName || 'Their practice'} is committed to
+              providing exceptional healthcare services to patients in{' '}
+              {provider.city || 'this city'}, {provider.state || 'N/A'}.
             </div>
-
-            {/* Patients Say Section with Real Reviews */}
             <div className='mb-4'>
               <div className='font-[500] text-[#061140] mb-1 font-montserrat'>
                 Patients Say…
               </div>
-
               {stats.totalReviews > 0 ? (
                 <>
-                  {/* Show sample review text from first review */}
                   <div className='text-[#484848]/80 text-base mb-2 font-karla'>
                     {reviewsData?.reviews?.[0]?.reviewText ||
-                      'Professional, knowledgeable, and caring. Highly recommended for quality healthcare services.'}
+                      'Professional, knowledgeable, and caring. Highly recommended.'}
                   </div>
-
-                  {/* Real Statistics */}
-                  <div className='flex w-full bg-[#DFE3F2] rounded-[8px] px-8 py-3 mb-2 gap-8 items-center justify-center'>
+                  <div className='flex flex-col sm:flex-row w-full bg-[#DFE3F2] rounded-[8px] px-4 sm:px-8 py-3 mb-2 gap-4 sm:gap-8 items-center justify-center'>
                     <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
                       <FaRegStar className='text-[#061140]' size={22} />
                       <span>
-                        Reviews&nbsp;{' '}
+                        Reviews 
                         <span className='font-semibold'>
                           {stats.averageSatisfactionRating.toFixed(1)} (
                           {stats.totalReviews})
@@ -482,7 +490,7 @@ function ProviderProfile() {
                     <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
                       <FaRegThumbsUp className='text-[#061140]' size={22} />
                       <span>
-                        Efficacy&nbsp;{' '}
+                        Efficacy 
                         <span className='font-semibold'>
                           {stats.averageEfficacyRating.toFixed(1)} (
                           {stats.totalReviews})
@@ -490,12 +498,11 @@ function ProviderProfile() {
                       </span>
                     </div>
                   </div>
-
                   <button
                     onClick={fetchAllReviews}
                     className='w-full py-3 mt-4 bg-[#FFFFFF] text-[#061140] border font-karla border-[#7E7E7E]/50 rounded-full font-semibold text-base hover:bg-gray-50'
                   >
-                    Read Reviews ({stats.totalReviews})
+                    Read All Reviews ({stats.totalReviews})
                   </button>
                 </>
               ) : (
@@ -503,19 +510,17 @@ function ProviderProfile() {
                   <div className='text-[#484848]/80 text-base mb-2 font-karla'>
                     No reviews available yet. Be the first to leave a review!
                   </div>
-                  <div className='flex w-full bg-[#DFE3F2] rounded-[8px] px-8 py-3 mb-2 gap-8 items-center justify-center'>
+                  <div className='flex flex-col sm:flex-row w-full bg-[#DFE3F2] rounded-[8px] px-4 sm:px-8 py-3 mb-2 gap-4 sm:gap-8 items-center justify-center'>
                     <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
                       <FaRegStar className='text-[#061140]' size={22} />
                       <span>
-                        Reviews&nbsp;{' '}
-                        <span className='font-semibold'>- (0)</span>
+                        Reviews <span className='font-semibold'>- (0)</span>
                       </span>
                     </div>
                     <div className='flex items-center gap-2 text-[#061140] text-base font-karla'>
                       <FaRegThumbsUp className='text-[#061140]' size={22} />
                       <span>
-                        Efficacy&nbsp;{' '}
-                        <span className='font-semibold'>- (0)</span>
+                        Efficacy <span className='font-semibold'>- (0)</span>
                       </span>
                     </div>
                   </div>
@@ -530,111 +535,115 @@ function ProviderProfile() {
             </div>
           </div>
 
-          {/* Education & Qualifications */}
-          <div className='!border-[#7E7E7E]/50 !border-b p-6'>
+          <div className='bg-white !border-[#7E7E7E]/50 !border rounded-[20px] p-6'>
             <div className='text-[20px] font-[500] text-[#061140] mb-4 leading-[26px] font-montserrat'>
               Education & Qualifications
             </div>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm'>
-              {/* Specialties */}
-              <div className='font-[700] text-[#333333] text-base font-karla'>
-                Specialties
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-base font-karla'>
+              <div>
+                <strong className='text-[#333333]'>Specialties</strong>
               </div>
-              <div className='text-[#484848]/80 text-base'>
-                {formatSpecialties()}
+              <div className='text-[#484848]/80'>{formatSpecialties()}</div>{' '}
+              {/* formatSpecialties already has checks */}
+              <div>
+                <strong className='text-[#333333]'>Practice</strong>
               </div>
-
-              {/* Practice */}
-              <div className='font-[700] text-[#333333] text-base font-karla'>
-                Practice
+              <div className='text-[#484848]/80'>
+                {provider.practiceName || 'N/A'}
               </div>
-              <div className='text-[#484848]/80 text-base'>
-                {provider.practiceName}
-              </div>
-
-              {/* Board Certifications */}
               {provider.boardCertifications &&
                 provider.boardCertifications.length > 0 && (
                   <>
-                    <div className='font-[700] text-[#333333] text-base font-karla'>
-                      Board Certifications
+                    <div>
+                      <strong className='text-[#333333]'>
+                        Board Certifications
+                      </strong>
                     </div>
-                    <div className='text-[#484848]/80 text-base'>
+                    <div className='text-[#484848]/80'>
                       {provider.boardCertifications.map((cert, index) => (
                         <div key={index}>{cert}</div>
                       ))}
                     </div>
                   </>
                 )}
-
-              {/* Hospital Affiliations */}
               {provider.hospitalAffiliations &&
                 provider.hospitalAffiliations.length > 0 && (
                   <>
-                    <div className='font-[700] text-[#333333] text-base font-karla'>
-                      Hospital Affiliations
+                    <div>
+                      <strong className='text-[#333333]'>
+                        Hospital Affiliations
+                      </strong>
                     </div>
-                    <div className='text-[#484848]/80 text-base'>
-                      {provider.hospitalAffiliations.map(
-                        (affiliation, index) => (
-                          <div key={index} className='mb-1'>
-                            {affiliation}
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </>
-                )}
-
-              {/* Education & Training */}
-              {provider.educationAndTraining &&
-                provider.educationAndTraining.length > 0 && (
-                  <>
-                    <div className='font-[700] text-[#333333] text-base font-karla'>
-                      Education & Training
-                    </div>
-                    <div className='text-[#484848]/80 text-base'>
-                      {provider.educationAndTraining.map((education, index) => (
-                        <div key={index} className='mb-2'>
-                          {education}
+                    <div className='text-[#484848]/80'>
+                      {provider.hospitalAffiliations.map((aff, index) => (
+                        <div key={index} className='mb-1'>
+                          {aff}
                         </div>
                       ))}
                     </div>
                   </>
                 )}
-
-              {/* NPI Number */}
-              <div className='font-[700] text-[#333333] text-base font-karla'>
-                NPI Number
+              {provider.educationAndTraining &&
+                provider.educationAndTraining.length > 0 && (
+                  <>
+                    <div>
+                      <strong className='text-[#333333]'>
+                        Education & Training
+                      </strong>
+                    </div>
+                    <div className='text-[#484848]/80'>
+                      {provider.educationAndTraining.map((edu, index) => (
+                        <div key={index} className='mb-2'>
+                          {edu}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              <div>
+                <strong className='text-[#333333]'>NPI Number</strong>
               </div>
-              <div className='text-[#484848]/80 text-base'>
-                {provider.npiNumber}
+              <div className='text-[#484848]/80'>
+                {provider.npiNumber || 'N/A'}
               </div>
+                {provider.stateLicenses && provider.stateLicenses.length > 0 && (
+                  <>
+                    <div><strong className='text-[#333333]'>State Licenses</strong></div>
+                    <div className='text-[#484848]/80'>
+                      {provider.stateLicenses.map((license, index) => (
+                        <div key={index} className='mb-2'>
+                          <div className='font-medium'>{license.state}</div>
+                          <div className='text-sm'>DEA: {license.deaNumber}</div>
+                          <div className='text-sm'>License: {license.licenseNumber}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+              )}
             </div>
           </div>
 
-          {/* Ad/Procedure Supported by Provider */}
           <div className='bg-white rounded-3xl shadow-lg p-6 flex items-center justify-center min-h-[140px]'>
-            <div className='w-full h-32 bg-gray-100 rounded-xl flex items-center justify-center'>
-              {provider.galleryUrl ? (
+            <div className='w-full h-32 bg-gray-100 rounded-xl flex items-center justify-center relative overflow-hidden'>
+              {galleryDisplayUrl && !galleryImageError ? (
                 <img
-                  src={provider.galleryUrl}
+                  src={galleryDisplayUrl}
                   alt='Procedures by provider'
                   className='w-full h-full object-cover rounded-xl'
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
+                  onError={() => {
+                    console.warn(
+                      `Failed to load gallery image: ${galleryDisplayUrl}`
+                    );
+                    setGalleryImageError(true);
                   }}
                 />
-              ) : null}
-              <span
-                className='text-gray-400 text-xs text-center'
-                style={{ display: provider.galleryUrl ? 'none' : 'flex' }}
-              >
-                AD
-                <br />
-                [Procedure Supported by Provider]
-              </span>
+              ) : (
+                <span className='text-gray-400 text-xs text-center'>
+                  AD
+                  <br />
+                  [Procedure Supported by Provider]
+                </span>
+              )}
             </div>
           </div>
         </div>

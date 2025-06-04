@@ -121,21 +121,38 @@ router.post('/send-subscription-email', verifyToken, async (req, res) => {
     res.status(200).json({ message: 'Subscription email sent successfully' });
   } catch (error) {
     console.error('Error sending subscription email:', error);
-    res
-      .status(500)
-      .json({
-        message: 'Failed to send subscription email',
-        error: error.message,
-      });
+    res.status(500).json({
+      message: 'Failed to send subscription email',
+      error: error.message,
+    });
   }
 });
 
 router.post('/provider-signup-notification', async (req, res) => {
   try {
-    const providerData = req.body;
+    // Handle both cases: providerId directly or nested provider object
+    let providerId;
+    
+    // Debug: Log what we received
+    console.log('📊 Received request body:', JSON.stringify(req.body, null, 2));
+    
+    if (typeof req.body.providerId === 'string') {
+      // Case 1: Frontend sent { providerId: "string_id" }
+      providerId = req.body.providerId;
+    } else if (req.body.providerId && typeof req.body.providerId === 'object') {
+      // Case 2: Frontend sent { providerId: { id: "...", ... } } (nested object)
+      providerId = req.body.providerId.id || req.body.providerId._id;
+    } else if (req.body.id || req.body._id) {
+      // Case 3: Frontend sent { id: "...", ... } (flat object)
+      providerId = req.body.id || req.body._id;
+    } else {
+      return res.status(400).json({ message: 'Provider ID is required' });
+    }
+    
+    console.log('🔍 Extracted provider ID:', providerId);
 
-    if (!providerData) {
-      return res.status(400).json({ message: 'Provider data is required' });
+    if (!providerId) {
+      return res.status(400).json({ message: 'Valid provider ID is required' });
     }
 
     const supportEmail = process.env.SUPPORT_EMAIL;
@@ -144,6 +161,20 @@ router.post('/provider-signup-notification', async (req, res) => {
       console.warn('SUPPORT_EMAIL not configured in environment variables');
       return res.status(400).json({ message: 'Support email not configured' });
     }
+
+    // Always fetch complete provider data from database to ensure we have all fields
+    const Provider = require('../models/Provider'); // Adjust path as needed
+    const provider = await Provider.findById(providerId);
+    
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+    
+    // Convert to plain object for easier access
+    const completeProviderData = provider.toObject();
+
+    // Debug: Log the provider data to see what we're working with
+    console.log('📊 Complete provider data from database:', JSON.stringify(completeProviderData, null, 2));
 
     const subject = 'New Provider Registration - Elite Healthspan';
     const htmlContent = `
@@ -154,13 +185,26 @@ router.post('/provider-signup-notification', async (req, res) => {
         </p>
         <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #0B0757; margin-top: 0;">Provider Details:</h3>
-          <p><strong>Name:</strong> ${providerData.name || 'Not provided'}</p>
-          <p><strong>Email:</strong> ${providerData.email || 'Not provided'}</p>
-          <p><strong>Practice Name:</strong> ${providerData.practiceName || 'Not provided'}</p>
-          <p><strong>Phone:</strong> ${providerData.phone || 'Not provided'}</p>
-          <p><strong>Specialties:</strong> ${providerData.specialties ? providerData.specialties.join(', ') : 'Not provided'}</p>
-          <p><strong>Registration Date:</strong> ${new Date().toLocaleDateString()}</p>
-          ${providerData.id ? `<p><strong>Provider ID:</strong> ${providerData.id}</p>` : ''}
+          <p><strong>Name:</strong> ${completeProviderData.providerName || 'Not provided'}</p>
+          <p><strong>Email:</strong> ${completeProviderData.email || 'Not provided'}</p>
+          <p><strong>Practice Name:</strong> ${completeProviderData.practiceName || 'Not provided'}</p>
+          <p><strong>Address:</strong> ${completeProviderData.address || 'Not provided'}</p>
+          <p><strong>City, State:</strong> ${completeProviderData.city || 'Not provided'}, ${completeProviderData.state || 'Not provided'}</p>
+          <p><strong>Specialties:</strong> ${
+            completeProviderData.specialties && completeProviderData.specialties.length > 0
+              ? completeProviderData.specialties.join(', ')
+              : 'Not provided'
+          }</p>
+          <p><strong>Hospital Affiliations:</strong> ${
+            completeProviderData.hospitalAffiliations && completeProviderData.hospitalAffiliations.length > 0
+              ? completeProviderData.hospitalAffiliations.join(', ')
+              : 'Not provided'
+          }</p>
+          <p><strong>Education & Training:</strong> ${
+            completeProviderData.educationAndTraining && completeProviderData.educationAndTraining.length > 0
+              ? completeProviderData.educationAndTraining.join(', ')
+              : 'Not provided'
+          }</p>
         </div>
         <p style="color: #333; font-size: 16px;">
           Please review the provider's information and follow up as needed.
@@ -178,13 +222,26 @@ router.post('/provider-signup-notification', async (req, res) => {
       A new healthcare provider has registered on Elite Healthspan.
 
       Provider Details:
-      - Name: ${providerData.name || 'Not provided'}
-      - Email: ${providerData.email || 'Not provided'}
-      - Practice Name: ${providerData.practiceName || 'Not provided'}
-      - Phone: ${providerData.phone || 'Not provided'}
-      - Specialties: ${providerData.specialties ? providerData.specialties.join(', ') : 'Not provided'}
-      - Registration Date: ${new Date().toLocaleDateString()}
-      ${providerData.id ? `- Provider ID: ${providerData.id}` : ''}
+      - Name: ${completeProviderData.providerName || 'Not provided'}
+      - Email: ${completeProviderData.email || 'Not provided'}
+      - Practice Name: ${completeProviderData.practiceName || 'Not provided'}
+      - Address: ${completeProviderData.address || 'Not provided'}
+      - City, State: ${completeProviderData.city || 'Not provided'}, ${completeProviderData.state || 'Not provided'}
+      - Specialties: ${
+        completeProviderData.specialties && completeProviderData.specialties.length > 0
+          ? completeProviderData.specialties.join(', ')
+          : 'Not provided'
+      }
+      - Hospital Affiliations: ${
+        completeProviderData.hospitalAffiliations && completeProviderData.hospitalAffiliations.length > 0
+          ? completeProviderData.hospitalAffiliations.join(', ')
+          : 'Not provided'
+      }
+      - Education & Training: ${
+        completeProviderData.educationAndTraining && completeProviderData.educationAndTraining.length > 0
+          ? completeProviderData.educationAndTraining.join(', ')
+          : 'Not provided'
+      }
 
       Please review the provider's information and follow up as needed.
 
@@ -197,9 +254,9 @@ router.post('/provider-signup-notification', async (req, res) => {
     await sendEmail(supportEmail, subject, textContent, htmlContent);
 
     console.log('✅ Email sent successfully');
-    // REMOVE THE DUPLICATE LINE BELOW:
-    res.status(200).json({ message: 'Provider signup notification sent successfully' });
-    
+    res
+      .status(200)
+      .json({ message: 'Provider signup notification sent successfully' });
   } catch (error) {
     console.error('Error sending provider signup notification:', error);
     res.status(500).json({

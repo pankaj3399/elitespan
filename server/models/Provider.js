@@ -1,4 +1,3 @@
-// server/models/Provider.js
 const mongoose = require('mongoose');
 
 // Review subdocument schema
@@ -38,6 +37,28 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// State License subdocument schema 
+const stateLicenseSchema = new mongoose.Schema(
+  {
+    state: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    deaNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    licenseNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
+  { _id: true }
+);
+
 const providerSchema = new mongoose.Schema(
   {
     // Basic Provider Information
@@ -56,8 +77,9 @@ const providerSchema = new mongoose.Schema(
     boardCertifications: { type: [String], default: [] },
     hospitalAffiliations: { type: [String], default: [] },
     educationAndTraining: { type: [String], default: [] },
+    stateLicenses: { type: [stateLicenseSchema], default: [] },
 
-    // Images/Files (remove reviewsUrl since we're not storing Excel)
+    // Images/Files 
     headshotUrl: String,
     galleryUrl: String,
 
@@ -79,6 +101,7 @@ providerSchema.index({ email: 1 });
 providerSchema.index({ isActive: 1, isApproved: 1 });
 providerSchema.index({ 'reviews.satisfactionRating': 1 });
 providerSchema.index({ 'reviews.isActive': 1, 'reviews.isApproved': 1 });
+providerSchema.index({ 'stateLicenses.state': 1 }); // NEW INDEX
 
 // Virtual for full address
 providerSchema.virtual('fullAddress').get(function () {
@@ -120,15 +143,18 @@ providerSchema.virtual('reviewStats').get(function () {
   };
 });
 
-// Method to check if provider profile is complete
+// Method to check if provider profile is complete - UPDATED
 providerSchema.methods.checkProfileCompletion = function () {
   const hasBasicInfo =
     this.practiceName && this.providerName && this.email && this.npiNumber;
   const hasQualifications =
     this.specialties.length > 0 || this.boardCertifications.length > 0;
   const hasImages = this.headshotUrl && this.galleryUrl;
+  // Add check for at least one state license - NEW
+  const hasStateLicenses = this.stateLicenses.length > 0;
 
-  this.isProfileComplete = hasBasicInfo && hasQualifications && hasImages;
+  this.isProfileComplete =
+    hasBasicInfo && hasQualifications && hasImages && hasStateLicenses;
 
   return this.isProfileComplete;
 };
