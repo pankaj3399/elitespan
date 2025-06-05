@@ -69,6 +69,93 @@ const Navbar = () => {
     logoutUser();
   };
 
+  // Helper function to determine what to show based on auth status
+  const renderAuthButtons = () => {
+    if (token && user) {
+      // User is logged in
+      return (
+        <div className='flex items-center gap-4'>
+          <span className='text-[#FFFFFF] text-sm'>Welcome, {user.name}</span>
+          <button
+            onClick={handleLogout}
+            className='text-[#061140] bg-[#FFFFFF] px-6 py-2 rounded-full hover:text-[#0B0757] font-medium'
+          >
+            Logout
+          </button>
+        </div>
+      );
+    } else {
+      // User is not logged in
+      return (
+        <>
+          <button
+            onClick={handleLoginClick}
+            className='text-[#061140] bg-[#FFFFFF] px-6 py-2 rounded-full hover:text-[#0B0757] font-medium'
+          >
+            Login
+          </button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleJoinClick}
+            className='px-6 py-3 bg-[#0C1F6D] text-white rounded-full hover:bg-[#1a237e] font-medium'
+          >
+            Join Elite Healthspan
+          </motion.button>
+        </>
+      );
+    }
+  };
+
+  // Helper function for mobile auth buttons
+  const renderMobileAuthButtons = () => {
+    if (token && user) {
+      // User is logged in
+      return (
+        <>
+          <div className='py-2 text-[#061140] font-normal text-[24px]'>
+            Welcome, {user.name}
+          </div>
+          <button
+            onClick={handleLogout}
+            className='py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium flex items-center'
+          >
+            <span>Logout</span>
+          </button>
+        </>
+      );
+    } else {
+      // User is not logged in
+      return (
+        <>
+          <a
+            href='#login'
+            onClick={(e) => {
+              e.preventDefault();
+              setIsOpen(false);
+              handleLoginClick();
+            }}
+            className='py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium flex items-center'
+          >
+            <span>Login</span>
+            <ChevronRight className='w-6 h-6 ml-2 mt-2' />
+          </a>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              handleJoinClick();
+              setIsOpen(false);
+            }}
+            className='block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium text-left'
+          >
+            Join Elite Healthspan
+          </motion.button>
+        </>
+      );
+    }
+  };
+
   return (
     <nav className='w-full py-2 px-6 sm:px-12 flex items-center justify-between absolute top-0 z-50 mt-4'>
       <div className='text-2xl font-bold text-[#0B0757] flex items-center gap-2'>
@@ -99,42 +186,26 @@ const Navbar = () => {
         >
           FAQ
         </Link>
-        <Link
-          to='/provider-portal'
-          style={{ fontFamily: 'Karla' }}
-          className='text-[#FFFFFF] hover:text-[#0B0757] font-medium'
-        >
-          Provider Sign Up
-        </Link>
+
+        {/* Only show Provider Sign Up if user is not logged in */}
+        {!token && (
+          <Link
+            to='/provider-portal'
+            style={{ fontFamily: 'Karla' }}
+            className='text-[#FFFFFF] hover:text-[#0B0757] font-medium'
+          >
+            Provider Sign Up
+          </Link>
+        )}
+
         <div
           style={{ fontFamily: 'Karla' }}
           className='flex items-center gap-2'
         >
-          {token ? (
-            <button
-              onClick={handleLogout}
-              className='text-[#FFFFFF] font-karla hover:text-[#0B0757] font-medium'
-            >
-              Logout
-            </button>
-          ) : (
-            <button
-              onClick={handleLoginClick}
-              className='text-[#061140] bg-[#FFFFFF] px-6 py-2 rounded-full hover:text-[#0B0757] font-medium'
-            >
-              Login
-            </button>
-          )}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleJoinClick}
-            className='px-6 py-3 bg-[#0C1F6D] text-white rounded-full hover:bg-[#1a237e] font-medium'
-          >
-            Join Elite Healthspan
-          </motion.button>
+          {renderAuthButtons()}
         </div>
       </div>
+
       <button
         className='md:hidden absolute right-4 text-[#0B0757] z-50'
         onClick={() => setIsOpen(!isOpen)}
@@ -145,6 +216,7 @@ const Navbar = () => {
           <Menu className='w-6 h-6 text-[#FFFFFF]' />
         )}
       </button>
+
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -171,57 +243,37 @@ const Navbar = () => {
           >
             FAQ
           </a>
-          {token ? (
-            <button
-              onClick={handleLogout}
-              className='py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium flex items-center'
+
+          {/* Only show Provider Sign Up in mobile if user is not logged in */}
+          {!token && (
+            <Link
+              to='/provider-portal'
+              className='block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium'
+              onClick={() => setIsOpen(false)}
             >
-              <span>Logout</span>
-            </button>
-          ) : (
-            <a
-              href='#login'
-              onClick={(e) => {
-                e.preventDefault();
-                setIsOpen(false);
-                handleLoginClick();
-              }}
-              className='py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium flex items-center'
-            >
-              <span>Login</span>
-              <ChevronRight className='w-6 h-6 ml-2 mt-2' />
-            </a>
+              Provider Sign Up
+            </Link>
           )}
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              handleJoinClick();
-              setIsOpen(false);
-            }}
-            className='block py-2 text-[#061140] hover:text-[#0B0757] font-normal text-[32px] md:font-medium text-left'
-          >
-            Join Elite Healthspan
-          </motion.button>
+          {renderMobileAuthButtons()}
         </motion.div>
       )}
 
-      {/* Modals */}
-      {modalStep === 'membership' && (
+      {/* Modals - Only show if user is not logged in */}
+      {!token && modalStep === 'membership' && (
         <MembershipModal
           onClose={closeModals}
           onContinue={() => handleContinue('contactInfo')}
         />
       )}
-      {modalStep === 'contactInfo' && (
+      {!token && modalStep === 'contactInfo' && (
         <ContactInfoForm
           onClose={closeModals}
           onContinue={(userId) => handleContinue('paymentMethod')}
           userId={user ? user.id : null}
         />
       )}
-      {modalStep === 'paymentMethod' && (
+      {!token && modalStep === 'paymentMethod' && (
         <PaymentMethodModal
           onClose={closeModals}
           onContinue={(paymentMethod) =>
@@ -230,7 +282,7 @@ const Navbar = () => {
           userId={user ? user.id : null}
         />
       )}
-      {modalStep === 'paymentForm_creditCard' && (
+      {!token && modalStep === 'paymentForm_creditCard' && (
         <CreditCardForm
           onClose={closeModals}
           onContinue={closeModals}
@@ -239,8 +291,8 @@ const Navbar = () => {
         />
       )}
 
-      {/* Simplified Login Modal - Same for all users */}
-      {modalStep === 'login' && (
+      {/* Login Modal - Only show if user is not logged in */}
+      {!token && modalStep === 'login' && (
         <div
           style={{ fontFamily: 'Montserrat' }}
           className='fixed inset-0 backdrop-blur-md bg-opacity-0 flex items-center justify-center z-50'

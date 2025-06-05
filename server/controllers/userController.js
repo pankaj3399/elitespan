@@ -58,7 +58,7 @@ exports.signup = async (req, res) => {
       } else if (existingUser.role) {
         userRole = existingUser.role; // Use the actual role field
       } else {
-        userRole = 'customer'; // Default fallback
+        userRole = 'user'; // Default fallback
       }
 
       const token = jwt.sign(
@@ -101,7 +101,7 @@ exports.signup = async (req, res) => {
     } else if (user.role) {
       userRole = user.role; // Use the actual role field
     } else {
-      userRole = 'customer'; // Default fallback
+      userRole = 'user'; // Default fallback
     }
 
     // Generate JWT token
@@ -161,7 +161,7 @@ exports.login = async (req, res) => {
     } else if (user.role) {
       userRole = user.role; // Use the actual role field from database
     } else {
-      userRole = 'customer'; // Default fallback
+      userRole = 'user'; // Default fallback
     }
 
     console.log('Determined user role:', userRole); // Debug log
