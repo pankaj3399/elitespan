@@ -15,7 +15,6 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
-import Navbar from '../components/common/Navbar';
 
 function ProviderDashboard() {
   const { user } = useAuth();
@@ -193,7 +192,6 @@ function ProviderDashboard() {
   if (loading) {
     return (
       <div className='min-h-screen flex flex-col bg-gradient-to-br from-[#FCF8F4] via-[#F8F6F0] to-[#F0F4FC]'>
-        <Navbar />
         <div className='flex-1 flex items-center justify-center'>
           <div className='text-center'>
             <div className='relative'>
@@ -212,7 +210,6 @@ function ProviderDashboard() {
   if (error) {
     return (
       <div className='min-h-screen flex flex-col bg-gradient-to-br from-[#FCF8F4] via-[#F8F6F0] to-[#F0F4FC]'>
-        <Navbar />
         <div className='flex-1 flex items-center justify-center'>
           <div className='text-center bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-lg'>
             <div className='text-red-500 text-4xl mb-4 animate-bounce'>⚠️</div>
@@ -234,8 +231,6 @@ function ProviderDashboard() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-[#FCF8F4] via-[#F8F6F0] to-[#F0F4FC]'>
-      <Navbar />
-
       <div className='max-w-6xl mx-auto px-4 py-8 mt-20'>
         {/* Header Section */}
         <div className='mb-8 text-center'>
