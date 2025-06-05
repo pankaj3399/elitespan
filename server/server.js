@@ -24,15 +24,16 @@ connectDB();
 
 const app = express();
 
+app.use(cors());
+
+app.use(express.json());
 // Middleware to log incoming requests
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-app.use(express.json());
 
-app.use(cors());
 
 // Routes
 app.use('/api/waitlist', waitlistRoutes);
