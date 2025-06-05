@@ -1,15 +1,11 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
 const cors = require('cors');
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Route imports
-const waitlistRoutes = require('./routes/waitlistRoutes');
 const userRoutes = require('./routes/userRoutes');
-const doctorRoutes = require('./routes/doctorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
 const adminPanelRoutes = require('./routes/adminPanelRoutes');
 const promoCodeRoutes = require('./routes/promoCodeRoutes');
 const providerRoutes = require('./routes/providerRoutes.js');
@@ -19,9 +15,6 @@ const emailRoutes = require('./routes/emailRoutes');
 // Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
-connectDB();
-
 const app = express();
 
 // Middleware to log incoming requests
@@ -30,16 +23,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Body parser middleware
 app.use(express.json());
 
+// CORS configuration
 app.use(cors());
 
 // Routes
-app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/doctors', doctorRoutes);
 app.use('/api/admins', adminRoutes);
-app.use('/api/payments', paymentRoutes);
 app.use('/api/admin-panel', adminPanelRoutes);
 app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/provider-info', providerRoutes);
@@ -51,6 +43,7 @@ app.get('/', (req, res) => {
   res.send('Backend API is running on Vercel');
 });
 
+// Connect to MongoDB (for serverless, connection happens on each request)
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -58,15 +51,14 @@ mongoose
   })
   .then(() => {
     console.log('MongoDB connected');
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   })
   .catch((err) => {
-    console.error('MongoDB connection error:', err);
+    console.error('MongoDB connection error:', error);
     process.exit(1);
   });
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 module.exports = app;
