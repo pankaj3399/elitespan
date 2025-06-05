@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 // Route imports
 const waitlistRoutes = require('./routes/waitlistRoutes');
@@ -49,7 +49,7 @@ app.get('/', (req, res) => {
   res.send('Backend API is running on Vercel');
 });
 
-// Connect to MongoDB THEN start server
+// Connect to MongoDB (for serverless, connection happens on each request)
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -57,14 +57,17 @@ mongoose
   })
   .then(() => {
     console.log('MongoDB connected');
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
-    process.exit(1);
   });
+
+// For local development only
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
