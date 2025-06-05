@@ -40,9 +40,9 @@ export const AuthProvider = ({ children }) => {
   const loginUser = (newToken, userData) => {
     console.log('Logging in user:', { newToken, userData });
     setToken(newToken);
-    setUser({ ...userData, role: userData.role || 'customer' });
+    setUser({ ...userData, role: userData.role || 'user' });
     localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify({ ...userData, role: userData.role || 'customer' }));
+    localStorage.setItem('user', JSON.stringify({ ...userData, role: userData.role || 'user' }));
     setAuthToken(newToken);
 
     // Role-based routing
@@ -56,9 +56,7 @@ export const AuthProvider = ({ children }) => {
       console.log('Provider user detected, redirecting to provider/profile');
       navigate('/provider/profile');
     } else {
-      console.log('Customer user logged in');
-      // Optionally redirect regular customers to a default route
-      // navigate('/dashboard'); // Uncomment if you want to redirect customers
+      console.log('User logged in');
     }
   };
 
