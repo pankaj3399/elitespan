@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getProvider } from '../services/api';
-import Navbar from '../components/common/Navbar';
 import { CiMobile2 } from 'react-icons/ci';
 import { FiSend } from 'react-icons/fi';
 import { IoBookmarkOutline, IoClose } from 'react-icons/io5';
@@ -185,7 +184,6 @@ function ProviderProfile() {
   if (loading) {
     return (
       <div className='min-h-screen flex flex-col bg-[#FCF8F4]'>
-        <Navbar />
         <div className='flex-1 flex items-center justify-center'>
           <div className='text-center'>
             <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-[#0C1F6D] mx-auto mb-4'></div>
@@ -200,7 +198,6 @@ function ProviderProfile() {
   if (error) {
     return (
       <div className='min-h-screen flex flex-col bg-[#FCF8F4]'>
-        <Navbar />
         <div className='flex-1 flex items-center justify-center'>
           <div className='text-center'>
             <div className='text-red-500 text-lg mb-4'>⚠️</div>
@@ -224,7 +221,6 @@ function ProviderProfile() {
   if (!provider) {
     return (
       <div className='min-h-screen flex flex-col bg-[#FCF8F4]'>
-        <Navbar />
         <div className='flex-1 flex items-center justify-center'>
           <div className='text-center'>
             <h2 className='text-xl font-semibold text-gray-800 mb-2'>
@@ -252,57 +248,50 @@ function ProviderProfile() {
 
   return (
     <div className='min-h-screen flex flex-col bg-[#FCF8F4]'>
-      <Navbar />
+    {/* Header Section with Two Images Side by Side */}
+<div className='relative w-full h-[75vh] bg-[#F5F5F5] flex flex-col md:flex-row'>
+  {/* Left Image - Doctor Photo */}
+  <div className='w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden'>
+    <img
+      src={headshotDisplayUrl}
+      alt={`${provider.providerName || 'Provider'} - Profile`}
+      className='w-full h-full object-cover object-top'
+      onError={(e) => {
+        e.target.onerror = null;
+        e.target.src =
+          'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=400&fit=crop&crop=center';
+      }}
+    />
+  </div>
 
-      {/* Header Section with Two Images Side by Side */}
-      <div className='relative w-full h-80 bg-[#F5F5F5] flex'>
-        {/* Left Image - Doctor Photo */}
-        <div className='w-1/2 h-full relative'>
-          <img
-            src={headshotDisplayUrl}
-            alt={`${provider.providerName || 'Provider'} - Profile`}
-            className='object-cover w-full h-full'
-            style={{ objectPosition: 'center top' }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=400&fit=crop&crop=center';
-            }}
-          />
-          
-
-        </div>
-
-        {/* Right Side - Gallery Image */}
-        <div className='w-1/2 h-full relative'>
-          {galleryDisplayUrl && !galleryImageError ? (
-            <img
-              src={galleryDisplayUrl}
-              alt='Office/Procedures by provider'
-              className='w-full h-full object-cover'
-              onError={() => {
-                console.warn(
-                  `Failed to load gallery image: ${galleryDisplayUrl}`
-                );
-                setGalleryImageError(true);
-              }}
-            />
-          ) : (
-            <div className='w-full h-full bg-gray-200 flex items-center justify-center'>
-              <span className='text-gray-400 text-center'>
-                Office Photo
-                <br />
-                [Not Available]
-              </span>
-            </div>
-          )}
-          
-          {/* All Photos Button - positioned on right side */}
-          <button className='absolute bottom-4 right-4 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-lg hover:bg-gray-50'>
-            All Photos (0)
-          </button>
-        </div>
+  {/* Right Side - Gallery Image */}
+  <div className='w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden'>
+    {galleryDisplayUrl && !galleryImageError ? (
+      <img
+        src={galleryDisplayUrl}
+        alt='Office/Procedures by provider'
+        className='w-full h-full object-cover object-center'
+        onError={() => {
+          console.warn(
+            `Failed to load gallery image: ${galleryDisplayUrl}`
+          );
+          setGalleryImageError(true);
+        }}
+      />
+    ) : (
+      <div className='w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-500 text-sm text-center leading-relaxed'>
+        Office Photo
+        <br />
+        [Not Available]
       </div>
+    )}
+    
+    {/* All Photos Button - positioned on right side */}
+    <button className='absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-white/20 hover:bg-white hover:-translate-y-0.5 transition-all duration-200'>
+      All Photos (0)
+    </button>
+  </div>
+</div>
 
       {/* Reviews Modal */}
       {showReviewsModal && (
