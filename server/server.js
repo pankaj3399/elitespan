@@ -1,8 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
 const cors = require('cors');
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Route imports
 const waitlistRoutes = require('./routes/waitlistRoutes');
@@ -19,21 +18,19 @@ const emailRoutes = require('./routes/emailRoutes');
 // Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
-connectDB();
-
 const app = express();
 
-app.use(cors());
-
-app.use(express.json());
 // Middleware to log incoming requests
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
+// CORS configuration
+app.use(cors());
 
+// Body parser middleware
+app.use(express.json());
 
 // Routes
 app.use('/api/waitlist', waitlistRoutes);
@@ -52,6 +49,7 @@ app.get('/', (req, res) => {
   res.send('Backend API is running on Vercel');
 });
 
+// Connect to MongoDB THEN start server
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -59,15 +57,14 @@ mongoose
   })
   .then(() => {
     console.log('MongoDB connected');
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
   });
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 module.exports = app;
