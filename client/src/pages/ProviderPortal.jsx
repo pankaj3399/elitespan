@@ -43,6 +43,14 @@ function ProviderPortal() {
       [name]: value,
     }));
 
+    // Clear server-side errors when user starts typing
+    if (errors[name] && (errors[name].includes('already exists') || errors[name].includes('already registered'))) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+
     // Real-time validation
     if (name !== 'suite') {
       // Suite is optional
@@ -166,63 +174,82 @@ function ProviderPortal() {
       navigate('/qualifications');
     } catch (error) {
       console.error('Error submitting provider info:', error.message);
-      alert('Error saving provider information. Please try again.');
+      console.error('Full error object:', error);
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      
+      // Handle server-side validation errors
+      if (error.response && error.response.status === 400) {
+        const serverError = error.response.data;
+        const errorMessage = serverError.message || error.message;
+        
+        console.log('Processing server error:', errorMessage);
+        
+        // Handle specific duplicate field errors
+        if (errorMessage === 'Email already exists' || 
+            errorMessage === 'User with this email already exists') {
+          console.log('Setting email error');
+          setErrors(prev => ({
+            ...prev,
+            email: 'This email address is already registered. Please use a different email.'
+          }));
+          return; // Don't show alert if we set field error
+        } else if (errorMessage === 'NPI Number already exists') {
+          console.log('Setting NPI error');
+          setErrors(prev => ({
+            ...prev,
+            npiNumber: 'This NPI Number is already registered. Please verify your NPI Number.'
+          }));
+          return; // Don't show alert if we set field error
+        } else if (errorMessage === 'Provider with this information already exists') {
+          // Generic duplicate error - could be either field
+          alert('A provider with this information already exists. Please check your email and NPI Number.');
+          return;
+        } else if (serverError.errors) {
+          // Handle field-specific validation errors from server
+          const serverErrors = {};
+          Object.keys(serverError.errors).forEach(field => {
+            serverErrors[field] = serverError.errors[field];
+          });
+          setErrors(prev => ({ ...prev, ...serverErrors }));
+          return;
+        } else {
+          // Generic error message
+          alert(errorMessage || 'Error saving provider information. Please try again.');
+          return;
+        }
+      } else if (error.message && (
+          error.message === 'Email already exists' || 
+          error.message === 'User with this email already exists')) {
+        // Handle case where error message is directly in error.message
+        console.log('Setting email error from error.message');
+        setErrors(prev => ({
+          ...prev,
+          email: 'This email address is already registered. Please use a different email.'
+        }));
+        return;
+      } else if (error.message && error.message === 'NPI Number already exists') {
+        console.log('Setting NPI error from error.message');
+        setErrors(prev => ({
+          ...prev,
+          npiNumber: 'This NPI Number is already registered. Please verify your NPI Number.'
+        }));
+        return;
+      } else {
+        // Network or other errors
+        alert('Error saving provider information. Please check your connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const states = [
-    'AL',
-    'AK',
-    'AZ',
-    'AR',
-    'CA',
-    'CO',
-    'CT',
-    'DE',
-    'FL',
-    'GA',
-    'HI',
-    'ID',
-    'IL',
-    'IN',
-    'IA',
-    'KS',
-    'KY',
-    'LA',
-    'ME',
-    'MD',
-    'MA',
-    'MI',
-    'MN',
-    'MS',
-    'MO',
-    'MT',
-    'NE',
-    'NV',
-    'NH',
-    'NJ',
-    'NM',
-    'NY',
-    'NC',
-    'ND',
-    'OH',
-    'OK',
-    'OR',
-    'PA',
-    'RI',
-    'SC',
-    'SD',
-    'TN',
-    'TX',
-    'UT',
-    'VT',
-    'VA',
-    'WA',
-    'WV',
-    'WI',
-    'WY',
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
   ];
 
   return (
@@ -449,9 +476,7 @@ function ProviderPortal() {
                 </div>
               </div>
 
-              {/* Rest of the form fields remain the same... */}
-              {/* NPI Number, Address, Suite, City/State/ZIP grid */}
-
+              {/* NPI Number */}
               <div>
                 <label
                   htmlFor='npiNumber'
@@ -491,6 +516,7 @@ function ProviderPortal() {
                 )}
               </div>
 
+              {/* Address */}
               <div>
                 <label
                   htmlFor='address'
@@ -520,6 +546,7 @@ function ProviderPortal() {
                 )}
               </div>
 
+              {/* Suite */}
               <div>
                 <label
                   htmlFor='suite'
@@ -538,6 +565,7 @@ function ProviderPortal() {
                 />
               </div>
 
+              {/* City, State, ZIP */}
               <div className='grid grid-cols-1 sm:grid-cols-4 gap-6'>
                 <div className='sm:col-span-2'>
                   <label
