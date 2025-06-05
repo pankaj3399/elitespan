@@ -249,7 +249,7 @@ function ProviderProfile() {
   return (
     <div className='min-h-screen flex flex-col bg-[#FCF8F4]'>
     {/* Header Section with Two Images Side by Side */}
-<div className='relative w-full h-[70vh] bg-[#F5F5F5] flex flex-col md:flex-row'>
+<div className='relative w-full h-[75vh] bg-[#F5F5F5] flex flex-col md:flex-row'>
   {/* Left Image - Doctor Photo */}
   <div className='w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden'>
     <img
