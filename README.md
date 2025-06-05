@@ -79,3 +79,61 @@
    - Name: www
    - Value: your-domain.com
    - TTL: default
+
+
+### 4. Install docker and docker-compose on ec2 (One-Time Setup on EC2):
+To make your GitHub Actions CI/CD flow work **successfully on EC2**, you only need to **manually install Docker and Docker Compose once** before your first deployment.
+
+#### 🔧 Here's What You Need to Do (One-Time Setup)
+
+You can SSH into your EC2 :
+
+Here’s how to **SSH into your EC2 instance directly from the AWS dashboard (GUI)** using the **“Connect”** option:
+
+#### Steps to Connect via AWS EC2 Dashboard:
+
+1. **Go to EC2 Dashboard:**
+
+   * Visit: [https://console.aws.amazon.com/ec2](https://console.aws.amazon.com/ec2)
+
+2. **Click “Instances”** in the left sidebar.
+
+3. **Select your EC2 instance** by clicking the checkbox next to it.
+
+4. **Click the “Connect” button** at the top.
+
+5. In the **Connect to instance** page:
+
+   * Select the **“EC2 Instance Connect (browser-based SSH)”** tab (it's selected by default).
+   * Leave default username (e.g., `ec2-user` for Amazon Linux or `ubuntu` for Ubuntu).
+   * Click the **orange “Connect”** button at the bottom.
+
+6. A new browser tab will open with a terminal session to your instance.
+
+#### after this, run these commands in the console(browser-based) one by one :
+
+```bash
+# 1. Update package list
+sudo apt update
+
+# 2. Install Docker
+sudo apt install -y docker.io
+
+# 3. Enable and start Docker
+sudo systemctl enable docker
+sudo systemctl start docker
+
+
+# You'll need to re-login or run: newgrp docker
+
+# 5. Install Docker Compose
+DOCKER_COMPOSE_VERSION="2.24.0"  # Check https://github.com/docker/compose/releases for latest
+sudo curl -L "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
+  -o /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+# 6. Confirm installation
+docker --version
+docker-compose --version
+```
