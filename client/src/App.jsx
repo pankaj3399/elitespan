@@ -80,7 +80,17 @@ const AppContent = () => {
           <Route path='/completion' element={<Completion />} />
           <Route
             path='/provider-profile/:providerId'
-            element={<ProviderProfile />}
+            element={
+              <ProtectedRoute
+                redirectAction={() =>
+                  toast.error(
+                    'You must be logged in to view provider profiles.'
+                  )
+                }
+              >
+                <ProviderProfile />
+              </ProtectedRoute>
+            }
           />
           <Route
             path='/provider/profile'
