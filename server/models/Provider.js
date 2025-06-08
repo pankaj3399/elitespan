@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// Review subdocument schema
+// Review subdocument schema (kept for future use elsewhere)
 const reviewSchema = new mongoose.Schema(
   {
     clientName: {
@@ -37,7 +37,7 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// State License subdocument schema 
+// State License subdocument schema
 const stateLicenseSchema = new mongoose.Schema(
   {
     state: {
@@ -79,11 +79,18 @@ const providerSchema = new mongoose.Schema(
     educationAndTraining: { type: [String], default: [] },
     stateLicenses: { type: [stateLicenseSchema], default: [] },
 
-    // Images/Files 
+    // Images/Files
     headshotUrl: String,
     galleryUrl: String,
 
-    // Embedded Reviews
+    // Practice Description (NEW FIELD)
+    practiceDescription: {
+      type: String,
+      maxlength: 1000,
+      trim: true,
+    },
+
+    // Embedded Reviews (kept for future use elsewhere)
     reviews: [reviewSchema],
 
     isProfileComplete: { type: Boolean, default: false },
@@ -101,7 +108,7 @@ providerSchema.index({ email: 1 });
 providerSchema.index({ isActive: 1, isApproved: 1 });
 providerSchema.index({ 'reviews.satisfactionRating': 1 });
 providerSchema.index({ 'reviews.isActive': 1, 'reviews.isApproved': 1 });
-providerSchema.index({ 'stateLicenses.state': 1 }); // NEW INDEX
+providerSchema.index({ 'stateLicenses.state': 1 });
 
 // Virtual for full address
 providerSchema.virtual('fullAddress').get(function () {
@@ -150,16 +157,22 @@ providerSchema.methods.checkProfileCompletion = function () {
   const hasQualifications =
     this.specialties.length > 0 || this.boardCertifications.length > 0;
   const hasImages = this.headshotUrl && this.galleryUrl;
-  // Add check for at least one state license - NEW
   const hasStateLicenses = this.stateLicenses.length > 0;
+  // Add check for practice description - NEW
+  const hasPracticeDescription =
+    this.practiceDescription && this.practiceDescription.trim().length > 0;
 
   this.isProfileComplete =
-    hasBasicInfo && hasQualifications && hasImages && hasStateLicenses;
+    hasBasicInfo &&
+    hasQualifications &&
+    hasImages &&
+    hasStateLicenses &&
+    hasPracticeDescription;
 
   return this.isProfileComplete;
 };
 
-// Method to add reviews from Excel data
+// Method to add reviews from Excel data (kept for future use)
 providerSchema.methods.addReviewsFromExcel = function (reviewsData) {
   // Clear existing reviews
   this.reviews = [];

@@ -180,6 +180,37 @@ function ProviderProfile() {
     }`.replace(/,\s*$/, ''); // Ensure no trailing commas
   };
 
+  // NEW: Helper function to get practice description or fallback
+  const getPracticeDescription = () => {
+    if (provider?.practiceDescription && provider.practiceDescription.trim()) {
+      return provider.practiceDescription;
+    }
+
+    // Fallback to auto-generated description if no practice description
+    let description = `Meet ${provider?.providerName || 'this provider'}.`;
+
+    if (
+      provider?.boardCertifications &&
+      provider.boardCertifications.length > 0
+    ) {
+      description += ` Board certified in ${provider.boardCertifications.join(
+        ', '
+      )}.`;
+    }
+
+    if (provider?.specialties && provider.specialties.length > 0) {
+      description += ` Specializing in ${provider.specialties.join(', ')}.`;
+    }
+
+    description += ` ${
+      provider?.practiceName || 'Their practice'
+    } is committed to providing exceptional healthcare services to patients in ${
+      provider?.city || 'this city'
+    }, ${provider?.state || 'N/A'}.`;
+
+    return description;
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -248,50 +279,50 @@ function ProviderProfile() {
 
   return (
     <div className='min-h-screen flex flex-col bg-[#FCF8F4]'>
-    {/* Header Section with Two Images Side by Side */}
-<div className='relative w-full h-[75vh] bg-[#F5F5F5] flex flex-col md:flex-row'>
-  {/* Left Image - Doctor Photo */}
-  <div className='w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden'>
-    <img
-      src={headshotDisplayUrl}
-      alt={`${provider.providerName || 'Provider'} - Profile`}
-      className='w-full h-full object-cover object-top'
-      onError={(e) => {
-        e.target.onerror = null;
-        e.target.src =
-          'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=400&fit=crop&crop=center';
-      }}
-    />
-  </div>
+      {/* Header Section with Two Images Side by Side */}
+      <div className='relative w-full h-[75vh] bg-[#F5F5F5] flex flex-col md:flex-row'>
+        {/* Left Image - Doctor Photo */}
+        <div className='w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden'>
+          <img
+            src={headshotDisplayUrl}
+            alt={`${provider.providerName || 'Provider'} - Profile`}
+            className='w-full h-full object-cover object-top'
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src =
+                'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=400&fit=crop&crop=center';
+            }}
+          />
+        </div>
 
-  {/* Right Side - Gallery Image */}
-  <div className='w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden'>
-    {galleryDisplayUrl && !galleryImageError ? (
-      <img
-        src={galleryDisplayUrl}
-        alt='Office/Procedures by provider'
-        className='w-full h-full object-cover object-center'
-        onError={() => {
-          console.warn(
-            `Failed to load gallery image: ${galleryDisplayUrl}`
-          );
-          setGalleryImageError(true);
-        }}
-      />
-    ) : (
-      <div className='w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-500 text-sm text-center leading-relaxed'>
-        Office Photo
-        <br />
-        [Not Available]
+        {/* Right Side - Gallery Image */}
+        <div className='w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden'>
+          {galleryDisplayUrl && !galleryImageError ? (
+            <img
+              src={galleryDisplayUrl}
+              alt='Office/Procedures by provider'
+              className='w-full h-full object-cover object-center'
+              onError={() => {
+                console.warn(
+                  `Failed to load gallery image: ${galleryDisplayUrl}`
+                );
+                setGalleryImageError(true);
+              }}
+            />
+          ) : (
+            <div className='w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-500 text-sm text-center leading-relaxed'>
+              Office Photo
+              <br />
+              [Not Available]
+            </div>
+          )}
+
+          {/* All Photos Button - positioned on right side */}
+          <button className='absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-white/20 hover:bg-white hover:-translate-y-0.5 transition-all duration-200'>
+            All Photos (0)
+          </button>
+        </div>
       </div>
-    )}
-    
-    {/* All Photos Button - positioned on right side */}
-    <button className='absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-gray-700 px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-white/20 hover:bg-white hover:-translate-y-0.5 transition-all duration-200'>
-      All Photos (0)
-    </button>
-  </div>
-</div>
 
       {/* Reviews Modal */}
       {showReviewsModal && (
@@ -408,7 +439,9 @@ function ProviderProfile() {
                     allowFullScreen={true}
                     loading='lazy'
                     referrerPolicy='no-referrer-when-downgrade'
-                    title={`Map showing ${provider.practiceName || 'Practice'} location`}
+                    title={`Map showing ${
+                      provider.practiceName || 'Practice'
+                    } location`}
                     sandbox='allow-scripts allow-same-origin allow-popups allow-forms'
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -437,7 +470,7 @@ function ProviderProfile() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className='flex justify-between items-start mb-4'>
                   <div>
                     <div className='text-base text-[#333333] mb-1 font-karla'>
@@ -471,7 +504,7 @@ function ProviderProfile() {
 
           {/* Right Content: About, Reviews, Education */}
           <div className='lg:col-span-2 space-y-8 mt-24'>
-            {/* About Section - No white box, directly on background */}
+            {/* About Section - UPDATED to show practice description */}
             <div className='p-6'>
               <div className='text-[20px] font-[500] text-[#061140] mb-2 leading-[26px] font-montserrat'>
                 About Dr.{' '}
@@ -479,22 +512,8 @@ function ProviderProfile() {
                   ? provider.providerName.split(' ').pop()
                   : 'Provider'}
               </div>
-              <div className='text-[#484848]/80 mb-4 text-base font-karla'>
-                Meet {provider.providerName || 'this provider'}.{' '}
-                {provider.boardCertifications &&
-                provider.boardCertifications.length > 0
-                  ? `Board certified in ${provider.boardCertifications.join(
-                      ', '
-                    )}.`
-                  : ''}{' '}
-                {provider.specialties && provider.specialties.length > 0
-                  ? `Specializing in ${provider.specialties.join(', ')}.`
-                  : ''}
-                <br />
-                <br />
-                {provider.practiceName || 'Their practice'} is committed to
-                providing exceptional healthcare services to patients in{' '}
-                {provider.city || 'this city'}, {provider.state || 'N/A'}.
+              <div className='text-[#484848]/80 mb-4 text-base font-karla leading-relaxed'>
+                {getPracticeDescription()}
               </div>
               <div className='mb-4'>
                 <div className='font-[500] text-[#061140] mb-1 font-montserrat'>
@@ -638,20 +657,29 @@ function ProviderProfile() {
                 <div className='text-[#484848]/80'>
                   {provider.npiNumber || 'N/A'}
                 </div>
-                  {provider.stateLicenses && provider.stateLicenses.length > 0 && (
+                {provider.stateLicenses &&
+                  provider.stateLicenses.length > 0 && (
                     <>
-                      <div><strong className='text-[#333333]'>State Licenses</strong></div>
+                      <div>
+                        <strong className='text-[#333333]'>
+                          State Licenses
+                        </strong>
+                      </div>
                       <div className='text-[#484848]/80'>
                         {provider.stateLicenses.map((license, index) => (
                           <div key={index} className='mb-2'>
                             <div className='font-medium'>{license.state}</div>
-                            <div className='text-sm'>DEA: {license.deaNumber}</div>
-                            <div className='text-sm'>License: {license.licenseNumber}</div>
+                            <div className='text-sm'>
+                              DEA: {license.deaNumber}
+                            </div>
+                            <div className='text-sm'>
+                              License: {license.licenseNumber}
+                            </div>
                           </div>
                         ))}
                       </div>
                     </>
-                )}
+                  )}
               </div>
             </div>
 

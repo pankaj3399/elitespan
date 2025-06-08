@@ -55,7 +55,7 @@ const upload = multer({
   },
 });
 
-// Create new provider (Step 1: Basic Info) - UPDATED TO CREATE USER TOO
+// Create new provider (Step 1: Basic Info)
 router.post('/', async (req, res) => {
   try {
     const { password, confirmPassword, ...providerData } = req.body;
@@ -240,12 +240,11 @@ router.put('/:id/qualifications', async (req, res) => {
   }
 });
 
-// Rest of the routes remain the same...
-// Update provider images (Step 2)
+// Update provider images and practice description (Step 3) - UPDATED
 router.put('/:id/images', async (req, res) => {
   try {
     const { id } = req.params;
-    const { headshotUrl, galleryUrl } = req.body;
+    const { headshotUrl, galleryUrl, practiceDescription } = req.body;
 
     const updateData = {};
     if (headshotUrl !== undefined) {
@@ -254,6 +253,10 @@ router.put('/:id/images', async (req, res) => {
     if (galleryUrl !== undefined) {
       updateData.galleryUrl = galleryUrl;
     }
+    // NEW: Handle practice description
+    if (practiceDescription !== undefined) {
+      updateData.practiceDescription = practiceDescription.trim();
+    }
 
     if (Object.keys(updateData).length === 0) {
       const currentProvider = await Provider.findById(id);
@@ -261,7 +264,7 @@ router.put('/:id/images', async (req, res) => {
         return res.status(404).json({ message: 'Provider not found' });
       }
       return res.status(200).json({
-        message: 'No new image information provided. Current data returned.',
+        message: 'No new information provided. Current data returned.',
         provider: prepareProviderForResponse(currentProvider),
       });
     }
@@ -277,12 +280,21 @@ router.put('/:id/images', async (req, res) => {
     }
 
     res.status(200).json({
-      message: 'Images saved successfully',
+      message: 'Profile content saved successfully',
       provider: prepareProviderForResponse(updatedProvider),
     });
   } catch (error) {
-    console.error('Error saving images:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error saving profile content:', error);
+
+    if (error.name === 'ValidationError') {
+      const errors = {};
+      Object.keys(error.errors).forEach((key) => {
+        errors[key] = error.errors[key].message;
+      });
+      return res.status(400).json({ message: 'Validation failed', errors });
+    }
+
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -317,6 +329,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// KEPT: Upload reviews (for future use elsewhere in the app)
 router.post(
   '/:providerId/upload-reviews',
   upload.single('reviewsFile'),
@@ -447,7 +460,7 @@ router.post(
   }
 );
 
-// Get provider with reviews
+// KEPT: Get provider with reviews (for future use elsewhere)
 router.get('/:providerId/reviews', async (req, res) => {
   try {
     const { providerId } = req.params;
