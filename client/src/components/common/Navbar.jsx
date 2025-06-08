@@ -135,7 +135,7 @@ const Navbar = () => {
                     style={{ fontFamily: 'Karla' }}
                     className='text-[#0B0757] text-sm'
                   >
-                    Welcome, {user.name}
+                    Hi, {user.name}
                   </span>
                   <button
                     onClick={handleLogout}
@@ -208,7 +208,7 @@ const Navbar = () => {
                   style={{ fontFamily: 'Karla' }}
                   className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2'
                 >
-                  About Elite
+                  About Us
                 </Link>
                 <Link
                   to='/faq'
@@ -239,7 +239,7 @@ const Navbar = () => {
                         style={{ fontFamily: 'Karla' }}
                         className='text-[#0B0757] text-sm mb-4'
                       >
-                        Welcome, {user.name}
+                        Hi, {user.name}
                       </div>
                       <button
                         onClick={handleLogout}
