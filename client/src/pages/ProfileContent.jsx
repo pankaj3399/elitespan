@@ -2,14 +2,13 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import StyledFileInput from '../components/common/StyledFileInput';
 import { MdOutlineFileUpload } from 'react-icons/md';
-import { IoMdArrowDown } from 'react-icons/io';
 import {
   getUploadSignature,
   uploadToS3,
   saveImageUrls,
-  uploadReviewsExcel,
   sendProviderSignupNotification,
   getProvider,
+  sendProviderWelcomeEmail,
 } from '../services/api';
 
 function ProfileContent() {
@@ -19,9 +18,9 @@ function ProfileContent() {
   const [uploadedFiles, setUploadedFiles] = useState({
     headshot: null,
     gallery: null,
-    reviews: null,
   });
 
+  const [practiceDescription, setPracticeDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -44,17 +43,6 @@ function ProfileContent() {
       !['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)
     ) {
       alert('Only JPG/PNG image files are allowed for this field.');
-      return;
-    }
-
-    if (
-      field === 'reviews' &&
-      ![
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-excel',
-      ].includes(file.type)
-    ) {
-      alert('Only .xls/.xlsx files are allowed for Client Reviews.');
       return;
     }
 
@@ -85,122 +73,119 @@ function ProfileContent() {
     return key;
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitted(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitted(true);
 
-  if (!providerId) {
-    alert('Provider ID not found. Please start from the beginning.');
-    navigate('/provider-portal');
-    return;
-  }
-
-  const { headshot, gallery, reviews } = uploadedFiles;
-
-  if (!headshot || !gallery || !reviews) {
-    alert('Please upload all required files before continuing.');
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    // Upload images to S3 (headshot and gallery only)
-    const [headshotKey, galleryKey] = await Promise.all([
-      uploadFile(headshot),
-      uploadFile(gallery),
-    ]);
-
-    console.log('Uploaded S3 keys:', { headshotKey, galleryKey }); // Debug log
-
-    // Save the image URLs to the provider record
-    const updatedProvider = await saveImageUrls(providerId, {
-      headshotUrl: headshotKey,
-      galleryUrl: galleryKey,
-    });
-
-    console.log('Updated provider response:', updatedProvider); // Debug log
-
-    // Verify images were saved successfully
-    if (!updatedProvider.provider) {
-      throw new Error('Failed to save images - no provider data returned');
+    if (!providerId) {
+      alert('Provider ID not found. Please start from the beginning.');
+      navigate('/provider-portal');
+      return;
     }
 
-    const savedProvider = updatedProvider.provider;
-    console.log('Saved provider images:', {
-      headshotUrl: savedProvider.headshotUrl,
-      galleryUrl: savedProvider.galleryUrl
-    }); // Debug log
+    const { headshot, gallery } = uploadedFiles;
 
-    // Verify the images were actually saved
-    if (!savedProvider.headshotUrl || !savedProvider.galleryUrl) {
-      throw new Error('Images were not properly saved to provider record');
+    if (!headshot || !gallery) {
+      alert(
+        'Please upload both headshot and gallery images before continuing.'
+      );
+      return;
     }
 
-    // Process the Excel reviews file directly
+    if (!practiceDescription.trim()) {
+      alert('Please provide a practice description before continuing.');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const reviewsResult = await uploadReviewsExcel(providerId, reviews);
+      // Upload images to S3
+      const [headshotKey, galleryKey] = await Promise.all([
+        uploadFile(headshot),
+        uploadFile(gallery),
+      ]);
 
-      // Show success message with details
-      if (reviewsResult.warnings) {
-        alert(
-          `Files uploaded successfully! ${reviewsResult.reviewsAdded} reviews were processed. ${reviewsResult.warnings.message}`
-        );
-      } else {
-        alert(
-          `Files uploaded successfully! ${reviewsResult.reviewsAdded} reviews were processed.`
+      console.log('Uploaded S3 keys:', { headshotKey, galleryKey }); // Debug log
+
+      // Save the image URLs and practice description to the provider record
+      const updatedProvider = await saveImageUrls(providerId, {
+        headshotUrl: headshotKey,
+        galleryUrl: galleryKey,
+        practiceDescription: practiceDescription.trim(),
+      });
+
+      console.log('Updated provider response:', updatedProvider); // Debug log
+
+      // Verify images were saved successfully
+      if (!updatedProvider.provider) {
+        throw new Error(
+          'Failed to save profile content - no provider data returned'
         );
       }
-    } catch (reviewError) {
-      console.error('Error processing reviews:', reviewError);
-      alert(
-        `Images uploaded successfully, but there was an issue processing the reviews file: ${reviewError.message}. Please check the file format and try again.`
-      );
+
+      const savedProvider = updatedProvider.provider;
+      console.log('Saved provider content:', {
+        headshotUrl: savedProvider.headshotUrl,
+        galleryUrl: savedProvider.galleryUrl,
+        practiceDescription: savedProvider.practiceDescription,
+      }); // Debug log
+
+      // Verify the content was actually saved
+      if (!savedProvider.headshotUrl || !savedProvider.galleryUrl) {
+        throw new Error('Images were not properly saved to provider record');
+      }
+
+      // Show success message
+      alert('Profile content uploaded successfully!');
+
+      // Send provider signup notification email using the updated provider data
+      try {
+        console.log('📧 Starting provider signup notification process...');
+
+        // Use the updated provider data we just received instead of fetching again
+        const providerData = {
+          id: providerId,
+          name: savedProvider.providerName || 'Name not available',
+          email: savedProvider.email || 'Email not available',
+          practiceName:
+            savedProvider.practiceName || 'Practice name not available',
+          phone: savedProvider.phone || 'Phone not provided',
+          specialties: savedProvider.specialties || [],
+          address: savedProvider.address || 'Address not provided',
+          certifications: savedProvider.boardCertifications || [],
+          npiNumber: savedProvider.npiNumber || 'NPI not provided',
+          hospitalAffiliations: savedProvider.hospitalAffiliations || [],
+          educationAndTraining: savedProvider.educationAndTraining || [],
+          practiceDescription:
+            savedProvider.practiceDescription || 'No description provided',
+        };
+
+        await sendProviderSignupNotification(providerData);
+        await sendProviderWelcomeEmail(savedProvider._id);
+      } catch (emailError) {
+        console.error(
+          '❌ Failed to send provider signup notification:',
+          emailError
+        );
+        console.warn(
+          '⚠️ Continuing with registration process despite email failure'
+        );
+        // Don't fail the process if email fails
+      }
+
+      // Clear the provider ID as the process is complete
+      localStorage.removeItem('providerId');
+
+      navigate('/completion');
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert(`Upload failed: ${err.message}. Please try again.`);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Send provider signup notification email using the updated provider data
-    try {
-      console.log('📧 Starting provider signup notification process...');
-      
-      // Use the updated provider data we just received instead of fetching again
-      const providerData = {
-        id: providerId,
-        name: savedProvider.providerName || 'Name not available',
-        email: savedProvider.email || 'Email not available',
-        practiceName: savedProvider.practiceName || 'Practice name not available',
-        phone: savedProvider.phone || 'Phone not provided',
-        specialties: savedProvider.specialties || [],
-        address: savedProvider.address || 'Address not provided',
-        certifications: savedProvider.boardCertifications || [],
-        npiNumber: savedProvider.npiNumber || 'NPI not provided',
-        hospitalAffiliations: savedProvider.hospitalAffiliations || [],
-        educationAndTraining: savedProvider.educationAndTraining || [],
-      };
-
-      console.log('👤 Using updated provider data:', providerData);
-
-      console.log('📤 Calling sendProviderSignupNotification...');
-      const notificationResult = await sendProviderSignupNotification(providerData);
-
-      console.log('✅ Provider signup notification sent successfully!');
-      console.log('📨 Notification result:', notificationResult);
-    } catch (emailError) {
-      console.error('❌ Failed to send provider signup notification:', emailError);
-      console.warn('⚠️ Continuing with registration process despite email failure');
-      // Don't fail the process if email fails
-    }
-
-    // Clear the provider ID as the process is complete
-    localStorage.removeItem('providerId');
-
-    navigate('/completion');
-  } catch (err) {
-    console.error('Upload failed:', err);
-    alert(`Upload failed: ${err.message}. Please try again.`);
-  } finally {
-    setLoading(false);
-  }
-};
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-white'>
@@ -251,7 +236,7 @@ const handleSubmit = async (e) => {
                         {
                           0: "Share your practice's name and address details.",
                           1: 'Outline your specialties, certifications, hospital affiliations, and training.',
-                          2: 'Customize your profile with a headshot, image gallery, and customer reviews.',
+                          2: 'Customize your profile with a headshot, image gallery, and practice description.',
                         }[i]
                       }
                     </p>
@@ -303,17 +288,37 @@ const handleSubmit = async (e) => {
                 submitted={submitted}
               />
 
-              <StyledFileInput
-                label='Client Reviews'
-                subLabel='Import .XLS file. Include Client Name, Review, and Satisfaction rating.'
-                onChange={(e) => handleFileSelect('reviews', e.target.files[0])}
-                onClear={() => handleClearFile('reviews')}
-                fileName={uploadedFiles.reviews?.name}
-                Icon={IoMdArrowDown}
-                accept='.xls,.xlsx'
-                isImage={false}
-                submitted={submitted}
-              />
+              <div className='space-y-2'>
+                <label className='block text-sm font-medium text-[#061140]'>
+                  Practice Description
+                </label>
+                <p className='text-xs text-[#484848] mb-2'>
+                  Tell potential patients about your practice, approach, and
+                  what makes you unique.
+                </p>
+                <textarea
+                  value={practiceDescription}
+                  onChange={(e) => setPracticeDescription(e.target.value)}
+                  placeholder='Describe your practice, treatment philosophy, areas of expertise, and what patients can expect when they visit...'
+                  rows={6}
+                  className={`w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#7F92E5] focus:border-transparent resize-none ${
+                    submitted && !practiceDescription.trim()
+                      ? 'border-red-500'
+                      : 'border-gray-300'
+                  }`}
+                  maxLength={1000}
+                />
+                <div className='flex justify-between items-center text-xs text-[#484848]'>
+                  <span>
+                    {submitted && !practiceDescription.trim() && (
+                      <span className='text-red-500'>
+                        Practice description is required
+                      </span>
+                    )}
+                  </span>
+                  <span>{practiceDescription.length}/1000 characters</span>
+                </div>
+              </div>
 
               <div className='grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6'>
                 <div className='col-span-1'>

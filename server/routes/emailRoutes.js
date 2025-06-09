@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const PromoCode = require('../models/PromoCode');
+const Provider = require('../models/Provider');
 const { sendEmail } = require('../config/email');
 const router = express.Router();
 
@@ -128,14 +129,108 @@ router.post('/send-subscription-email', verifyToken, async (req, res) => {
   }
 });
 
+// Endpoint: Send Provider Welcome Email
+router.post('/send-provider-welcome-email', async (req, res) => {
+  try {
+    const { providerId } = req.body;
+
+    if (!providerId) {
+      return res.status(400).json({ message: 'Provider ID is required' });
+    }
+
+    // Fetch provider data from database
+    const provider = await Provider.findById(providerId);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+
+    const supportEmail = process.env.SUPPORT_EMAIL || 'info@elitehealthspan.co';
+
+    const subject =
+      'Welcome to Elite Healthspan – Your Registration is Complete!';
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #0B0757;">Dear ${provider.providerName},</h2>
+        <p style="color: #333; font-size: 16px;">
+          Thank you for registering with Elite Healthspan! We're excited to consider your application to join our network of dedicated healthcare professionals, who are committed to advancing precision medicine.
+        </p>
+        <p style="color: #333; font-size: 16px;">
+          Your registration has been successfully received. Here's what happens next:
+        </p>
+        <ul style="color: #333; font-size: 16px; padding-left: 20px;">
+          <li>Our team will review your information and credentials.</li>
+          <li>You will receive a confirmation email once your profile is verified and activated.</li>
+          <li>Once approved, you'll gain access to your provider dashboard, where you can edit and access exclusive resources.</li>
+        </ul>
+        <p style="color: #333; font-size: 16px;">
+          If you have any questions or need assistance, contact our team at 
+          <a href="mailto:info@elitehealthspan.co" style="color: #0B0757;">info@elitehealthspan.co</a>.
+        </p>
+        <p style="color: #333; font-size: 16px;">
+          Best regards,<br/>
+          The Elite Healthspan Team<br/>
+          <a href="https://www.elitehealthspan.co" style="color: #0B0757;">www.elitehealthspan.co</a><br/>
+          Phone: (203) 987-4449
+        </p>
+        <hr style="border: 1px solid #eee; margin: 20px 0;" />
+        <p style="color: #666; font-size: 12px; text-align: center;">
+          Please do not reply to this email if you have already contacted support. This is an automated message.
+        </p>
+        <p style="color: #666; font-size: 12px; text-align: center;">
+          © ${new Date().getFullYear()} Elite Healthspan. All rights reserved.
+        </p>
+      </div>
+    `;
+
+    const textContent = `
+      Dear ${provider.providerName},
+
+      Thank you for registering with Elite Healthspan! We're excited to consider your application to join our network of dedicated healthcare professionals, who are committed to advancing precision medicine.
+
+      Your registration has been successfully received. Here's what happens next:
+
+      ~ Our team will review your information and credentials.
+      ~ You will receive a confirmation email once your profile is verified and activated.
+      ~ Once approved, you'll gain access to your provider dashboard, where you can edit and access exclusive resources.
+
+      If you have any questions or need assistance, contact our team at info@elitehealthspan.co.
+
+      Best regards,
+      The Elite Healthspan Team
+      www.elitehealthspan.co
+      Phone: (203) 987-4449
+
+      Please do not reply to this email if you have already contacted support. This is an automated message.
+
+      © ${new Date().getFullYear()} Elite Healthspan. All rights reserved.
+    `;
+
+    await sendEmail(provider.email, subject, textContent, htmlContent);
+
+    console.log(
+      `Provider welcome email sent successfully to ${provider.email}`
+    );
+    res
+      .status(200)
+      .json({ message: 'Provider welcome email sent successfully' });
+  } catch (error) {
+    console.error('Error sending provider welcome email:', error);
+    res.status(500).json({
+      message: 'Failed to send provider welcome email',
+      error: error.message,
+    });
+  }
+});
+
 router.post('/provider-signup-notification', async (req, res) => {
   try {
     // Handle both cases: providerId directly or nested provider object
     let providerId;
-    
+
     // Debug: Log what we received
     console.log('📊 Received request body:', JSON.stringify(req.body, null, 2));
-    
+
     if (typeof req.body.providerId === 'string') {
       // Case 1: Frontend sent { providerId: "string_id" }
       providerId = req.body.providerId;
@@ -148,7 +243,7 @@ router.post('/provider-signup-notification', async (req, res) => {
     } else {
       return res.status(400).json({ message: 'Provider ID is required' });
     }
-    
+
     console.log('🔍 Extracted provider ID:', providerId);
 
     if (!providerId) {
@@ -165,16 +260,19 @@ router.post('/provider-signup-notification', async (req, res) => {
     // Always fetch complete provider data from database to ensure we have all fields
     const Provider = require('../models/Provider'); // Adjust path as needed
     const provider = await Provider.findById(providerId);
-    
+
     if (!provider) {
       return res.status(404).json({ message: 'Provider not found' });
     }
-    
+
     // Convert to plain object for easier access
     const completeProviderData = provider.toObject();
 
     // Debug: Log the provider data to see what we're working with
-    console.log('📊 Complete provider data from database:', JSON.stringify(completeProviderData, null, 2));
+    console.log(
+      '📊 Complete provider data from database:',
+      JSON.stringify(completeProviderData, null, 2)
+    );
 
     const subject = 'New Provider Registration - Elite Healthspan';
     const htmlContent = `
@@ -185,23 +283,36 @@ router.post('/provider-signup-notification', async (req, res) => {
         </p>
         <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #0B0757; margin-top: 0;">Provider Details:</h3>
-          <p><strong>Name:</strong> ${completeProviderData.providerName || 'Not provided'}</p>
-          <p><strong>Email:</strong> ${completeProviderData.email || 'Not provided'}</p>
-          <p><strong>Practice Name:</strong> ${completeProviderData.practiceName || 'Not provided'}</p>
-          <p><strong>Address:</strong> ${completeProviderData.address || 'Not provided'}</p>
-          <p><strong>City, State:</strong> ${completeProviderData.city || 'Not provided'}, ${completeProviderData.state || 'Not provided'}</p>
+          <p><strong>Name:</strong> ${
+            completeProviderData.providerName || 'Not provided'
+          }</p>
+          <p><strong>Email:</strong> ${
+            completeProviderData.email || 'Not provided'
+          }</p>
+          <p><strong>Practice Name:</strong> ${
+            completeProviderData.practiceName || 'Not provided'
+          }</p>
+          <p><strong>Address:</strong> ${
+            completeProviderData.address || 'Not provided'
+          }</p>
+          <p><strong>City, State:</strong> ${
+            completeProviderData.city || 'Not provided'
+          }, ${completeProviderData.state || 'Not provided'}</p>
           <p><strong>Specialties:</strong> ${
-            completeProviderData.specialties && completeProviderData.specialties.length > 0
+            completeProviderData.specialties &&
+            completeProviderData.specialties.length > 0
               ? completeProviderData.specialties.join(', ')
               : 'Not provided'
           }</p>
           <p><strong>Hospital Affiliations:</strong> ${
-            completeProviderData.hospitalAffiliations && completeProviderData.hospitalAffiliations.length > 0
+            completeProviderData.hospitalAffiliations &&
+            completeProviderData.hospitalAffiliations.length > 0
               ? completeProviderData.hospitalAffiliations.join(', ')
               : 'Not provided'
           }</p>
           <p><strong>Education & Training:</strong> ${
-            completeProviderData.educationAndTraining && completeProviderData.educationAndTraining.length > 0
+            completeProviderData.educationAndTraining &&
+            completeProviderData.educationAndTraining.length > 0
               ? completeProviderData.educationAndTraining.join(', ')
               : 'Not provided'
           }</p>
@@ -226,19 +337,24 @@ router.post('/provider-signup-notification', async (req, res) => {
       - Email: ${completeProviderData.email || 'Not provided'}
       - Practice Name: ${completeProviderData.practiceName || 'Not provided'}
       - Address: ${completeProviderData.address || 'Not provided'}
-      - City, State: ${completeProviderData.city || 'Not provided'}, ${completeProviderData.state || 'Not provided'}
+      - City, State: ${completeProviderData.city || 'Not provided'}, ${
+      completeProviderData.state || 'Not provided'
+    }
       - Specialties: ${
-        completeProviderData.specialties && completeProviderData.specialties.length > 0
+        completeProviderData.specialties &&
+        completeProviderData.specialties.length > 0
           ? completeProviderData.specialties.join(', ')
           : 'Not provided'
       }
       - Hospital Affiliations: ${
-        completeProviderData.hospitalAffiliations && completeProviderData.hospitalAffiliations.length > 0
+        completeProviderData.hospitalAffiliations &&
+        completeProviderData.hospitalAffiliations.length > 0
           ? completeProviderData.hospitalAffiliations.join(', ')
           : 'Not provided'
       }
       - Education & Training: ${
-        completeProviderData.educationAndTraining && completeProviderData.educationAndTraining.length > 0
+        completeProviderData.educationAndTraining &&
+        completeProviderData.educationAndTraining.length > 0
           ? completeProviderData.educationAndTraining.join(', ')
           : 'Not provided'
       }
@@ -247,13 +363,10 @@ router.post('/provider-signup-notification', async (req, res) => {
 
       © ${new Date().getFullYear()} Elite Healthspan. All rights reserved.
     `;
-
-    console.log('📤 About to send email to:', supportEmail);
-    console.log('📧 Email subject:', subject);
-
     await sendEmail(supportEmail, subject, textContent, htmlContent);
-
-    console.log('✅ Email sent successfully');
+    console.log(
+      `Provider signup notification sent successfully to ${supportEmail}`
+    );
     res
       .status(200)
       .json({ message: 'Provider signup notification sent successfully' });

@@ -433,4 +433,37 @@ export const sendProviderSignupNotification = async (providerData) => {
   }
 };
 
+export const sendProviderWelcomeEmail = async (providerId) => {
+  console.log('🚀 Starting provider welcome email process');
+  console.log('📋 Provider ID:', providerId);
+  
+  try {
+    console.log('📤 Preparing to send POST request to /api/email/send-provider-welcome-email');
+    console.log('🔗 Request URL:', `${BASE_URL}/api/email/send-provider-welcome-email`);
+    console.log('📦 Request payload:', JSON.stringify({ providerId }, null, 2));
+    
+    const response = await api.post('/email/send-provider-welcome-email', { providerId });
+    
+    console.log('📨 Welcome email response received from server');
+    console.log('✅ Response status:', response.status);
+    console.log('📨 Success response data:', JSON.stringify(response.data, null, 2));
+    console.log('🎉 Provider welcome email sent successfully!');
+    
+    return response.data;
+  } catch (error) {
+    console.error('🚨 Error in sendProviderWelcomeEmail:');
+    console.error('❌ Error type:', error.constructor.name);
+    console.error('❌ Error message:', error.message);
+    
+    if (error.response) {
+      console.error('📄 Error response data:', error.response.data);
+      console.error('📊 Error status:', error.response.status);
+    }
+    
+    console.error('📋 Provider ID that failed:', providerId);
+    console.error('⚠️ Re-throwing error for upstream handling');
+    throw new Error(error.response?.data?.message || error.message || 'Failed to send provider welcome email');
+  }
+};
+
 export default api;

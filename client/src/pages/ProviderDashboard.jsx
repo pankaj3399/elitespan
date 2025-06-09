@@ -14,6 +14,7 @@ import {
   ThumbsUp,
   Plus,
   Trash2,
+  FileText,
 } from 'lucide-react';
 
 function ProviderDashboard() {
@@ -25,6 +26,7 @@ function ProviderDashboard() {
     basic: false,
     qualifications: false,
     images: false,
+    description: false, // NEW: Added description edit mode
   });
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
@@ -125,6 +127,12 @@ function ProviderDashboard() {
           updateData = {
             headshotUrl: formData.headshotUrl,
             galleryUrl: formData.galleryUrl,
+          };
+          break;
+        case 'description': // NEW: Handle practice description
+          endpoint = `/api/provider-info/${user.providerId}/images`;
+          updateData = {
+            practiceDescription: formData.practiceDescription,
           };
           break;
       }
@@ -490,6 +498,87 @@ function ProviderDashboard() {
                     {provider?.fullAddress || 'Address not provided'}
                   </p>
                 </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* NEW: Practice Description Section */}
+        <div className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-8 border border-white/20 hover:shadow-2xl transition-all duration-300'>
+          <div className='flex justify-between items-center mb-6'>
+            <div className='flex items-center'>
+              <div className='bg-gradient-to-r from-[#0C1F6D] to-[#7F92E5] p-3 rounded-full mr-4'>
+                <FileText className='text-white' size={24} />
+              </div>
+              <h2 className='text-2xl font-semibold text-[#061140] font-montserrat'>
+                Practice Description
+              </h2>
+            </div>
+            <button
+              onClick={() => handleEditToggle('description')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-200 transform hover:scale-105 ${
+                editMode.description
+                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:shadow-lg'
+                  : 'bg-gradient-to-r from-[#0C1F6D] to-[#1a237e] text-white hover:shadow-lg'
+              }`}
+            >
+              {editMode.description ? <X size={18} /> : <Edit size={18} />}
+              {editMode.description ? 'Cancel' : 'Edit'}
+            </button>
+          </div>
+
+          {editMode.description ? (
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-[#061140] mb-2 font-karla'>
+                  Tell patients about your practice, approach, and what makes
+                  you unique
+                </label>
+                <textarea
+                  value={formData.practiceDescription || ''}
+                  onChange={(e) =>
+                    handleInputChange('practiceDescription', e.target.value)
+                  }
+                  rows={8}
+                  maxLength={1000}
+                  className='w-full px-4 py-3 border border-[#7E7E7E]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0C1F6D] focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm resize-none'
+                  placeholder='Describe your practice, treatment philosophy, areas of expertise, and what patients can expect when they visit...'
+                />
+                <div className='flex justify-between items-center text-xs text-[#484848] mt-1'>
+                  <span></span>
+                  <span>
+                    {(formData.practiceDescription || '').length}/1000
+                    characters
+                  </span>
+                </div>
+              </div>
+
+              <div className='flex justify-end mt-6'>
+                <button
+                  onClick={() => saveSection('description')}
+                  disabled={saving}
+                  className='flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none font-medium'
+                >
+                  <Save size={18} />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className='bg-gradient-to-r from-[#F8F6F0] to-[#FCF8F4] p-6 rounded-xl border border-[#7E7E7E]/20'>
+              <div className='text-[#484848] font-karla leading-relaxed'>
+                {provider?.practiceDescription &&
+                provider.practiceDescription.trim() ? (
+                  <p className='whitespace-pre-wrap'>
+                    {provider.practiceDescription}
+                  </p>
+                ) : (
+                  <p className='text-[#7E7E7E] italic'>
+                    No practice description provided yet. Click "Edit" to add
+                    information about your practice, treatment philosophy, and
+                    what makes you unique.
+                  </p>
+                )}
               </div>
             </div>
           )}
