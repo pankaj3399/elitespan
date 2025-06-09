@@ -8,6 +8,7 @@ import {
   saveImageUrls,
   sendProviderSignupNotification,
   getProvider,
+  sendProviderWelcomeEmail,
 } from '../services/api';
 
 function ProfileContent() {
@@ -160,15 +161,8 @@ function ProfileContent() {
             savedProvider.practiceDescription || 'No description provided',
         };
 
-        console.log('👤 Using updated provider data:', providerData);
-
-        console.log('📤 Calling sendProviderSignupNotification...');
-        const notificationResult = await sendProviderSignupNotification(
-          providerData
-        );
-
-        console.log('✅ Provider signup notification sent successfully!');
-        console.log('📨 Notification result:', notificationResult);
+        await sendProviderSignupNotification(providerData);
+        await sendProviderWelcomeEmail(savedProvider._id);
       } catch (emailError) {
         console.error(
           '❌ Failed to send provider signup notification:',
