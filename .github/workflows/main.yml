@@ -163,7 +163,6 @@ jobs:
                 - AWS_REGION=${AWS_REGION}
                 - EMAIL_SERVICE=sendgrid
                 - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
-                - AWS_S3_BUCKET_URL=${AWS_S3_BUCKET_URL}
                 - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
                 - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
                 - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
@@ -217,7 +216,6 @@ jobs:
           AWS_REGION=${{ secrets.AWS_REGION }}
           EMAIL_SERVICE=sendgrid
           AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
-          AWS_S3_BUCKET_URL=${{ secrets.AWS_S3_BUCKET_URL }}
           STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
           STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}

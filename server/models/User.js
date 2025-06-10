@@ -1,6 +1,6 @@
 // backend/models/User.js
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const contactInfoSchema = new mongoose.Schema({
   phone: { type: String, required: false, trim: true },
@@ -26,13 +26,13 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'provider'],
-    default: 'user',
+    enum: ["user", "provider", "admin"],
+    default: "user",
     required: false,
   },
   providerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Provider',
+    ref: "Provider",
     required: false,
   },
   contactInfo: {
@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
-  isAdmin:{
+  isAdmin: {
     type: Boolean,
     default: false,
   },
@@ -58,4 +58,4 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

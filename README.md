@@ -10,7 +10,6 @@
    - `AWS_ACCESS_KEY_ID`
    - `AWS_REGION`
    - `AWS_S3_BUCKET_NAME`
-   - `AWS_S3_BUCKET_URL`
    - `AWS_SECRET_ACCESS_KEY`
    - `DOCKER_PASSWORD`
    - `DOCKER_USERNAME`
@@ -80,8 +79,8 @@
    - Value: your-domain.com
    - TTL: default
 
-
 ### 4. Install docker and docker-compose on ec2 (One-Time Setup on EC2):
+
 To make your GitHub Actions CI/CD flow work **successfully on EC2**, you only need to **manually install Docker and Docker Compose once** before your first deployment.
 
 #### 🔧 Here's What You Need to Do (One-Time Setup)
@@ -94,7 +93,7 @@ Here’s how to **SSH into your EC2 instance directly from the AWS dashboard (GU
 
 1. **Go to EC2 Dashboard:**
 
-   * Visit: [https://console.aws.amazon.com/ec2](https://console.aws.amazon.com/ec2)
+   - Visit: [https://console.aws.amazon.com/ec2](https://console.aws.amazon.com/ec2)
 
 2. **Click “Instances”** in the left sidebar.
 
@@ -104,9 +103,9 @@ Here’s how to **SSH into your EC2 instance directly from the AWS dashboard (GU
 
 5. In the **Connect to instance** page:
 
-   * Select the **“EC2 Instance Connect (browser-based SSH)”** tab (it's selected by default).
-   * Leave default username (e.g., `ec2-user` for Amazon Linux or `ubuntu` for Ubuntu).
-   * Click the **orange “Connect”** button at the bottom.
+   - Select the **“EC2 Instance Connect (browser-based SSH)”** tab (it's selected by default).
+   - Leave default username (e.g., `ec2-user` for Amazon Linux or `ubuntu` for Ubuntu).
+   - Click the **orange “Connect”** button at the bottom.
 
 6. A new browser tab will open with a terminal session to your instance.
 
