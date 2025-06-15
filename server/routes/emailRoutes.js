@@ -248,8 +248,14 @@ router.post("/provider-signup-notification", async (req, res) => {
       return res.status(400).json({ message: "Valid provider ID is required" });
     }
 
+    const supportEmail = process.env.SUPPORT_EMAIL;
+
+    if (!supportEmail) {
+      console.warn("SUPPORT_EMAIL not configured in environment variables");
+      return res.status(400).json({ message: "Support email not configured" });
+    }
+
     // Always fetch complete provider data from database to ensure we have all fields
-    const Provider = require("../models/Provider"); // Adjust path as needed
     const provider = await Provider.findById(providerId);
 
     if (!provider) {
