@@ -18,6 +18,7 @@
    - `EC2_USERNAME`: `ubuntu`
    - `EMAIL_SERVICE`: `sendgrid`
    - `SENDGRID_API_KEY`: Your SendGrid API key
+   - `RESEND_API_KEY`: Resend api key
    - `JWT_SECRET`
    - `MONGO_URI`
    - `SSH_PRIVATE_KEY`:
