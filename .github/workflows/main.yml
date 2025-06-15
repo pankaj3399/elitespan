@@ -169,6 +169,7 @@ jobs:
                 - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
                 - ADMIN_EMAIL=${ADMIN_EMAIL}
                 - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+                - SUPPORT_EMAIL=${SUPPORT_EMAIL}
               
           EOL
           
