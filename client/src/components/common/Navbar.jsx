@@ -79,11 +79,10 @@ const Navbar = () => {
       <nav className='w-full bg-white shadow-lg relative z-40 border-b border-gray-100'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-between h-16 lg:h-20'>
-            
             {/* Logo */}
             <Link to='/' className='flex items-center gap-3 flex-shrink-0'>
               <img src={logo} alt='Elite Healthspan' className='h-8 lg:h-10' />
-              <span 
+              <span
                 style={{ fontFamily: 'Karla' }}
                 className='text-lg lg:text-xl font-light text-[#0B0757] tracking-wider hidden sm:block'
               >
@@ -114,7 +113,7 @@ const Navbar = () => {
               >
                 FAQ
               </Link>
-              
+
               {/* Only show Provider Sign Up if user is not logged in */}
               {!token && (
                 <Link
@@ -131,7 +130,7 @@ const Navbar = () => {
             <div className='hidden lg:flex items-center space-x-4'>
               {token && user ? (
                 <>
-                  <span 
+                  <span
                     style={{ fontFamily: 'Karla' }}
                     className='text-[#0B0757] text-sm'
                   >
@@ -192,7 +191,6 @@ const Navbar = () => {
               className='lg:hidden bg-white border-t border-gray-200 shadow-lg'
             >
               <div className='px-4 py-4 space-y-4'>
-                
                 {/* Mobile Navigation Links */}
                 <Link
                   to='/how'
@@ -218,7 +216,7 @@ const Navbar = () => {
                 >
                   FAQ
                 </Link>
-                
+
                 {/* Only show Provider Sign Up in mobile if user is not logged in */}
                 {!token && (
                   <Link
@@ -235,7 +233,7 @@ const Navbar = () => {
                 <div className='pt-4 border-t border-gray-200'>
                   {token && user ? (
                     <>
-                      <div 
+                      <div
                         style={{ fontFamily: 'Karla' }}
                         className='text-[#0B0757] text-sm mb-4'
                       >
@@ -281,20 +279,20 @@ const Navbar = () => {
       </nav>
 
       {/* Modals - Only show if user is not logged in */}
-      {!token && modalStep === 'membership' && (
+      {modalStep === 'membership' && (
         <MembershipModal
           onClose={closeModals}
           onContinue={() => handleContinue('contactInfo')}
         />
       )}
-      {!token && modalStep === 'contactInfo' && (
+      {modalStep === 'contactInfo' && (
         <ContactInfoForm
           onClose={closeModals}
           onContinue={(userId) => handleContinue('paymentMethod')}
           userId={user ? user.id : null}
         />
       )}
-      {!token && modalStep === 'paymentMethod' && (
+      {modalStep === 'paymentMethod' && (
         <PaymentMethodModal
           onClose={closeModals}
           onContinue={(paymentMethod) =>
@@ -303,7 +301,7 @@ const Navbar = () => {
           userId={user ? user.id : null}
         />
       )}
-      {!token && modalStep === 'paymentForm_creditCard' && (
+      {modalStep === 'paymentForm_creditCard' && (
         <CreditCardForm
           onClose={closeModals}
           onContinue={closeModals}
@@ -311,7 +309,6 @@ const Navbar = () => {
           token={token}
         />
       )}
-
       {/* Login Modal - Only show if user is not logged in */}
       {!token && modalStep === 'login' && (
         <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
@@ -333,12 +330,9 @@ const Navbar = () => {
               Login
             </h2>
 
-            <form
-              onSubmit={handleLoginSubmit}
-              className='space-y-4'
-            >
+            <form onSubmit={handleLoginSubmit} className='space-y-4'>
               <div>
-                <label 
+                <label
                   style={{ fontFamily: 'Karla' }}
                   className='block text-gray-700 text-sm font-medium mb-2'
                 >
@@ -357,7 +351,7 @@ const Navbar = () => {
               </div>
 
               <div>
-                <label 
+                <label
                   style={{ fontFamily: 'Karla' }}
                   className='block text-gray-700 text-sm font-medium mb-2'
                 >
@@ -391,7 +385,7 @@ const Navbar = () => {
             </form>
 
             <div className='mt-6 text-center'>
-              <p 
+              <p
                 style={{ fontFamily: 'Karla' }}
                 className='text-gray-600 text-sm'
               >
