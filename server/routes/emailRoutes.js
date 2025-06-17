@@ -119,6 +119,38 @@ router.post("/send-subscription-email", verifyToken, async (req, res) => {
 
     await sendEmail(email, subject, textContent, htmlContent);
 
+    const subjectAdmin = "New User Registration - Elite Healthspan";
+
+    const textContentAdmin = `
+      New User Registration - Elite Healthspan
+      A new user with name ${name} has registered on Elite Healthspan.
+      Please review the user's information and follow up as needed.
+      © ${new Date().getFullYear()} Elite Healthspan. All rights reserved.
+    `;
+
+    const htmlContentAdmin = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #0B0757;">New User Registration</h2>
+        <p style="color: #333; font-size: 16px;">
+          A new user with name ${name} has registered on Elite Healthspan.
+        </p>
+        <p style="color: #333; font-size: 16px;">
+          Please review the user's information and follow up as needed.
+        </p>
+        <hr style="border: 1px solid #eee;" />
+        <p style="color: #666; font-size: 12px; text-align: center;">
+          © ${new Date().getFullYear()} Elite Healthspan. All rights reserved.
+        </p>
+      </div>
+    `;
+    const supportEmail = process.env.SUPPORT_EMAIL;
+    await sendEmail(
+      supportEmail,
+      subjectAdmin,
+      textContentAdmin,
+      htmlContentAdmin,
+    );
+
     res.status(200).json({ message: "Subscription email sent successfully" });
   } catch (error) {
     console.error("Error sending subscription email:", error);
