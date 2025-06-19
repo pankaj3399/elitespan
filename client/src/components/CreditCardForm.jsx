@@ -22,6 +22,7 @@ const CreditCardForm = ({
 }) => {
   const [error, setError] = useState('');
   const [cardError, setCardError] = useState('');
+  const [promoError, setPromoError] = useState(''); 
   const [paymentIntent, setPaymentIntent] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -140,13 +141,21 @@ const CreditCardForm = ({
   };
 
   const handlePromoCode = async () => {
-    if (!promoCode) return;
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+
+    // Clear previous promo error
+    setPromoError('');
+    setIsLoading(true);
+
     try {
       console.log(
         'Sending promo code validation request with code:',
         promoCode
       );
-      const response = await validatePromoCode(finalToken, promoCode);
+      const response = await validatePromoCode(finalToken, promoCode.trim());
       console.log('Promo code validation response:', response);
       setDiscount(response.discountPercentage || 0);
       fetchPaymentIntent(
@@ -159,10 +168,23 @@ const CreditCardForm = ({
         err.response?.data || err.message
       );
       setDiscount(0);
-      setError(err.response?.data?.message || 'Invalid or expired promo code');
+      // Use separate promo error state instead of general error
+      setPromoError(
+        err.response?.data?.message || 'Invalid or expired promo code'
+      );
       toast.error(
         err.response?.data?.message || 'Invalid or expired promo code'
       );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Clear promo error when user types in promo code input
+  const handlePromoCodeChange = (e) => {
+    setPromoCode(e.target.value);
+    if (promoError) {
+      setPromoError('');
     }
   };
 
@@ -199,6 +221,10 @@ const CreditCardForm = ({
   }, [finalUserId, finalToken]); // Removed discount from dependencies to prevent re-fetch loop
 
   const handleCreditCard = async () => {
+    // Clear all errors at start
+    setError('');
+    setCardError('');
+
     if (!finalToken) {
       setError('Please log in to make a payment.');
       return;
@@ -405,16 +431,22 @@ const CreditCardForm = ({
           <input
             type='text'
             value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
+            onChange={handlePromoCodeChange}
             placeholder='Enter Promo Code'
             className='w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
+            disabled={isLoading}
           />
           <button
             onClick={handlePromoCode}
-            className='mt-2 px-4 py-2 bg-[#0B0757] text-white rounded-lg hover:bg-[#1a237e] cursor-pointer'
+            disabled={isLoading || !promoCode.trim()}
+            className='mt-2 px-4 py-2 bg-[#0B0757] text-white rounded-lg hover:bg-[#1a237e] cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed'
           >
-            Apply
+            {isLoading ? 'Applying...' : 'Apply'}
           </button>
+          {/* Separate promo error display */}
+          {promoError && (
+            <p className='text-red-500 text-sm mt-2'>{promoError}</p>
+          )}
         </div>
 
         {/* Payment Breakdown */}
@@ -446,7 +478,7 @@ const CreditCardForm = ({
           </label>
           <div
             ref={cardElementRef}
-            className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
+            className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757] min-h-[44px]'
           >
             {error && error.includes('Stripe initialization failed') && (
               <p className='text-red-500 text-sm'>
@@ -474,6 +506,7 @@ const CreditCardForm = ({
             value={country}
             onChange={(e) => setCountry(e.target.value)}
             className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757] cursor-pointer'
+            disabled={isLoading}
           >
             <option value='US'>United States (US)</option>
             <option value='CA'>Canada (CA)</option>
@@ -488,9 +521,11 @@ const CreditCardForm = ({
             value={zipCode}
             onChange={(e) => setZipCode(e.target.value)}
             className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
+            disabled={isLoading}
           />
         </div>
 
+        {/* General errors (excluding Stripe init and promo errors) */}
         {error && !error.includes('Stripe initialization failed') && (
           <p className='text-red-500 text-sm mt-4'>{error}</p>
         )}
@@ -499,6 +534,7 @@ const CreditCardForm = ({
           <button
             onClick={onClose}
             className='w-full py-3 bg-white text-[#0B0757] rounded-full border border-[#0B0757] font-medium text-base hover:bg-gray-100 cursor-pointer'
+            disabled={isLoading}
           >
             Back
           </button>
