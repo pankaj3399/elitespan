@@ -84,7 +84,7 @@ const Sidebar = () => {
       <div className='fixed top-4 left-4 z-50 md:hidden'>
         <button
           onClick={toggleSidebar}
-          className='p-2 rounded-full bg-indigo-900 text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-white'
+          className='p-2 rounded-full bg-indigo-900 text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-white cursor-pointer hover:bg-indigo-800 transition-colors duration-200'
           aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
         >
           {isOpen ? <X className='w-5 h-5' /> : <Menu className='w-5 h-5' />}
@@ -94,7 +94,7 @@ const Sidebar = () => {
       {/* Overlay for mobile - only visible when sidebar is open */}
       {isMobile && isOpen && (
         <div
-          className='fixed inset-0 bg-black bg-opacity-50 z-30'
+          className='fixed inset-0 bg-black bg-opacity-50 z-30 cursor-pointer'
           onClick={toggleSidebar}
           aria-hidden='true'
         />
@@ -108,7 +108,7 @@ const Sidebar = () => {
       >
         <div className='px-6 py-8'>
           <div className='flex items-center justify-between'>
-            <div className='flex items-center'>
+            <div className='flex items-center cursor-pointer hover:opacity-80 transition-opacity duration-200'>
               <div className='h-8 w-8 bg-white rounded-md flex items-center justify-center'>
                 <span className='text-indigo-900 font-bold text-lg'>E</span>
               </div>
@@ -117,7 +117,7 @@ const Sidebar = () => {
             {isMobile && (
               <button
                 onClick={toggleSidebar}
-                className='p-1 rounded-full hover:bg-indigo-800'
+                className='p-1 rounded-full hover:bg-indigo-800 cursor-pointer transition-colors duration-200'
                 aria-label='Close sidebar'
               >
                 <ChevronLeft className='w-5 h-5' />
@@ -150,10 +150,10 @@ const Sidebar = () => {
                 <NavLink
                   key={item.name}
                   to={item.path}
-                  className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center px-4 py-3 rounded-lg transition-colors cursor-pointer ${
                     isActive
                       ? 'bg-indigo-700 text-white shadow-md'
-                      : 'text-indigo-100 hover:bg-indigo-800'
+                      : 'text-indigo-100 hover:bg-indigo-800 hover:text-white'
                   }`}
                 >
                   <span className={isActive ? 'text-white' : 'text-indigo-300'}>
@@ -172,7 +172,7 @@ const Sidebar = () => {
         <div className='absolute bottom-0 left-0 right-0 p-4'>
           <button
             onClick={handleLogout}
-            className='flex items-center justify-center w-full px-4 py-3 rounded-lg hover:bg-indigo-800 transition-colors text-sm font-medium text-indigo-100'
+            className='flex items-center justify-center w-full px-4 py-3 rounded-lg hover:bg-indigo-800 transition-colors text-sm font-medium text-indigo-100 cursor-pointer hover:text-white'
           >
             <LogOut className='w-5 h-5 mr-3 text-indigo-300' />
             Sign Out

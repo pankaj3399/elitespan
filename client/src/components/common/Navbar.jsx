@@ -80,7 +80,10 @@ const Navbar = () => {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-between h-16 lg:h-20'>
             {/* Logo */}
-            <Link to='/' className='flex items-center gap-3 flex-shrink-0'>
+            <Link
+              to='/'
+              className='flex items-center gap-3 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity duration-200'
+            >
               <img src={logo} alt='Elite Healthspan' className='h-8 lg:h-10' />
               <span
                 style={{ fontFamily: 'Karla' }}
@@ -95,21 +98,21 @@ const Navbar = () => {
               <Link
                 to='/how'
                 style={{ fontFamily: 'Karla' }}
-                className='text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium'
+                className='text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium cursor-pointer'
               >
                 How It Works
               </Link>
               <Link
                 to='/about'
                 style={{ fontFamily: 'Karla' }}
-                className='text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium'
+                className='text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium cursor-pointer'
               >
                 About Elite
               </Link>
               <Link
                 to='/faq'
                 style={{ fontFamily: 'Karla' }}
-                className='text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium'
+                className='text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium cursor-pointer'
               >
                 FAQ
               </Link>
@@ -119,7 +122,7 @@ const Navbar = () => {
                 <Link
                   to='/provider-portal'
                   style={{ fontFamily: 'Karla' }}
-                  className='text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium'
+                  className='text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium cursor-pointer'
                 >
                   Provider Sign Up
                 </Link>
@@ -139,7 +142,7 @@ const Navbar = () => {
                   <button
                     onClick={handleLogout}
                     style={{ fontFamily: 'Karla' }}
-                    className='bg-[#0B0757] text-white px-6 py-2 rounded-full hover:bg-[#0C1F6D] transition-colors duration-200 font-medium'
+                    className='bg-[#0B0757] text-white px-6 py-2 rounded-full hover:bg-[#0C1F6D] transition-colors duration-200 font-medium cursor-pointer'
                   >
                     Logout
                   </button>
@@ -149,7 +152,7 @@ const Navbar = () => {
                   <button
                     onClick={handleLoginClick}
                     style={{ fontFamily: 'Karla' }}
-                    className='bg-[#0B0757] text-white px-6 py-2 rounded-full hover:bg-[#0C1F6D] transition-colors duration-200 font-medium'
+                    className='bg-[#0B0757] text-white px-6 py-2 rounded-full hover:bg-[#0C1F6D] transition-colors duration-200 font-medium cursor-pointer'
                   >
                     Login
                   </button>
@@ -158,7 +161,7 @@ const Navbar = () => {
                     whileTap={{ scale: 0.95 }}
                     onClick={handleJoinClick}
                     style={{ fontFamily: 'Karla' }}
-                    className='bg-[#D4A017] text-white px-6 py-2 rounded-full hover:bg-[#B8901A] transition-colors duration-200 font-medium'
+                    className='bg-[#D4A017] text-white px-6 py-2 rounded-full hover:bg-[#B8901A] transition-colors duration-200 font-medium cursor-pointer'
                   >
                     Join Elite
                   </motion.button>
@@ -169,7 +172,7 @@ const Navbar = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className='lg:hidden p-2 rounded-md text-[#0B0757] hover:bg-gray-100 transition-colors duration-200'
+              className='lg:hidden p-2 rounded-md text-[#0B0757] hover:bg-gray-100 transition-colors duration-200 cursor-pointer'
             >
               {isOpen ? (
                 <X className='h-6 w-6' />
@@ -196,7 +199,7 @@ const Navbar = () => {
                   to='/how'
                   onClick={closeMobileMenu}
                   style={{ fontFamily: 'Karla' }}
-                  className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2'
+                  className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2 cursor-pointer'
                 >
                   How It Works
                 </Link>
@@ -204,7 +207,7 @@ const Navbar = () => {
                   to='/about'
                   onClick={closeMobileMenu}
                   style={{ fontFamily: 'Karla' }}
-                  className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2'
+                  className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2 cursor-pointer'
                 >
                   About Us
                 </Link>
@@ -212,7 +215,7 @@ const Navbar = () => {
                   to='/faq'
                   onClick={closeMobileMenu}
                   style={{ fontFamily: 'Karla' }}
-                  className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2'
+                  className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2 cursor-pointer'
                 >
                   FAQ
                 </Link>
@@ -223,7 +226,7 @@ const Navbar = () => {
                     to='/provider-portal'
                     onClick={closeMobileMenu}
                     style={{ fontFamily: 'Karla' }}
-                    className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2'
+                    className='block text-[#0B0757] hover:text-[#0C1F6D] transition-colors duration-200 font-medium py-2 cursor-pointer'
                   >
                     Provider Sign Up
                   </Link>
@@ -242,7 +245,7 @@ const Navbar = () => {
                       <button
                         onClick={handleLogout}
                         style={{ fontFamily: 'Karla' }}
-                        className='w-full bg-[#0B0757] text-white py-3 px-6 rounded-full hover:bg-[#0C1F6D] transition-colors duration-200 font-medium'
+                        className='w-full bg-[#0B0757] text-white py-3 px-6 rounded-full hover:bg-[#0C1F6D] transition-colors duration-200 font-medium cursor-pointer'
                       >
                         Logout
                       </button>
@@ -255,7 +258,7 @@ const Navbar = () => {
                           closeMobileMenu();
                         }}
                         style={{ fontFamily: 'Karla' }}
-                        className='w-full bg-[#0B0757] text-white py-3 px-6 rounded-full hover:bg-[#0C1F6D] transition-colors duration-200 font-medium'
+                        className='w-full bg-[#0B0757] text-white py-3 px-6 rounded-full hover:bg-[#0C1F6D] transition-colors duration-200 font-medium cursor-pointer'
                       >
                         Login
                       </button>
@@ -265,7 +268,7 @@ const Navbar = () => {
                           closeMobileMenu();
                         }}
                         style={{ fontFamily: 'Karla' }}
-                        className='w-full bg-[#D4A017] text-white py-3 px-6 rounded-full hover:bg-[#B8901A] transition-colors duration-200 font-medium'
+                        className='w-full bg-[#D4A017] text-white py-3 px-6 rounded-full hover:bg-[#B8901A] transition-colors duration-200 font-medium cursor-pointer'
                       >
                         Join Elite Healthspan
                       </button>
@@ -321,7 +324,7 @@ const Navbar = () => {
           >
             <button
               onClick={closeModals}
-              className='absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors'
+              className='absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer'
             >
               <X className='w-6 h-6' />
             </button>
@@ -378,7 +381,7 @@ const Navbar = () => {
               <button
                 type='submit'
                 style={{ fontFamily: 'Karla' }}
-                className='w-full bg-[#D4A017] text-white py-3 px-6 rounded-lg hover:bg-[#B8901A] transition-colors duration-200 font-medium mt-6'
+                className='w-full bg-[#D4A017] text-white py-3 px-6 rounded-lg hover:bg-[#B8901A] transition-colors duration-200 font-medium mt-6 cursor-pointer'
               >
                 Login
               </button>
@@ -395,7 +398,7 @@ const Navbar = () => {
                     closeModals();
                     handleJoinClick();
                   }}
-                  className='text-[#0B0757] font-medium hover:text-[#1a237e] transition-colors'
+                  className='text-[#0B0757] font-medium hover:text-[#1a237e] transition-colors cursor-pointer'
                 >
                   Join Elite Healthspan
                 </button>
