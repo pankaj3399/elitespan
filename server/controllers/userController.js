@@ -51,15 +51,8 @@ exports.signup = async (req, res) => {
     if (existingUser) {
       // User exists, return their data to proceed to payment (premium status updated after payment)
 
-      // FIXED: Use actual role from database, with proper fallback
-      let userRole;
-      if (existingUser.isAdmin) {
-        userRole = 'admin';
-      } else if (existingUser.role) {
-        userRole = existingUser.role; // Use the actual role field
-      } else {
-        userRole = 'user'; // Default fallback
-      }
+      // Use role field with 'user' as default fallback
+      const userRole = existingUser.role || 'user';
 
       const token = jwt.sign(
         { id: existingUser._id, role: userRole },
@@ -72,9 +65,8 @@ exports.signup = async (req, res) => {
           id: existingUser._id,
           name: existingUser.name,
           email: existingUser.email,
-          role: userRole, // Return the correct role
+          role: userRole,
           providerId: existingUser.providerId, // Include providerId if exists
-          isAdmin: existingUser.isAdmin,
         },
         token,
       });
@@ -94,15 +86,8 @@ exports.signup = async (req, res) => {
 
     await user.save();
 
-    // FIXED: Use actual role from database, with proper fallback
-    let userRole;
-    if (user.isAdmin) {
-      userRole = 'admin';
-    } else if (user.role) {
-      userRole = user.role; // Use the actual role field
-    } else {
-      userRole = 'user'; // Default fallback
-    }
+    // Use role field with 'user' as default fallback
+    const userRole = user.role || 'user';
 
     // Generate JWT token
     const token = jwt.sign(
@@ -117,9 +102,8 @@ exports.signup = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: userRole, // Return the correct role
+        role: userRole,
         providerId: user.providerId, // Include providerId if exists
-        isAdmin: user.isAdmin,
       },
       token,
     });
@@ -149,25 +133,17 @@ exports.login = async (req, res) => {
     console.log('User found in database:', {
       id: user._id,
       email: user.email,
-      role: user.role, // This should show 'provider' for your test user
-      isAdmin: user.isAdmin,
+      role: user.role,
       providerId: user.providerId,
     });
 
-    // FIXED: Use actual role from database, with proper fallback logic
-    let userRole;
-    if (user.isAdmin) {
-      userRole = 'admin';
-    } else if (user.role) {
-      userRole = user.role; // Use the actual role field from database
-    } else {
-      userRole = 'user'; // Default fallback
-    }
+    // Use role field with 'user' as default fallback
+    const userRole = user.role || 'user';
 
     console.log('Determined user role:', userRole); // Debug log
 
     const token = jwt.sign(
-      { id: user._id, role: userRole }, // This will now include the correct role
+      { id: user._id, role: userRole },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -179,9 +155,8 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: userRole, // This will now be 'provider' for your test user
+        role: userRole,
         providerId: user.providerId, // Include providerId for providers
-        isAdmin: user.isAdmin,
       },
     };
 

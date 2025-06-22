@@ -30,7 +30,6 @@ const seedAdmin = async () => {
       email: "erica@gmail.com",
       password: hashedPassword,
       role: "admin",
-      isAdmin: true, // Set isAdmin to true for admin user
     });
 
     await adminUser.save();

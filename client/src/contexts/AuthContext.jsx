@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
 
     // Role-based routing
     const userRole = userData.role;
-    const isAdmin = userData.role === 'admin' || userData.isAdmin === true;
+    const isAdmin = userData.role === 'admin';
     
     if (isAdmin) {
       console.log('Admin user detected, redirecting to admin/providers');
