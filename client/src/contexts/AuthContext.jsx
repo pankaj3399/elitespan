@@ -56,6 +56,8 @@ export const AuthProvider = ({ children }) => {
       console.log('Provider user detected, redirecting to provider/profile');
       navigate('/provider/profile');
     } else {
+            navigate('/user/dashboard');
+
       console.log('User logged in');
     }
   };

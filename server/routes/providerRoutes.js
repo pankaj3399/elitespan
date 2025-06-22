@@ -55,6 +55,51 @@ const upload = multer({
   },
 });
 
+router.get('/', async (req, res) => {
+  try {
+    const { search, specialty } = req.query;
+
+    // Base query: Ensures only active and approved providers are shown to users.
+    const query = {
+      isActive: true,
+      isApproved: true,
+    };
+
+    // Add specialty filter if provided
+    if (specialty) {
+      query.specialties = { $in: [new RegExp(specialty, 'i')] };
+    }
+
+    // Add general search filter if provided (searches multiple fields)
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { providerName: searchRegex },
+        { practiceName: searchRegex },
+        { city: searchRegex },
+        { state: searchRegex },
+        { specialties: { $in: [searchRegex] } },
+      ];
+    }
+
+    const providers = await Provider.find(query);
+
+    // Use the helper function to ensure S3 URLs are complete
+    const preparedProviders = providers.map((p) =>
+      prepareProviderForResponse(p)
+    );
+
+    res.json({
+      success: true,
+      count: preparedProviders.length,
+      providers: preparedProviders,
+    });
+  } catch (error) {
+    console.error('Error fetching public providers:', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
 // Create new provider (Step 1: Basic Info)
 router.post('/', async (req, res) => {
   try {
@@ -298,11 +343,16 @@ router.put('/:id/images', async (req, res) => {
   }
 });
 
-// Get provider
+// Get provider by ID
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const providerFromDB = await Provider.findOne({ _id: id });
+    // We can add the isActive and isApproved checks here too for public profile pages
+    const providerFromDB = await Provider.findOne({
+      _id: id,
+      isActive: true,
+      isApproved: true,
+    });
 
     if (!providerFromDB) {
       return res

@@ -67,6 +67,7 @@ exports.signup = async (req, res) => {
           email: existingUser.email,
           role: userRole,
           providerId: existingUser.providerId, // Include providerId if exists
+          isPremium: existingUser.isPremium, 
         },
         token,
       });
@@ -104,6 +105,7 @@ exports.signup = async (req, res) => {
         email: user.email,
         role: userRole,
         providerId: user.providerId, // Include providerId if exists
+        isPremium: user.isPremium,
       },
       token,
     });
@@ -157,6 +159,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: userRole,
         providerId: user.providerId, // Include providerId for providers
+         isPremium: user.isPremium, 
       },
     };
 
