@@ -10,7 +10,6 @@ const adminPanelRoutes = require('./routes/adminPanelRoutes');
 const promoCodeRoutes = require('./routes/promoCodeRoutes');
 const providerRoutes = require('./routes/providerRoutes.js');
 const uploadRoutes = require('./routes/uploadRoutes');
-const emailRoutes = require('./routes/emailRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 // Load environment variables
 dotenv.config();
@@ -36,7 +35,6 @@ app.use('/api/admin-panel', adminPanelRoutes);
 app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/provider-info', providerRoutes);
 app.use('/api', uploadRoutes);
-app.use('/api/email', emailRoutes);
 app.use('/api/payments', paymentRoutes);
 // Default route for testing
 app.get('/', (req, res) => {

@@ -4,7 +4,6 @@ import { loadStripe } from '@stripe/stripe-js';
 import {
   createPaymentIntent,
   confirmPayment,
-  sendSubscriptionEmail,
   validatePromoCode,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -103,6 +102,7 @@ const CreditCardForm = ({
       amount: Math.round(amount * 100),
       userId: finalUserId,
       doctorId: null,
+      promoCode: promoCode.trim() || undefined, // ✅ ADD: Include promo code in payment intent
     }; // Convert to cents
     console.log('Fetching payment intent with payload:', paymentData);
 
@@ -281,30 +281,6 @@ const CreditCardForm = ({
       if (paymentResponse.message === 'Payment confirmed') {
         console.log('Payment confirmed successfully:', paymentResponse);
 
-        try {
-          const emailResponse = await sendSubscriptionEmail(
-            finalToken,
-            finalUserId
-          );
-          console.log('Subscription email sent successfully:', emailResponse);
-        } catch (emailError) {
-          console.error(
-            'Failed to send subscription email:',
-            emailError.message
-          );
-          toast.error(
-            'Payment successful, but failed to send confirmation email. Please contact support.',
-            {
-              position: 'top-right',
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-            }
-          );
-        }
-
         toast.success(
           'Welcome to Elite Healthspan! Your Annual Membership is Active 🎉',
           {
@@ -346,30 +322,6 @@ const CreditCardForm = ({
 
         if (secondConfirmation.message === 'Payment confirmed') {
           console.log('Payment confirmed after 3D Secure:', secondConfirmation);
-
-          try {
-            const emailResponse = await sendSubscriptionEmail(
-              finalToken,
-              finalUserId
-            );
-            console.log('Subscription email sent successfully:', emailResponse);
-          } catch (emailError) {
-            console.error(
-              'Failed to send subscription email:',
-              emailError.message
-            );
-            toast.error(
-              'Payment successful, but failed to send confirmation email. Please contact support.',
-              {
-                position: 'top-right',
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-              }
-            );
-          }
 
           toast.success(
             'Welcome to Elite Healthspan! Your Annual Membership is Active 🎉',

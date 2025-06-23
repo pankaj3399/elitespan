@@ -5,6 +5,7 @@ const User = require('../models/User.js'); // Import User model
 const multer = require('multer');
 const XLSX = require('xlsx');
 const bcrypt = require('bcryptjs'); // For password hashing
+const { sendProviderRegistrationEmails } = require('../utils/email.js');
 const router = express.Router();
 
 // --- Helper Function to Construct Full S3 URL ---
@@ -402,6 +403,17 @@ router.put('/:id/images', async (req, res) => {
 
     if (!updatedProvider) {
       return res.status(404).json({ message: 'Provider not found' });
+    }
+
+        // If this is the final step, send emails
+    if (headshotUrl && galleryUrl && practiceDescription) {
+      try {
+        await sendProviderRegistrationEmails(id);
+        console.log('✅ Provider registration completed - emails sent successfully');
+      } catch (emailError) {
+        console.error('❌ Failed to send registration emails:', emailError);
+        // Don't fail the upload if email fails
+      }
     }
 
     res.status(200).json({

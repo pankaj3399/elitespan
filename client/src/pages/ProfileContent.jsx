@@ -7,9 +7,6 @@ import {
   getUploadSignature,
   uploadToS3,
   saveImageUrls,
-  sendProviderSignupNotification,
-  getProvider,
-  sendProviderWelcomeEmail,
 } from '../services/api';
 
 function ProfileContent() {
@@ -161,9 +158,6 @@ function ProfileContent() {
           practiceDescription:
             savedProvider.practiceDescription || 'No description provided',
         };
-
-        await sendProviderSignupNotification(providerData);
-        await sendProviderWelcomeEmail(savedProvider._id);
       } catch (emailError) {
         console.error(
           '❌ Failed to send provider signup notification:',
