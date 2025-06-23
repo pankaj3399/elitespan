@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import { signup, login } from '../services/api';
+import { signup } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const ContactInfoForm = ({ onClose, onContinue, userId }) => {
@@ -14,8 +14,9 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
-const [contactProviders, setContactProviders] = useState(false);
-const [terms, setTerms] = useState(false);  const [error, setError] = useState('');
+  const [contactProviders, setContactProviders] = useState(false);
+  const [terms, setTerms] = useState(false);
+  const [error, setError] = useState('');
   const { loginUser } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -69,7 +70,9 @@ const [terms, setTerms] = useState(false);  const [error, setError] = useState('
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!terms ||!contactProviders) {
+    setError(''); // Clear previous errors
+
+    if (!terms || !contactProviders) {
       setError('You must agree to the Terms & Services');
       return;
     }
@@ -108,32 +111,19 @@ const [terms, setTerms] = useState(false);  const [error, setError] = useState('
     console.log('Signup payload:', JSON.stringify(payload, null, 2));
 
     try {
-      let response;
-      try {
-        response = await login({
-          email: email.trim(),
-          password: password.trim(),
-        });
-        console.log('Login response:', response);
-        if (!response.user || !response.user.id) {
-          throw new Error('Login response does not contain user ID');
-        }
-        loginUser(response.token, response.user);
-        onContinue(response.user.id);
-      } catch (loginError) {
-        console.log(
-          'Login failed, proceeding with signup:',
-          loginError.message
-        );
-        response = await signup(payload);
-        console.log('Signup response:', response);
-        if (!response.user || !response.user.id) {
-          throw new Error('Signup response does not contain user ID');
-        }
-        loginUser(response.token, response.user);
-        onContinue(response.user.id);
+      // Directly attempt to sign up the user.
+      const response = await signup(payload);
+      console.log('Signup response:', response);
+
+      if (!response.user || !response.user.id) {
+        throw new Error('Signup response does not contain user ID');
       }
+
+      // On successful signup, log the user in and continue.
+      loginUser(response.token, response.user);
+      onContinue(response.user.id);
     } catch (err) {
+      // Handle errors from the signup API, including duplicate email errors.
       if (err.message && err.message.includes('{')) {
         try {
           const errorData = JSON.parse(err.message);
@@ -142,9 +132,9 @@ const [terms, setTerms] = useState(false);  const [error, setError] = useState('
           setError('Signup failed due to an unknown error');
         }
       } else {
-        setError(err.message || 'Server error during signup/login');
+        setError(err.message || 'Server error during signup');
       }
-      console.error('Error in signup/login:', err);
+      console.error('Error in signup:', err);
     }
   };
 
@@ -296,7 +286,7 @@ const [terms, setTerms] = useState(false);  const [error, setError] = useState('
                           onClick={() => toggleSpecialty(spec)}
                           className='text-black text-[18px] focus:outline-none pb-[2px] cursor-pointer'
                         >
-                          &times;
+                          ×
                         </button>
                       </div>
                     ))
