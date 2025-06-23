@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import StyledFileInput from '../components/common/StyledFileInput';
 import { MdOutlineFileUpload } from 'react-icons/md';
 import {
@@ -42,7 +43,7 @@ function ProfileContent() {
       (field === 'headshot' || field === 'gallery') &&
       !['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)
     ) {
-      alert('Only JPG/PNG image files are allowed for this field.');
+      toast.error('Only JPG/PNG image files are allowed for this field.');
       return;
     }
 
@@ -78,7 +79,7 @@ function ProfileContent() {
     setSubmitted(true);
 
     if (!providerId) {
-      alert('Provider ID not found. Please start from the beginning.');
+      toast.error('Provider ID not found. Please start from the beginning.');
       navigate('/provider-portal');
       return;
     }
@@ -86,14 +87,14 @@ function ProfileContent() {
     const { headshot, gallery } = uploadedFiles;
 
     if (!headshot || !gallery) {
-      alert(
+      toast.error(
         'Please upload both headshot and gallery images before continuing.'
       );
       return;
     }
 
     if (!practiceDescription.trim()) {
-      alert('Please provide a practice description before continuing.');
+      toast.error('Please provide a practice description before continuing.');
       return;
     }
 
@@ -137,7 +138,7 @@ function ProfileContent() {
       }
 
       // Show success message
-      alert('Profile content uploaded successfully!');
+      toast.success('Profile content uploaded successfully!');
 
       // Send provider signup notification email using the updated provider data
       try {
@@ -180,7 +181,7 @@ function ProfileContent() {
       navigate('/completion');
     } catch (err) {
       console.error('Upload failed:', err);
-      alert(`Upload failed: ${err.message}. Please try again.`);
+      toast.error(`Upload failed: ${err.message}. Please try again.`);
     } finally {
       setLoading(false);
     }
