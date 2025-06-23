@@ -57,7 +57,14 @@ const upload = multer({
 
 router.get('/', async (req, res) => {
   try {
-    const { search, specialty } = req.query;
+    const { search, specialty, location, userSpecialties } = req.query;
+
+    console.log('🔍 Provider search request:', {
+      search,
+      specialty,
+      location,
+      userSpecialties
+    });
 
     // Base query: Ensures only active and approved providers are shown to users.
     const query = {
@@ -65,13 +72,40 @@ router.get('/', async (req, res) => {
       isApproved: true,
     };
 
-    // Add specialty filter if provided
+    // Add specialty filter if provided (manual search)
     if (specialty) {
+      console.log('🎯 Adding specialty filter:', specialty);
       query.specialties = { $in: [new RegExp(specialty, 'i')] };
+    }
+
+    // Add user specialties filter if provided (automatic matching)
+    if (userSpecialties && !specialty) { // Only apply if not manually searching
+      const userSpecialtiesArray = userSpecialties.split(',').map(s => s.trim());
+      console.log('👤 User specialties for matching:', userSpecialtiesArray);
+      
+      // Create regex patterns for partial matching
+      const specialtyRegexes = userSpecialtiesArray.map(userSpec => 
+        new RegExp(userSpec, 'i')
+      );
+      
+      console.log('🔍 Final specialty regexes:', specialtyRegexes);
+      query.specialties = { $in: specialtyRegexes };
+      console.log('🔎 Applied user specialty filter to query');
+    }
+
+    // Add location filter if provided (search city and state only)
+    if (location) {
+      console.log('📍 Adding location filter:', location);
+      const locationRegex = new RegExp(location, 'i');
+      query.$or = [
+        { city: locationRegex },
+        { state: locationRegex },
+      ];
     }
 
     // Add general search filter if provided (searches multiple fields)
     if (search) {
+      console.log('🔍 Adding general search filter:', search);
       const searchRegex = new RegExp(search, 'i');
       query.$or = [
         { providerName: searchRegex },
@@ -82,24 +116,70 @@ router.get('/', async (req, res) => {
       ];
     }
 
+    console.log('📋 Final MongoDB query:', JSON.stringify(query, null, 2));
+
     const providers = await Provider.find(query);
+
+    console.log(`📊 Found ${providers.length} providers from database`);
+
+    // Log each provider's specialties for debugging
+    providers.forEach((provider, index) => {
+      console.log(`Provider ${index + 1}: ${provider.providerName}`);
+      console.log(`  Raw specialties:`, provider.specialties);
+      console.log(`  Specialties array:`, Array.isArray(provider.specialties) ? provider.specialties : 'Not an array');
+      console.log(`  Specialties length:`, provider.specialties?.length || 0);
+      console.log(`  Specialties type:`, typeof provider.specialties);
+      console.log(`  Formatted: [${provider.specialties?.length > 0 ? provider.specialties.join(', ') : 'Empty array'}]`);
+      
+      // If we have user specialties, check if this provider matches
+      if (userSpecialties) {
+        const userSpecialtiesArray = userSpecialties.split(',').map(s => s.trim().toLowerCase());
+        const providerSpecialties = provider.specialties?.map(s => s.toLowerCase()) || [];
+        
+        const hasMatch = providerSpecialties.some(providerSpec => 
+          userSpecialtiesArray.some(userSpec => 
+            providerSpec.includes(userSpec) || userSpec.includes(providerSpec)
+          )
+        );
+        
+        console.log(`  Matches user specialties: ${hasMatch ? '✅' : '❌'}`);
+        if (hasMatch) {
+          const matchingSpecs = providerSpecialties.filter(providerSpec => 
+            userSpecialtiesArray.some(userSpec => 
+              providerSpec.includes(userSpec) || userSpec.includes(providerSpec)
+            )
+          );
+          console.log(`  Matching specialties: [${matchingSpecs.join(', ')}]`);
+        }
+      }
+      console.log('---');
+    });
 
     // Use the helper function to ensure S3 URLs are complete
     const preparedProviders = providers.map((p) =>
       prepareProviderForResponse(p)
     );
 
+    console.log(`✅ Returning ${preparedProviders.length} prepared providers`);
+
     res.json({
       success: true,
       count: preparedProviders.length,
       providers: preparedProviders,
+      debug: {
+        originalQuery: query,
+        userSpecialties: userSpecialties ? userSpecialties.split(',') : null,
+        searchType: specialty ? 'manual specialty search' : 
+                   userSpecialties ? 'user specialty matching' : 
+                   location ? 'location search' : 
+                   search ? 'general search' : 'all providers'
+      }
     });
   } catch (error) {
-    console.error('Error fetching public providers:', error);
+    console.error('❌ Error fetching public providers:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 });
-
 // Create new provider (Step 1: Basic Info)
 router.post('/', async (req, res) => {
   try {

@@ -14,8 +14,8 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
-  const [terms, setTerms] = useState(false);
-  const [error, setError] = useState('');
+const [contactProviders, setContactProviders] = useState(false);
+const [terms, setTerms] = useState(false);  const [error, setError] = useState('');
   const { loginUser } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -69,7 +69,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!terms) {
+    if (!terms ||!contactProviders) {
       setError('You must agree to the Terms & Services');
       return;
     }
@@ -334,8 +334,8 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
             <div className='flex items-center gap-2'>
               <input
                 type='checkbox'
-                checked={terms}
-                onChange={(e) => setTerms(e.target.checked)}
+                checked={contactProviders}
+                onChange={(e) => setContactProviders(e.target.checked)}
                 className='w-4 h-4 text-[#0B0757] border-gray-200 rounded focus:ring-[#0B0757] cursor-pointer'
               />
               <label className='text-gray-700 text-sm cursor-pointer'>
