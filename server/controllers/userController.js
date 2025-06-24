@@ -3,6 +3,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
+const { geocodeAddress, createGeoJSONPoint } = require('../utils/geocoding');
 require('dotenv').config();
 
 exports.signup = async (req, res) => {
@@ -39,11 +40,23 @@ exports.signup = async (req, res) => {
         .json({ message: 'Password must be at least 6 characters long' });
     }
 
-    // Ensure contactInfo is an object, even if empty
-    if (contactInfo && typeof contactInfo !== 'object') {
+    // Validate contactInfo is provided and has required fields
+    if (!contactInfo || typeof contactInfo !== 'object') {
       return res
         .status(400)
-        .json({ message: 'Contact info must be an object' });
+        .json({ message: 'Contact information is required' });
+    }
+
+    if (!contactInfo.address || !contactInfo.address.trim()) {
+      return res
+        .status(400)
+        .json({ message: 'Address is required for location-based matching' });
+    }
+
+    if (!contactInfo.specialties || !Array.isArray(contactInfo.specialties) || contactInfo.specialties.length === 0) {
+      return res
+        .status(400)
+        .json({ message: 'At least one area of interest is required' });
     }
 
     // SECURITY: Validate and restrict role to only allowed values
@@ -84,9 +97,25 @@ exports.signup = async (req, res) => {
           email: existingUser.email,
           role: existingUserRole,
           providerId: existingUser.providerId, // Include providerId if exists
-          isPremium: existingUser.isPremium, 
+          isPremium: existingUser.isPremium,
+          contactInfo: existingUser.contactInfo
         },
         token,
+      });
+    }
+
+    // Geocode the user's address
+    console.log('🌍 Geocoding user address:', contactInfo.address);
+    let coordinates;
+    try {
+      const geocodeResult = await geocodeAddress(contactInfo.address);
+      coordinates = createGeoJSONPoint(geocodeResult.lat, geocodeResult.lng);
+      console.log('✅ User address geocoded successfully:', coordinates);
+    } catch (geocodeError) {
+      console.error('❌ Geocoding failed for user address:', geocodeError.message);
+      return res.status(400).json({ 
+        message: 'Unable to verify the provided address. Please check that your address is correct and try again.',
+        geocodeError: geocodeError.message 
       });
     }
 
@@ -94,12 +123,17 @@ exports.signup = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password.trim(), salt);
 
-    // Create new user with validated role
+    // Create new user with validated role and location
     const user = new User({
       name: name.trim(),
       email: email.trim(),
       password: hashedPassword,
-      contactInfo: contactInfo || {},
+      contactInfo: {
+        phone: contactInfo.phone || '',
+        address: contactInfo.address.trim(),
+        specialties: contactInfo.specialties
+      },
+      location: coordinates,
       role: userRole, // Use the validated role
     });
 
@@ -121,6 +155,7 @@ exports.signup = async (req, res) => {
         role: userRole,
         providerId: user.providerId, // Include providerId if exists
         isPremium: user.isPremium,
+        contactInfo: user.contactInfo
       },
       token,
     });
@@ -175,7 +210,8 @@ exports.login = async (req, res) => {
         email: user.email,
         role: userRole,
         providerId: user.providerId, // Include providerId for providers
-        isPremium: user.isPremium, 
+        isPremium: user.isPremium,
+        contactInfo: user.contactInfo
       },
     };
 
@@ -215,10 +251,33 @@ exports.editProfile = async (req, res) => {
     }
 
     user.name = name ? name.trim() : user.name;
-    user.contactInfo = contactInfo || user.contactInfo;
     user.isPremium = isPremium !== undefined ? isPremium : user.isPremium;
     user.premiumExpiry = premiumExpiry || user.premiumExpiry;
     user.role = updatedRole;
+
+    // Handle contactInfo updates with potential geocoding
+    if (contactInfo) {
+      const updatedContactInfo = { ...user.contactInfo, ...contactInfo };
+      
+      // If address changed, we need to geocode the new address
+      if (contactInfo.address && contactInfo.address !== user.contactInfo.address) {
+        console.log('🌍 User address changed, re-geocoding:', contactInfo.address);
+        try {
+          const geocodeResult = await geocodeAddress(contactInfo.address);
+          const coordinates = createGeoJSONPoint(geocodeResult.lat, geocodeResult.lng);
+          user.location = coordinates;
+          console.log('✅ User address re-geocoded successfully:', coordinates);
+        } catch (geocodeError) {
+          console.error('❌ Re-geocoding failed for user address:', geocodeError.message);
+          return res.status(400).json({ 
+            message: 'Unable to verify the new address. Please check that your address is correct.',
+            geocodeError: geocodeError.message 
+          });
+        }
+      }
+      
+      user.contactInfo = updatedContactInfo;
+    }
 
     await user.save();
     res.json({ message: 'Profile updated successfully', user });

@@ -40,9 +40,16 @@ const ProviderCard = ({ provider }) => (
       )}
     </div>
     <div className='p-5'>
-      <p className='text-sm text-gray-500'>
-        [{provider.specialties?.[0] || 'Healthcare'}]
-      </p>
+      <div className='flex justify-between items-start mb-2'>
+        <p className='text-sm text-gray-500'>
+          [{provider.specialties?.[0] || 'Healthcare'}]
+        </p>
+        {provider.distance && (
+          <div className='bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium'>
+            {provider.distance} mi
+          </div>
+        )}
+      </div>
       <h3 className='text-xl font-semibold text-gray-800 mt-1'>
         {provider.providerName}
       </h3>
@@ -271,90 +278,49 @@ function Dashboard() {
     }
   }, [user, refreshUser]);
 
-  const fetchProviders = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const filters = {};
+const fetchProviders = useCallback(async () => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const filters = {};
 
-      // Handle location search
-      if (searchFilters.location) {
-        filters.location = searchFilters.location;
-      }
-
-      // Handle specialty search - use the specialty filter specifically
-      if (searchFilters.specialty) {
-        filters.specialty = searchFilters.specialty;
-      }
-
-      // Debug user object structure
-      console.log('Full user object:', user);
-      console.log('User contactInfo:', user?.contactInfo);
-      console.log('User specialties from contactInfo:', user?.contactInfo?.specialties);
-
-      // Add user's specialties for matching (separate from search)
-      const userSpecialties = user?.contactInfo?.specialties;
-      if (userSpecialties && Array.isArray(userSpecialties) && userSpecialties.length > 0) {
-        filters.userSpecialties = userSpecialties.join(',');
-        console.log('✅ Adding userSpecialties to filters:', filters.userSpecialties);
-      } else {
-        console.log('❌ No user specialties found:', {
-          userSpecialties,
-          isArray: Array.isArray(userSpecialties),
-          length: userSpecialties?.length
-        });
-      }
-
-      console.log('Fetching providers with filters:', filters);
-
-      const response = await getAllProviders(filters);
-      let fetchedProviders = response.providers || [];
-
-      console.log('Received providers from API:', fetchedProviders.length);
-
-      // ALWAYS filter by user specialties if they exist (unless user is manually searching for specific specialty)
-      if (userSpecialties && Array.isArray(userSpecialties) && userSpecialties.length > 0 && !searchFilters.specialty) {
-        const userSpecialtiesLower = userSpecialties.map(s => s.toLowerCase());
-        console.log('🔍 Client-side filtering by user specialties:', userSpecialtiesLower);
-        
-        fetchedProviders = fetchedProviders.filter(provider => {
-          if (!provider.specialties || provider.specialties.length === 0) {
-            console.log(`❌ Provider ${provider.providerName}: No specialties`);
-            return false; // Don't show providers with no specialties
-          }
-          
-          const hasMatch = provider.specialties.some(specialty => 
-            userSpecialtiesLower.some(userSpec => 
-              specialty.toLowerCase().includes(userSpec.toLowerCase()) ||
-              userSpec.toLowerCase().includes(specialty.toLowerCase())
-            )
-          );
-          
-          console.log(`${hasMatch ? '✅' : '❌'} Provider ${provider.providerName}:`, {
-            providerSpecialties: provider.specialties,
-            userSpecialties: userSpecialtiesLower,
-            match: hasMatch
-          });
-          
-          return hasMatch;
-        });
-        
-        console.log('🎯 After client-side filtering:', fetchedProviders.length, 'providers');
-      } else {
-        console.log('🔄 No user specialties filtering applied');
-      }
-
-      console.log('Final filtered providers:', fetchedProviders.length);
-      setProviders(fetchedProviders);
-    } catch (err) {
-      const errorMessage = err.message || 'Failed to fetch providers.';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+    // Handle location search
+    if (searchFilters.location) {
+      filters.location = searchFilters.location;
     }
-  }, [searchFilters.location, searchFilters.specialty, user?.contactInfo?.specialties]);
 
+    // Handle specialty search - use the specialty filter specifically
+    if (searchFilters.specialty) {
+      filters.specialty = searchFilters.specialty;
+    }
+
+    // Add user ID for distance calculation
+    if (user?.id) {
+      filters.userId = user.id;
+    }
+
+    // Add user's specialties for matching (separate from search)
+    const userSpecialties = user?.contactInfo?.specialties;
+    if (userSpecialties && Array.isArray(userSpecialties) && userSpecialties.length > 0) {
+      filters.userSpecialties = userSpecialties.join(',');
+      console.log('✅ Adding userSpecialties to filters:', filters.userSpecialties);
+    }
+
+    console.log('Fetching providers with filters:', filters);
+
+    const response = await getAllProviders(filters);
+    let fetchedProviders = response.providers || [];
+
+    console.log('Received providers from API:', fetchedProviders.length);
+    setProviders(fetchedProviders);
+  } catch (err) {
+    const errorMessage = err.message || 'Failed to fetch providers.';
+    setError(errorMessage);
+    toast.error(errorMessage);
+  } finally {
+    setIsLoading(false);
+  }
+}, [searchFilters.location, searchFilters.specialty, user?.contactInfo?.specialties, user?.id]);
   useEffect(() => {
     fetchProviders();
   }, [fetchProviders]);

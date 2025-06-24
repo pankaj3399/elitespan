@@ -4,8 +4,8 @@ const mongoose = require("mongoose");
 
 const contactInfoSchema = new mongoose.Schema({
   phone: { type: String, required: false, trim: true },
-  address: { type: String, required: false, trim: true },
-  specialties: [{ type: String, trim: true }], // Added specialties as an array of strings
+  address: { type: String, required: true, trim: true }, 
+  specialties: [{ type: String, trim: true }],
 });
 
 const userSchema = new mongoose.Schema({
@@ -37,8 +37,20 @@ const userSchema = new mongoose.Schema({
   },
   contactInfo: {
     type: contactInfoSchema,
-    required: false,
-    default: {},
+    required: true, // Now required
+  },
+  // Geospatial location data
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+      index: '2dsphere' // Geospatial index
+    }
   },
   isPremium: {
     type: Boolean,
@@ -53,5 +65,8 @@ const userSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Create geospatial index for location-based queries
+userSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model("User", userSchema);

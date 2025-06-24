@@ -1,11 +1,12 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 // client/src/components/ContactInfoForm.jsx
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { signup } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { Loader } from '@googlemaps/js-api-loader';
 
 const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const [firstName, setFirstName] = useState('');
@@ -17,7 +18,12 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
   const [contactProviders, setContactProviders] = useState(false);
   const [terms, setTerms] = useState(false);
   const [error, setError] = useState('');
+  const [isLoadingMaps, setIsLoadingMaps] = useState(true);
   const { loginUser } = useAuth();
+
+  // Google Maps autocomplete
+  const addressInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({ specialties: [] });
@@ -34,6 +40,61 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
     'Vision',
     "Women's Health",
   ];
+
+  // Initialize Google Maps autocomplete
+  useEffect(() => {
+    const initializeAutocomplete = async () => {
+      try {
+        const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        
+        if (!GOOGLE_MAPS_API_KEY) {
+          console.warn('Google Maps API key not found. Address autocomplete will not work.');
+          setIsLoadingMaps(false);
+          return;
+        }
+
+        const loader = new Loader({
+          apiKey: GOOGLE_MAPS_API_KEY,
+          version: 'weekly',
+          libraries: ['places'],
+        });
+
+        await loader.load();
+
+        if (addressInputRef.current) {
+          autocompleteRef.current = new google.maps.places.Autocomplete(
+            addressInputRef.current,
+            {
+              types: ['address'],
+              componentRestrictions: { country: 'us' }, // Restrict to US addresses
+              fields: ['formatted_address', 'geometry'],
+            }
+          );
+
+          autocompleteRef.current.addListener('place_changed', () => {
+            const place = autocompleteRef.current.getPlace();
+            if (place.formatted_address) {
+              setAddress(place.formatted_address);
+            }
+          });
+        }
+
+        setIsLoadingMaps(false);
+      } catch (error) {
+        console.error('Error loading Google Maps:', error);
+        setIsLoadingMaps(false);
+      }
+    };
+
+    initializeAutocomplete();
+
+    // Cleanup
+    return () => {
+      if (autocompleteRef.current) {
+        google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
+  }, []);
 
   // Format phone number to remove dashes and non-numeric characters
   const formatPhoneNumber = (value) => {
@@ -93,6 +154,10 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
       setError('Phone number must be in the format 000-000-0000');
       return;
     }
+    if (!address.trim()) {
+      setError('Address is required for location-based provider matching');
+      return;
+    }
     if (formData.specialties.length === 0) {
       setError('Please select at least one area of interest');
       return;
@@ -104,7 +169,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
       password: password.trim(),
       contactInfo: {
         phone: phoneNumber.trim() || '',
-        address: address.trim() || '',
+        address: address.trim(),
         specialties: formData.specialties,
       },
     };
@@ -124,7 +189,9 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
       onContinue(response.user.id);
     } catch (err) {
       // Handle errors from the signup API, including duplicate email errors.
-      if (err.message && err.message.includes('{')) {
+      if (err.message && err.message.includes('Unable to verify the provided address')) {
+        setError('Unable to verify your address. Please check that your address is correct and try again.');
+      } else if (err.message && err.message.includes('{')) {
         try {
           const errorData = JSON.parse(err.message);
           setError(errorData.message || 'Signup failed');
@@ -199,6 +266,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
+                  required
                 />
               </div>
               <div className='flex-1 flex flex-col gap-2'>
@@ -209,6 +277,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
+                  required
                 />
               </div>
             </div>
@@ -221,6 +290,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
+                required
               />
             </div>
 
@@ -232,6 +302,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
+                required
               />
             </div>
 
@@ -244,18 +315,26 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                 onChange={handlePhoneChange}
                 className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
                 maxLength='12'
+                required
               />
             </div>
 
             <div className='flex flex-col gap-2'>
-              <label className='text-gray-700 text-sm'>Address</label>
+              <label className='text-gray-700 text-sm'>
+                Address {isLoadingMaps && <span className='text-xs text-gray-500'>(Loading suggestions...)</span>}
+              </label>
               <input
+                ref={addressInputRef}
                 type='text'
-                placeholder='Address (Optional)'
+                placeholder='Start typing your address...'
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className='w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#0B0757]'
+                required
               />
+              <p className='text-xs text-gray-500'>
+                Required for finding providers near you
+              </p>
             </div>
 
             {/* Specialties Dropdown */}
@@ -327,6 +406,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                 checked={contactProviders}
                 onChange={(e) => setContactProviders(e.target.checked)}
                 className='w-4 h-4 text-[#0B0757] border-gray-200 rounded focus:ring-[#0B0757] cursor-pointer'
+                required
               />
               <label className='text-gray-700 text-sm cursor-pointer'>
                 Use this information when contacting providers & clinics.
@@ -339,6 +419,7 @@ const ContactInfoForm = ({ onClose, onContinue, userId }) => {
                 checked={terms}
                 onChange={(e) => setTerms(e.target.checked)}
                 className='w-4 h-4 text-[#0B0757] border-gray-200 rounded focus:ring-[#0B0757] cursor-pointer'
+                required
               />
               <label className='text-gray-700 text-sm cursor-pointer'>
                 By joining, you agree to our Terms & Services.

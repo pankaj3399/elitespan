@@ -27,9 +27,8 @@ router.post(
       .withMessage('Password must be at least 6 characters long'),
 
     check('contactInfo')
-      .optional()
       .isObject()
-      .withMessage('Contact info must be an object if provided'),
+      .withMessage('Contact info is required'),
 
     check('contactInfo.phone')
       .optional()
@@ -38,18 +37,16 @@ router.post(
       .withMessage('Phone must be a string'),
 
     check('contactInfo.address')
-      .optional()
       .trim()
-      .isString()
-      .withMessage('Address must be a string'),
+      .not()
+      .isEmpty()
+      .withMessage('Address is required for location-based matching'),
 
     check('contactInfo.specialties')
-      .optional()
-      .isArray()
-      .withMessage('Specialties must be an array of strings'),
+      .isArray({ min: 1 })
+      .withMessage('At least one area of interest is required'),
 
     check('contactInfo.specialties.*')
-      .optional()
       .isString()
       .withMessage('Each specialty must be a string'),
   ],
@@ -88,6 +85,5 @@ router.put(
 );
 
 router.get('/profile', auth, getProfile);
-
 
 module.exports = router;
