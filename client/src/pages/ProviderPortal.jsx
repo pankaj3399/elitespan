@@ -1,6 +1,7 @@
 // client/src/pages/ProviderPortal.jsx
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 import { saveProviderInfo } from '../services/api';
 
 function ProviderPortal() {
@@ -193,17 +194,17 @@ function ProviderPortal() {
             ...prev,
             email: 'This email address is already registered. Please use a different email.'
           }));
-          return; // Don't show alert if we set field error
+          return; // Don't show toast if we set field error
         } else if (errorMessage === 'NPI Number already exists') {
           console.log('Setting NPI error');
           setErrors(prev => ({
             ...prev,
             npiNumber: 'This NPI Number is already registered. Please verify your NPI Number.'
           }));
-          return; // Don't show alert if we set field error
+          return; // Don't show toast if we set field error
         } else if (errorMessage === 'Provider with this information already exists') {
           // Generic duplicate error - could be either field
-          alert('A provider with this information already exists. Please check your email and NPI Number.');
+          toast.error('A provider with this information already exists. Please check your email and NPI Number.');
           return;
         } else if (serverError.errors) {
           // Handle field-specific validation errors from server
@@ -215,7 +216,7 @@ function ProviderPortal() {
           return;
         } else {
           // Generic error message
-          alert(errorMessage || 'Error saving provider information. Please try again.');
+          toast.error(errorMessage || 'Error saving provider information. Please try again.');
           return;
         }
       } else if (error.message && (
@@ -237,7 +238,7 @@ function ProviderPortal() {
         return;
       } else {
         // Network or other errors
-        alert('Error saving provider information. Please check your connection and try again.');
+        toast.error('Error saving provider information. Please check your connection and try again.');
       }
     } finally {
       setIsLoading(false);

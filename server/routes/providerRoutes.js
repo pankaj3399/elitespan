@@ -1,16 +1,26 @@
 // server/routes/providerRoutes.js
 const express = require('express');
 const Provider = require('../models/Provider.js');
-const User = require('../models/User.js'); // Import User model
+const User = require('../models/User.js');
 const multer = require('multer');
 const XLSX = require('xlsx');
-const bcrypt = require('bcryptjs'); // For password hashing
+const bcrypt = require('bcryptjs');
+const { sendProviderRegistrationEmails } = require('../utils/email.js');
+const {
+  geocodeAddress,
+  createGeoJSONPoint,
+  buildProviderAddress,
+  calculateDistance,
+} = require('../utils/geocoding.js');
 const router = express.Router();
 
 // --- Helper Function to Construct Full S3 URL ---
 const getFullS3Url = (key) => {
   if (!key) {
     return null;
+  }
+   if (key.startsWith('http://') || key.startsWith('https://')) {
+    return key;
   }
   const bucketName = process.env.AWS_S3_BUCKET_NAME;
   const region = process.env.AWS_REGION;
@@ -24,8 +34,8 @@ const getFullS3Url = (key) => {
   return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
 };
 
-// --- Helper to prepare provider data for response (with full URLs) ---
-const prepareProviderForResponse = (providerDocument) => {
+// --- Helper to prepare provider data for response (with full URLs and distance) ---
+const prepareProviderForResponse = (providerDocument, userLocation = null) => {
   if (!providerDocument) return null;
   const providerObject = providerDocument.toObject
     ? providerDocument.toObject()
@@ -33,6 +43,24 @@ const prepareProviderForResponse = (providerDocument) => {
 
   providerObject.headshotUrl = getFullS3Url(providerObject.headshotUrl);
   providerObject.galleryUrl = getFullS3Url(providerObject.galleryUrl);
+
+  // Add distance if user location is provided
+  if (
+    userLocation &&
+    providerObject.location &&
+    providerObject.location.coordinates
+  ) {
+    const [providerLng, providerLat] = providerObject.location.coordinates;
+    const [userLng, userLat] = userLocation.coordinates;
+    const distance = calculateDistance(
+      userLat,
+      userLng,
+      providerLat,
+      providerLng
+    );
+    providerObject.distance = Math.round(distance * 10) / 10; // Round to 1 decimal place
+    providerObject.distanceUnit = 'miles';
+  }
 
   return providerObject;
 };
@@ -55,7 +83,179 @@ const upload = multer({
   },
 });
 
-// Create new provider (Step 1: Basic Info)
+// GET all providers with geospatial search
+router.get('/', async (req, res) => {
+  try {
+    const { search, specialty, location, userSpecialties, userId } = req.query;
+
+    console.log('🔍 Provider search request:', {
+      search,
+      specialty,
+      location,
+      userSpecialties,
+      userId,
+    });
+
+    // Get user's location for distance calculation
+    let userLocation = null;
+    if (userId) {
+      try {
+        const user = await User.findById(userId).select('location');
+        if (user && user.location) {
+          userLocation = user.location;
+          console.log('👤 Found user location:', userLocation.coordinates);
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not fetch user location:', error.message);
+      }
+    }
+
+    // Base query: Ensures only active and approved providers are shown to users.
+    const query = {
+      isActive: true,
+      isApproved: true,
+    };
+
+    // Add specialty filter if provided (manual search)
+    if (specialty) {
+      console.log('🎯 Adding specialty filter:', specialty);
+      query.specialties = { $in: [new RegExp(specialty, 'i')] };
+    }
+
+    // Add user specialties filter if provided (automatic matching)
+    if (userSpecialties && !specialty) {
+      // Only apply if not manually searching
+      const userSpecialtiesArray = userSpecialties
+        .split(',')
+        .map((s) => s.trim());
+      console.log('👤 User specialties for matching:', userSpecialtiesArray);
+
+      // Create regex patterns for partial matching
+      const specialtyRegexes = userSpecialtiesArray.map(
+        (userSpec) => new RegExp(userSpec, 'i')
+      );
+
+      console.log('🔍 Final specialty regexes:', specialtyRegexes);
+      query.specialties = { $in: specialtyRegexes };
+      console.log('🔎 Applied user specialty filter to query');
+    }
+
+    // Add location filter if provided (search city and state only)
+    if (location) {
+      console.log('📍 Adding location filter:', location);
+      const locationRegex = new RegExp(location, 'i');
+      query.$or = [{ city: locationRegex }, { state: locationRegex }];
+    }
+
+    // Add general search filter if provided (searches multiple fields)
+    if (search) {
+      console.log('🔍 Adding general search filter:', search);
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { providerName: searchRegex },
+        { practiceName: searchRegex },
+        { city: searchRegex },
+        { state: searchRegex },
+        { specialties: { $in: [searchRegex] } },
+      ];
+    }
+
+    console.log('📋 Final MongoDB query:', JSON.stringify(query, null, 2));
+
+    let providers;
+
+    // If we have user location, use geospatial query for distance sorting
+    if (userLocation && userLocation.coordinates) {
+      console.log('🌍 Using geospatial query with user location');
+
+      providers = await Provider.aggregate([
+        {
+          $geoNear: {
+            near: userLocation,
+            distanceField: 'calculatedDistance',
+            distanceMultiplier: 0.000621371, // Convert meters to miles
+            spherical: true,
+            query: query,
+            key: 'location', // <--- ADD THIS LINE
+            maxDistance: 160934 * 100,
+            minDistance: 0,
+          },
+        },
+        { $limit: 100 },
+      ]);
+
+      console.log(
+        `📊 Found ${providers.length} providers with geospatial sorting`
+      );
+    } else {
+      // Fallback to regular query without distance sorting
+      console.log('📍 Using regular query without geospatial sorting');
+      providers = await Provider.find(query).limit(100);
+      console.log(`📊 Found ${providers.length} providers from regular query`);
+    }
+
+    // Log each provider's specialties for debugging
+    providers.forEach((provider, index) => {
+      console.log(`Provider ${index + 1}: ${provider.providerName}`);
+      console.log(`  Raw specialties:`, provider.specialties);
+      console.log(
+        `  Distance: ${provider.calculatedDistance ? provider.calculatedDistance.toFixed(1) + ' miles' : 'Not calculated'}`
+      );
+
+      // If we have user specialties, check if this provider matches
+      if (userSpecialties) {
+        const userSpecialtiesArray = userSpecialties
+          .split(',')
+          .map((s) => s.trim().toLowerCase());
+        const providerSpecialties =
+          provider.specialties?.map((s) => s.toLowerCase()) || [];
+
+        const hasMatch = providerSpecialties.some((providerSpec) =>
+          userSpecialtiesArray.some(
+            (userSpec) =>
+              providerSpec.includes(userSpec) || userSpec.includes(providerSpec)
+          )
+        );
+
+        console.log(`  Matches user specialties: ${hasMatch ? '✅' : '❌'}`);
+      }
+      console.log('---');
+    });
+
+    // Use the helper function to ensure S3 URLs are complete and add distance
+    const preparedProviders = providers.map((p) =>
+      prepareProviderForResponse(p, userLocation)
+    );
+
+    console.log(`✅ Returning ${preparedProviders.length} prepared providers`);
+
+    res.json({
+      success: true,
+      count: preparedProviders.length,
+      providers: preparedProviders,
+      debug: {
+        originalQuery: query,
+        userSpecialties: userSpecialties ? userSpecialties.split(',') : null,
+        userLocationUsed: !!userLocation,
+        searchType: specialty
+          ? 'manual specialty search'
+          : userSpecialties
+            ? 'user specialty matching'
+            : location
+              ? 'location search'
+              : search
+                ? 'general search'
+                : 'all providers',
+        sortedByDistance: !!userLocation,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Error fetching public providers:', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+// Create new provider (Step 1: Basic Info) with geocoding
 router.post('/', async (req, res) => {
   try {
     const { password, confirmPassword, ...providerData } = req.body;
@@ -81,12 +281,36 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Geocode provider address
+    console.log('🌍 Geocoding provider address');
+    const fullAddress = buildProviderAddress(providerData);
+    let coordinates;
+
+    try {
+      const geocodeResult = await geocodeAddress(fullAddress);
+      coordinates = createGeoJSONPoint(geocodeResult.lat, geocodeResult.lng);
+      console.log('✅ Provider address geocoded successfully:', coordinates);
+    } catch (geocodeError) {
+      console.error(
+        '❌ Geocoding failed for provider address:',
+        geocodeError.message
+      );
+      return res.status(400).json({
+        message:
+          'Unable to verify the provided address. Please check that the address is correct.',
+        geocodeError: geocodeError.message,
+      });
+    }
+
     // Hash the password
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create the Provider document first
-    const newProvider = new Provider(providerData);
+    // Create the Provider document with location
+    const newProvider = new Provider({
+      ...providerData,
+      location: coordinates,
+    });
     const savedProvider = await newProvider.save();
 
     // Create the User document with provider role
@@ -96,6 +320,12 @@ router.post('/', async (req, res) => {
       password: hashedPassword,
       role: 'provider',
       providerId: savedProvider._id,
+      contactInfo: {
+        address: fullAddress,
+        phone: '', // Provider phone would be separate
+        specialties: providerData.specialties || [],
+      },
+      location: coordinates, // Same location as provider
     });
 
     const savedUser = await newUser.save();
@@ -240,7 +470,7 @@ router.put('/:id/qualifications', async (req, res) => {
   }
 });
 
-// Update provider images and practice description (Step 3) - UPDATED
+// Update provider images and practice description (Step 3)
 router.put('/:id/images', async (req, res) => {
   try {
     const { id } = req.params;
@@ -253,7 +483,6 @@ router.put('/:id/images', async (req, res) => {
     if (galleryUrl !== undefined) {
       updateData.galleryUrl = galleryUrl;
     }
-    // NEW: Handle practice description
     if (practiceDescription !== undefined) {
       updateData.practiceDescription = practiceDescription.trim();
     }
@@ -279,6 +508,19 @@ router.put('/:id/images', async (req, res) => {
       return res.status(404).json({ message: 'Provider not found' });
     }
 
+    // If this is the final step, send emails
+    if (headshotUrl && galleryUrl && practiceDescription) {
+      try {
+        await sendProviderRegistrationEmails(id);
+        console.log(
+          '✅ Provider registration completed - emails sent successfully'
+        );
+      } catch (emailError) {
+        console.error('❌ Failed to send registration emails:', emailError);
+        // Don't fail the upload if email fails
+      }
+    }
+
     res.status(200).json({
       message: 'Profile content saved successfully',
       provider: prepareProviderForResponse(updatedProvider),
@@ -298,11 +540,17 @@ router.put('/:id/images', async (req, res) => {
   }
 });
 
-// Get provider
+// Get provider by ID
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const providerFromDB = await Provider.findOne({ _id: id });
+    const { userId } = req.query; // Optional user ID for distance calculation
+
+    const providerFromDB = await Provider.findOne({
+      _id: id,
+      isActive: true,
+      isApproved: true,
+    });
 
     if (!providerFromDB) {
       return res
@@ -310,9 +558,25 @@ router.get('/:id', async (req, res) => {
         .json({ message: 'Provider not found or not available' });
     }
 
+    // Get user location if userId provided
+    let userLocation = null;
+    if (userId) {
+      try {
+        const user = await User.findById(userId).select('location');
+        if (user && user.location) {
+          userLocation = user.location;
+        }
+      } catch (error) {
+        console.warn(
+          '⚠️ Could not fetch user location for provider details:',
+          error.message
+        );
+      }
+    }
+
     res.status(200).json({
       message: 'Provider retrieved successfully',
-      provider: prepareProviderForResponse(providerFromDB),
+      provider: prepareProviderForResponse(providerFromDB, userLocation),
     });
   } catch (error) {
     console.error('Error fetching provider:', error);

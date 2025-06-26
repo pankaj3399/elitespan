@@ -1,3 +1,5 @@
+// backend/models/Provider.js
+
 const mongoose = require('mongoose');
 
 // Review subdocument schema (kept for future use elsewhere)
@@ -72,6 +74,20 @@ const providerSchema = new mongoose.Schema(
     state: { type: String, required: true },
     zip: { type: String, required: true },
 
+    // Geospatial location data
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point'
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        required: true,
+        index: '2dsphere' // Geospatial index
+      }
+    },
+
     // Qualifications
     specialties: { type: [String], default: [] },
     boardCertifications: { type: [String], default: [] },
@@ -83,7 +99,7 @@ const providerSchema = new mongoose.Schema(
     headshotUrl: String,
     galleryUrl: String,
 
-    // Practice Description (NEW FIELD)
+    // Practice Description
     practiceDescription: {
       type: String,
       maxlength: 1000,
@@ -109,6 +125,8 @@ providerSchema.index({ isActive: 1, isApproved: 1 });
 providerSchema.index({ 'reviews.satisfactionRating': 1 });
 providerSchema.index({ 'reviews.isActive': 1, 'reviews.isApproved': 1 });
 providerSchema.index({ 'stateLicenses.state': 1 });
+// Geospatial index for location-based queries
+providerSchema.index({ location: '2dsphere' });
 
 // Virtual for full address
 providerSchema.virtual('fullAddress').get(function () {
@@ -150,7 +168,7 @@ providerSchema.virtual('reviewStats').get(function () {
   };
 });
 
-// Method to check if provider profile is complete - UPDATED
+// Method to check if provider profile is complete
 providerSchema.methods.checkProfileCompletion = function () {
   const hasBasicInfo =
     this.practiceName && this.providerName && this.email && this.npiNumber;
@@ -158,16 +176,17 @@ providerSchema.methods.checkProfileCompletion = function () {
     this.specialties.length > 0 || this.boardCertifications.length > 0;
   const hasImages = this.headshotUrl && this.galleryUrl;
   const hasStateLicenses = this.stateLicenses.length > 0;
-  // Add check for practice description - NEW
   const hasPracticeDescription =
     this.practiceDescription && this.practiceDescription.trim().length > 0;
+  const hasLocation = this.location && this.location.coordinates && this.location.coordinates.length === 2;
 
   this.isProfileComplete =
     hasBasicInfo &&
     hasQualifications &&
     hasImages &&
     hasStateLicenses &&
-    hasPracticeDescription;
+    hasPracticeDescription &&
+    hasLocation;
 
   return this.isProfileComplete;
 };

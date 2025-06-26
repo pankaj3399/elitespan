@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
+import { toast } from 'react-toastify';
 import MembershipModal from '../MembershipModal';
 import ContactInfoForm from '../ContactInfoForm';
 import PaymentMethodModal from '../PaymentMethodModal';
@@ -53,7 +54,7 @@ const Navbar = () => {
       console.log('Login response:', response);
       loginUser(response.token, response.user);
       closeModals();
-      alert('Logged in successfully!');
+      toast.success('Logged in successfully!');
     } catch (error) {
       setLoginError(
         error.message === 'Login failed' || error.message.includes('Invalid')

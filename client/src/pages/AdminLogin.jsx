@@ -39,7 +39,7 @@ const AdminLogin = () => {
 
       // Check if user has admin privileges
       const user = response.user;
-      const isAdmin = user.role === 'admin' || user.isAdmin === true;
+      const isAdmin = user.role === 'admin';
 
       if (!isAdmin) {
         toast.error('Access denied. Admin privileges required.');

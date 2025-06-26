@@ -25,6 +25,7 @@ import AdminProviders from './pages/AdminProvidersDashboard';
 import AdminLogin from './pages/AdminLogin';
 import ProviderDashboard from './pages/ProviderDashboard';
 import ProviderProtectedRoute from './components/ProviderProtectedRoute';
+import Dashboard from './pages/user/Dashboard';
 
 const App = () => {
   return (
@@ -78,6 +79,20 @@ const AppContent = () => {
           <Route path='/qualifications' element={<Qualifications />} />
           <Route path='/profile-content' element={<ProfileContent />} />
           <Route path='/completion' element={<Completion />} />
+             <Route
+            path='/user/dashboard'
+            element={
+              <ProtectedRoute
+                redirectAction={() =>
+                  toast.error(
+                    'You must be logged in to view provider profiles.'
+                  )
+                }
+              >
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path='/provider-profile/:providerId'
             element={

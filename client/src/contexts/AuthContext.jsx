@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
 
     // Role-based routing
     const userRole = userData.role;
-    const isAdmin = userData.role === 'admin' || userData.isAdmin === true;
+    const isAdmin = userData.role === 'admin';
     
     if (isAdmin) {
       console.log('Admin user detected, redirecting to admin/providers');
@@ -56,6 +56,7 @@ export const AuthProvider = ({ children }) => {
       console.log('Provider user detected, redirecting to provider/profile');
       navigate('/provider/profile');
     } else {
+      navigate('/user/dashboard');
       console.log('User logged in');
     }
   };
@@ -70,6 +71,57 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
+  // ADD THIS FUNCTION - refreshUser to fetch updated user data
+  const refreshUser = async () => {
+    if (!token) {
+      console.log('No token available for user refresh');
+      return;
+    }
+
+    try {
+      console.log('Refreshing user data...');
+      setLoading(true);
+      
+      const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      
+      // Fetch updated user profile
+      const response = await fetch(`${BASE_URL}/api/users/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        console.log('User data refreshed successfully:', userData);
+        
+        // Update the user state with new data
+        const updatedUser = { ...userData.user, role: userData.user.role || 'user' };
+        setUser(updatedUser);
+        
+        // Update localStorage with new user data
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        console.log('User premium status updated:', updatedUser.isPremium);
+        return updatedUser;
+        
+      } else {
+        console.error('Failed to refresh user data:', response.status);
+        const errorData = await response.json();
+        console.error('Error details:', errorData);
+        throw new Error('Failed to refresh user data');
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      // Optionally handle error (logout user, show error message, etc.)
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const userId = user?.id || null;
 
   return (
@@ -81,6 +133,7 @@ export const AuthProvider = ({ children }) => {
         loginUser,
         logoutUser,
         loading,
+        refreshUser, // ADD THIS LINE - expose refreshUser function
       }}
     >
       {loading ? null : children}

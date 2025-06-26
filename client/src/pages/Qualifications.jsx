@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import QualificationInput from '../components/common/QualificationInput';
 import { saveQualifications } from '../services/api';
 import { FaChevronUp, FaChevronDown } from 'react-icons/fa6';
@@ -114,7 +115,7 @@ function Qualifications() {
     e.preventDefault();
 
     if (!providerId) {
-      alert('Provider ID not found. Please start from the beginning.');
+      toast.error('Provider ID not found. Please start from the beginning.');
       navigate('/provider-portal');
       return;
     }
@@ -126,7 +127,7 @@ function Qualifications() {
 
     for (const license of validStateLicenses) {
       if (!license.state.trim() || !license.deaNumber.trim() || !license.licenseNumber.trim()) {
-        alert('Each state license must include state, DEA number, and license number.');
+        toast.error('Each state license must include state, DEA number, and license number.');
         return;
       }
     }
@@ -135,7 +136,7 @@ function Qualifications() {
     const states = validStateLicenses.map(license => license.state);
     const uniqueStates = new Set(states);
     if (states.length !== uniqueStates.size) {
-      alert('Cannot have multiple licenses for the same state.');
+      toast.error('Cannot have multiple licenses for the same state.');
       return;
     }
 
@@ -151,7 +152,7 @@ function Qualifications() {
       navigate('/profile-content');
     } catch (error) {
       console.error('Error saving qualifications:', error);
-      alert('Error saving qualifications. Please try again.');
+      toast.error('Error saving qualifications. Please try again.');
     } finally {
       setIsLoading(false);
     }

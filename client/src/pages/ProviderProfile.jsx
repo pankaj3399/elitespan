@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { getProvider } from '../services/api';
 import { CiMobile2 } from 'react-icons/ci';
 import { FiSend } from 'react-icons/fi';
@@ -80,7 +81,7 @@ function ProviderProfile() {
       setShowReviewsModal(true);
     } catch (err) {
       console.error('Error fetching all reviews:', err);
-      alert('Failed to load reviews. Please try again.');
+      toast.error('Failed to load reviews. Please try again.');
     }
   };
 
