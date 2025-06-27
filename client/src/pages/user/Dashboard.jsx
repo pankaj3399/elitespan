@@ -16,9 +16,7 @@ import CreditCardForm from '../../components/CreditCardForm';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-// --- REUSABLE COMPONENTS with Enhanced Hover Effects ---
-
-const ProviderCard = ({ provider }) => (
+const ProviderCard = ({ provider, onSeeProfile }) => (
   <div className='group w-[300px] sm:w-[380px] flex-shrink-0 bg-white rounded-2xl border border-gray-200/80 shadow-md overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1'>
     <div className='h-48 overflow-hidden'>
       {provider.headshotUrl ? (
@@ -79,7 +77,10 @@ const ProviderCard = ({ provider }) => (
         </p>
       </div>
       <div className='mt-5 flex gap-3'>
-        <button className='flex-1 py-2.5 px-4 rounded-full border border-gray-300 text-gray-800 font-semibold transition-all duration-200 hover:bg-gray-100 hover:border-gray-400 cursor-pointer'>
+        <button
+          onClick={() => onSeeProfile(provider._id)}
+          className='flex-1 py-2.5 px-4 rounded-full border border-gray-300 text-gray-800 font-semibold transition-all duration-200 hover:bg-gray-100 hover:border-gray-400 cursor-pointer'
+        >
           See Profile
         </button>
         <button className='flex-1 py-2.5 px-4 rounded-full bg-[#0B247D] text-white font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:bg-[#081b5a] hover:shadow-lg cursor-pointer'>
@@ -90,7 +91,13 @@ const ProviderCard = ({ provider }) => (
   </div>
 );
 
-const HorizontalProvidersSection = ({ title, items, isLoading, error }) => {
+const HorizontalProvidersSection = ({
+  title,
+  items,
+  isLoading,
+  error,
+  onSeeProfile,
+}) => {
   const scrollContainerRef = useRef(null);
 
   const scrollLeft = () => {
@@ -153,7 +160,11 @@ const HorizontalProvidersSection = ({ title, items, isLoading, error }) => {
           }}
         >
           {items.map((item) => (
-            <ProviderCard key={item._id} provider={item} />
+            <ProviderCard
+              key={item._id}
+              provider={item}
+              onSeeProfile={onSeeProfile}
+            />
           ))}
           <div className='flex-shrink-0 w-1 sm:w-2 md:w-4'></div>
         </div>
@@ -168,7 +179,6 @@ const HorizontalProvidersSection = ({ title, items, isLoading, error }) => {
           {title}
         </h2>
         {items.length > 0 && !isLoading && (
-          // Arrows in the header are also hidden on mobile
           <div className='hidden md:flex gap-2'>
             <button
               onClick={scrollLeft}
@@ -189,7 +199,6 @@ const HorizontalProvidersSection = ({ title, items, isLoading, error }) => {
     </div>
   );
 };
-
 // --- USER STORY SECTION ---
 const UserStorySection = () => (
   <div className='w-full max-w-7xl mx-auto py-16 px-4'>
@@ -207,7 +216,8 @@ const UserStorySection = () => (
           Member Highlight
         </div>
         <h2 className='text-3xl font-bold text-gray-900 leading-tight'>
-          "Finding the right specialist changed everything for my health journey"
+          "Finding the right specialist changed everything for my health
+          journey"
         </h2>
         <div className='text-gray-600 text-lg leading-relaxed space-y-4'>
           <p>
@@ -272,6 +282,10 @@ function Dashboard() {
       );
     }
   }, [user, refreshUser]);
+
+  const handleSeeProfile = (providerId) => {
+    navigate(`/provider-profile/${providerId}`);
+  };
 
   const fetchNearbyProviders = useCallback(
     async (isSearch = false) => {
@@ -480,6 +494,7 @@ function Dashboard() {
           items={nearbyProviders}
           isLoading={isNearbyLoading}
           error={nearbyError}
+          onSeeProfile={handleSeeProfile}
         />
 
         {user?.contactInfo?.specialties?.length > 0 && (
@@ -488,6 +503,7 @@ function Dashboard() {
             items={interestProviders}
             isLoading={isInterestLoading}
             error={interestError}
+            onSeeProfile={handleSeeProfile}
           />
         )}
 
