@@ -11,6 +11,7 @@ const promoCodeRoutes = require('./routes/promoCodeRoutes');
 const providerRoutes = require('./routes/providerRoutes.js');
 const uploadRoutes = require('./routes/uploadRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const productRoutes = require('./routes/productRoutes');
 // Load environment variables
 dotenv.config();
 
@@ -36,6 +37,8 @@ app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/provider-info', providerRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/products', productRoutes);
+
 // Default route for testing
 app.get('/', (req, res) => {
   res.send('Backend API is running on Vercel');
