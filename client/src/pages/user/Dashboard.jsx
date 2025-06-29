@@ -10,7 +10,11 @@ import {
   Bookmark,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { getAllProviders } from '../../services/api';
+import {
+  getAllProducts,
+  getAllProviders,
+  requestProductAccess,
+} from '../../services/api';
 import PaymentMethodModal from '../../components/PaymentMethodModal';
 import CreditCardForm from '../../components/CreditCardForm';
 import { useAuth } from '../../contexts/AuthContext';
@@ -86,6 +90,43 @@ const ProviderCard = ({ provider, onSeeProfile }) => (
         <button className='flex-1 py-2.5 px-4 rounded-full bg-[#0B247D] text-white font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:bg-[#081b5a] hover:shadow-lg cursor-pointer'>
           <Bookmark size={16} /> Save
         </button>
+      </div>
+    </div>
+  </div>
+);
+
+const ProductCard = ({ product, onRequestAccess, onProductClick }) => (
+  <div className='group w-[300px] sm:w-[380px] flex-shrink-0 bg-white rounded-2xl border border-gray-200/80 shadow-md overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1'>
+    <div className='h-48 overflow-hidden'>
+      <img
+        src={product.imageUrl}
+        alt={product.title}
+        className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
+      />
+    </div>
+    <div className='p-5'>
+      <h3 className='text-xl font-semibold text-gray-800 mb-3'>
+        {product.title}
+      </h3>
+      <p className='text-gray-600 text-sm mb-4 line-clamp-3'>
+        {product.description}
+      </p>
+      <div className='mt-5'>
+        {product.link ? (
+          <button
+            onClick={() => onProductClick(product.link)}
+            className='w-full py-2.5 px-4 rounded-full bg-[#0B247D] text-white font-semibold transition-all duration-200 hover:bg-[#081b5a] hover:shadow-lg cursor-pointer flex items-center justify-center gap-2'
+          >
+            Learn More <ArrowRight size={16} />
+          </button>
+        ) : (
+          <button
+            onClick={() => onRequestAccess(product._id)}
+            className='w-full py-2.5 px-4 rounded-full border border-[#0B247D] text-[#0B247D] font-semibold transition-all duration-200 hover:bg-[#0B247D] hover:text-white cursor-pointer'
+          >
+            Request Early Access
+          </button>
+        )}
       </div>
     </div>
   </div>
@@ -199,6 +240,116 @@ const HorizontalProvidersSection = ({
     </div>
   );
 };
+const HorizontalProductsSection = ({
+  title,
+  items,
+  isLoading,
+  error,
+  onRequestAccess,
+  onProductClick,
+}) => {
+  const scrollContainerRef = useRef(null);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className='w-full flex justify-center items-center h-64'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900'></div>
+        </div>
+      );
+    }
+    if (error) {
+      return (
+        <div className='w-full flex justify-center items-center h-64'>
+          <p className='text-red-500 text-center'>{error}</p>
+        </div>
+      );
+    }
+    if (items.length === 0) {
+      return (
+        <div className='w-full flex justify-center items-center h-64'>
+          <p className='text-gray-500'>No products available.</p>
+        </div>
+      );
+    }
+    return (
+      <div className='relative'>
+        {/* Navigation Arrows */}
+        <button
+          onClick={scrollLeft}
+          className='hidden md:block absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors border border-gray-200'
+        >
+          <ChevronLeft size={20} className='text-gray-600' />
+        </button>
+        <button
+          onClick={scrollRight}
+          className='hidden md:block absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors border border-gray-200'
+        >
+          <ChevronRight size={20} className='text-gray-600' />
+        </button>
+
+        {/* Horizontal scroll container */}
+        <div
+          ref={scrollContainerRef}
+          className='flex overflow-x-auto gap-6 px-4 sm:px-6 md:px-8 py-4'
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
+          {items.map((item) => (
+            <ProductCard
+              key={item._id}
+              product={item}
+              onRequestAccess={onRequestAccess}
+              onProductClick={onProductClick}
+            />
+          ))}
+          <div className='flex-shrink-0 w-1 sm:w-2 md:w-4'></div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className='w-full max-w-7xl mx-auto py-8'>
+      <div className='flex justify-between items-center mb-6 px-4 sm:px-6 md:px-8'>
+        <h2 className='text-2xl sm:text-3xl font-semibold text-gray-800'>
+          {title}
+        </h2>
+        {items.length > 0 && !isLoading && (
+          <div className='hidden md:flex gap-2'>
+            <button
+              onClick={scrollLeft}
+              className='p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors'
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={scrollRight}
+              className='p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors'
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
+      </div>
+      {renderContent()}
+    </div>
+  );
+};
 // --- USER STORY SECTION ---
 const UserStorySection = () => (
   <div className='w-full max-w-7xl mx-auto py-16 px-4'>
@@ -258,7 +409,9 @@ function Dashboard() {
 
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
   const [showCreditCardForm, setShowCreditCardForm] = useState(false);
-
+  const [products, setProducts] = useState([]);
+  const [isProductsLoading, setIsProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState(null);
   const [nearbyProviders, setNearbyProviders] = useState([]);
   const [isNearbyLoading, setIsNearbyLoading] = useState(true);
   const [nearbyError, setNearbyError] = useState(null);
@@ -336,12 +489,33 @@ function Dashboard() {
     }
   }, [user?.id, user?.contactInfo?.specialties]);
 
+  const fetchProducts = useCallback(async () => {
+    setIsProductsLoading(true);
+    setProductsError(null);
+    try {
+      const response = await getAllProducts();
+      setProducts(response.products || []);
+    } catch (err) {
+      const errorMessage = err.message || 'Failed to fetch products.';
+      setProductsError(errorMessage);
+    } finally {
+      setIsProductsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (user?.isPremium && user.id) {
       fetchNearbyProviders();
       fetchInterestProviders();
+      fetchProducts();
     }
-  }, [user?.isPremium, user?.id, fetchNearbyProviders, fetchInterestProviders]);
+  }, [
+    user?.isPremium,
+    user?.id,
+    fetchNearbyProviders,
+    fetchInterestProviders,
+    fetchProducts,
+  ]);
 
   const handleSearchInputChange = (e) => {
     const { name, value } = e.target;
@@ -351,6 +525,21 @@ function Dashboard() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchNearbyProviders(true);
+  };
+
+  const handleRequestAccess = async (productId) => {
+    try {
+      const response = await requestProductAccess(token, productId);
+      toast.success(
+        response.message || 'Access request submitted successfully!'
+      );
+    } catch (error) {
+      toast.error(error.message || 'Failed to submit access request');
+    }
+  };
+
+  const handleProductClick = (link) => {
+    window.open(link, '_blank', 'noopener,noreferrer');
   };
 
   const handlePaymentMethodSelect = (method) => {
@@ -506,6 +695,15 @@ function Dashboard() {
             onSeeProfile={handleSeeProfile}
           />
         )}
+
+        <HorizontalProductsSection
+          title='Healthcare Innovation Products'
+          items={products}
+          isLoading={isProductsLoading}
+          error={productsError}
+          onRequestAccess={handleRequestAccess}
+          onProductClick={handleProductClick}
+        />
 
         <UserStorySection />
       </main>
